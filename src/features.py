@@ -791,4 +791,27 @@ def prev_app_installments(prev_app, installments, data):
     gc.collect()
 
 
-    return data, list(set(data.columns) - set(COLS))     
+    return data, list(set(data.columns) - set(COLS))
+
+def loan_stacking(bureau, data):
+    COLS = data.columns.tolist()
+
+    # find all active records and take mean of days credit
+    res = bureau.loc[bureau.CREDIT_ACTIVE == 0, ['SK_ID_CURR', 'DAYS_CREDIT']]
+    res = res.groupby('SK_ID_CURR')['DAYS_CREDIT'].mean()
+
+    data.loc[:, 'stacked_loan_credit_start'] = data.SK_ID_CURR.map(res)
+
+    del res
+    gc.collect()
+
+    # find all active records and take sum of amount credited
+    res = bureau.loc[bureau.CREDIT_ACTIVE == 0, ['SK_ID_CURR', 'AMT_CREDIT_SUM']]
+    res = res.groupby('SK_ID_CURR')['AMT_CREDIT_SUM'].sum()
+
+    data.loc[:, 'stacked_loan_credit_sum'] = data.SK_ID_CURR.map(res)
+    
+    del res
+    gc.collect()
+
+    return data, list(set(data.columns) - set(COLS))
