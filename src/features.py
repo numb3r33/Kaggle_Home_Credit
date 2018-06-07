@@ -814,4 +814,29 @@ def loan_stacking(bureau, data):
     del res
     gc.collect()
 
+    # when was last update about active credit reached bureau ?
+    res = bureau.loc[bureau.CREDIT_ACTIVE == 0, ['SK_ID_CURR', 'DAYS_CREDIT_UPDATE']]
+    res = -res.groupby('SK_ID_CURR')['DAYS_CREDIT_UPDATE'].max()
+
+    data.loc[:, 'last_update_active_records'] = data.SK_ID_CURR.map(res).fillna(-1).astype(np.int8)
+
+    del res
+    gc.collect()
+    
+    # number of active loan records
+    res = bureau.loc[(bureau.CREDIT_ACTIVE == 0) & (bureau.DAYS_CREDIT > -365*2), ['SK_ID_CURR', 'DAYS_CREDIT_UPDATE']]
+    res = res.groupby('SK_ID_CURR').size()
+
+    data.loc[:, 'num_active_loan_records'] = data.SK_ID_CURR.map(res).fillna(-1).astype(np.int8)
+
+    del res
+    gc.collect()
+
+    # total amount credit courtesy of recent loans
+    res = bureau.loc[(bureau.CREDIT_ACTIVE == 0) & (bureau.DAYS_CREDIT > -365*2), ['SK_ID_CURR', 'AMT_CREDIT_SUM']]
+    res = res.groupby('SK_ID_CURR')['AMT_CREDIT_SUM'].sum()
+
+    res = data.SK_ID_CURR.map(res)
+    data.loc[:, 'diff_active_credit_income'] = data.AMT_INCOME_TOTAL - (res + data.AMT_CREDIT)
+
     return data, list(set(data.columns) - set(COLS))

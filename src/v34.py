@@ -10,11 +10,26 @@ from base import *
 from features import *
 
 from datetime import datetime
+from sklearn.externals import joblib
 
 basepath = os.path.expanduser('../')
 
 SEED = 1231
 np.random.seed(SEED)
+
+COLS_TO_REMOVE = ['SK_ID_CURR', 'TARGET',
+                  'FLAG_DOCUMENT_9', 'FLAG_DOCUMENT_5',
+                  'FLAG_DOCUMENT_5', 'FLAG_DOCUMENT_11',
+                  'FLAG_DOCUMENT_7', 'FLAG_DOCUMENT_17',
+                  'FLAG_DOCUMENT_20', 'FLAG_DOCUMENT_4',
+                  'FLAG_DOCUMENT_14', 'FLAG_DOCUMENT_21',
+                  'FLAG_DOCUMENT_10',          
+                  'AMT_REQ_CREDIT_BUREAU_DAY', 'FLAG_DOCUMENT_2',
+                  'FLAG_DOCUMENT_15', 'FLAG_DOCUMENT_19',
+                  'FLAG_CONT_MOBILE', 'FLAG_MOBIL',
+                  'FLAG_DOCUMENT_12', 'REG_REGION_NOT_LIVE_REGION',
+                  'FLAG_DOCUMENT_13', 'AMT_REQ_CREDIT_BUREAU_HOUR'
+                ]
 
 PARAMS = {
     'num_boost_round': 5000,
@@ -24,6 +39,7 @@ PARAMS = {
     'min_data_in_leaf': 100,
     'num_leaves': 60,
     'feature_fraction': .3,
+    'feature_fraction_seed': SEED,
     'lambda_l1': 5,
     'lambda_l2': 20,
     'min_child_weight': 2.,
@@ -381,6 +397,9 @@ class ModelV34(BaseModel):
             data, FEATURE_NAMES = loan_stacking(bureau, data)
             data.index          = np.arange(len(data))
 
+            # fill infrequent values
+            data = super(ModelV34, self).fill_infrequent_values(data)
+
             data.iloc[:ntrain].loc[:, FEATURE_NAMES].to_pickle(os.path.join(basepath, self.params['output_path'] + self.params['run_name'] + f'loan_stacking_{fold_name}train.pkl'))
             data.iloc[ntrain:].loc[:, FEATURE_NAMES].to_pickle(os.path.join(basepath, self.params['output_path'] + self.params['run_name'] + f'loan_stacking_{fold_name}test.pkl'))
             print('\nTook: {} seconds'.format(time.clock() - t0))
@@ -529,7 +548,7 @@ if __name__ == '__main__':
 
         m              = ModelV34(**params)
         train, test    = m.merge_datasets(fold_name)
-        feature_list   = list(set(train.columns) - set(['TARGET', 'SK_ID_CURR']))
+        feature_list   = list(set(train.columns) - set(COLS_TO_REMOVE))
         is_eval        = len(fold_name) > 0
 
         if not is_eval:
@@ -539,7 +558,6 @@ if __name__ == '__main__':
         m.train(train, test, feature_list, is_eval, MODEL_FILENAME, **PARAMS)
     
 
-    # TODO: Think about how to store feature list and treat it as hyper-parameter
     elif args.t:
         print('Train Model and evaluate predictions on a given fold ....')
         print()
@@ -557,14 +575,19 @@ if __name__ == '__main__':
 
         m              = ModelV34(**params)
         train, test    = m.merge_datasets(fold_name)
-        feature_list   = list(set(train.columns) - set(['TARGET', 'SK_ID_CURR'])) 
-        is_eval        = len(fold_name) > 0
 
-        print('Evaluation Mode: ', is_eval)
+        if os.path.exists(os.path.join(basepath, output_path + run_name + f'{MODEL_FILENAME}_features.pkl')):
+            feature_list = joblib.load(os.path.join(basepath, output_path + run_name + f'{MODEL_FILENAME}_features.pkl'))
+        else: 
+            feature_list   = list(set(train.columns) - set(COLS_TO_REMOVE)) 
+            joblib.dump(feature_list, os.path.join(basepath, output_path + run_name + f'{MODEL_FILENAME}_features.pkl'))
 
+        # check to see if we are doing validation or final test generation.
+        is_eval  = len(fold_name) > 0
+        
         if not is_eval:
             # use best iteration found through different folds
-            PARAMS['num_boost_round'] = 1100
+            PARAMS['num_boost_round'] = 1200
             PARAMS['num_boost_round'] = int(1.2 * PARAMS['num_boost_round'])
             PARAMS['learning_rate']   /= 1.2
 
@@ -581,8 +604,9 @@ if __name__ == '__main__':
         # save submission
         if not is_eval:
             print('Generating Submissions ...')
-            # found through validation scores
-            HOLDOUT_SCORE = (0.7918 + .7918) / 2
+
+            # found through validation scores across multiple folds
+            HOLDOUT_SCORE = (0.7913 + .7926) / 2
 
             sub_identifier = "%s-%s-%.5f" % (datetime.now().strftime('%Y%m%d-%H%M'), MODEL_FILENAME, HOLDOUT_SCORE)
 
