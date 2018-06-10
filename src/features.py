@@ -3,9 +3,19 @@ import numpy as np
 
 import gc
 
+def frequency_encoding(data, cols):
+    for col in cols:
+        data.loc[:, col] = data.groupby(col)[col].transform(lambda x: len(x)).values
+    return data
+
 def get_agg_features(data, gp, f, on):
     agg         = gp.groupby(on)[f]\
-                        .agg({np.mean, np.median, np.max, np.min, np.var, np.sum}).fillna(-1)
+                        .agg({np.mean, 
+                              np.median, 
+                              np.max, 
+                              np.min, 
+                              np.var, 
+                              np.sum}).fillna(-1)
     
     for c in agg.select_dtypes(include=['float64']).columns:
         agg[c]  = agg[c].astype(np.float32)
@@ -793,7 +803,7 @@ def prev_app_installments(prev_app, installments, data):
 
     return data, list(set(data.columns) - set(COLS))
 
-def loan_stacking(bureau, data):
+def loan_stacking(bureau, prev_app, credit_bal, data):
     COLS = data.columns.tolist()
 
     # find all active records and take mean of days credit
@@ -823,8 +833,8 @@ def loan_stacking(bureau, data):
     del res
     gc.collect()
     
-    # number of active loan records
-    res = bureau.loc[(bureau.CREDIT_ACTIVE == 0) & (bureau.DAYS_CREDIT > -365*2), ['SK_ID_CURR', 'DAYS_CREDIT_UPDATE']]
+    # number of active loan records ( for last 1 year )
+    res = bureau.loc[(bureau.CREDIT_ACTIVE == 0) & (bureau.DAYS_CREDIT > -365*1), ['SK_ID_CURR', 'DAYS_CREDIT_UPDATE']]
     res = res.groupby('SK_ID_CURR').size()
 
     data.loc[:, 'num_active_loan_records'] = data.SK_ID_CURR.map(res).fillna(-1).astype(np.int8)
@@ -832,11 +842,44 @@ def loan_stacking(bureau, data):
     del res
     gc.collect()
 
-    # total amount credit courtesy of recent loans
-    res = bureau.loc[(bureau.CREDIT_ACTIVE == 0) & (bureau.DAYS_CREDIT > -365*2), ['SK_ID_CURR', 'AMT_CREDIT_SUM']]
+    # total amount credit courtesy of recent loans ( for last 1 year )
+    res = bureau.loc[(bureau.CREDIT_ACTIVE == 0) & (bureau.DAYS_CREDIT > -365*1), ['SK_ID_CURR', 'AMT_CREDIT_SUM']]
     res = res.groupby('SK_ID_CURR')['AMT_CREDIT_SUM'].sum()
 
     res = data.SK_ID_CURR.map(res)
     data.loc[:, 'diff_active_credit_income'] = data.AMT_INCOME_TOTAL - (res + data.AMT_CREDIT)
+
+
+    # repayment ability of a loanee
+    res           = prev_app.loc[(prev_app.NAME_CONTRACT_STATUS == 0) &\
+                                 (prev_app.DAYS_TERMINATION.isin([365243, np.nan])), 
+                                 ['SK_ID_CURR', 'AMT_ANNUITY', 'AMT_CREDIT']]
+
+    total_credit  = res.groupby('SK_ID_CURR')['AMT_CREDIT'].sum()
+    total_annuity = res.groupby('SK_ID_CURR')['AMT_ANNUITY'].sum()
+    
+    r1 = data.SK_ID_CURR.map(total_annuity)
+    r2 = data.SK_ID_CURR.map(total_credit)
+
+    data.loc[:, 'total_annuity_to_credit_hc']      = (r1 + data.AMT_ANNUITY) / (r2 + data.AMT_CREDIT)
+    data.loc[:, 'annuity_to_total_income']         = (r1 + data.AMT_ANNUITY) / (data.AMT_INCOME_TOTAL) 
+    data.loc[:, 'total_income_total_diff_annuity'] = (data.AMT_INCOME_TOTAL) - (r1 + data.AMT_ANNUITY)
+
+    del r1, r2, res
+    gc.collect()
+
+    # adjust total income by number of family members as well
+    data.loc[:, 'adjusted_total_income'] = (data.AMT_INCOME_TOTAL / data.CNT_FAM_MEMBERS)
+
+    # most recent balance during active credits and take difference with current amount credited
+    res = credit_bal.loc[(credit_bal.MONTHS_BALANCE == -1) & (credit_bal.NAME_CONTRACT_STATUS == 0), :]\
+                .groupby('SK_ID_CURR')['AMT_BALANCE'].mean()
+    
+    res = data.SK_ID_CURR.map(res)
+    data.loc[:, 'diff_balance_curr_credit'] = res - data.AMT_CREDIT 
+
+    del res
+    gc.collect()
+
 
     return data, list(set(data.columns) - set(COLS))

@@ -7,8 +7,9 @@ from sklearn.model_selection import train_test_split
 from sklearn.metrics import roc_auc_score
 from sklearn.externals import joblib
 
+import time
+
 SEED = 1231
-np.random.seed(SEED)
 
 #TODO: Think what all methods can be moved to base class which would be beneficial for
 # other experiments.
@@ -78,14 +79,29 @@ class BaseModel:
                                             )
         return dtr, dte
 
+    def get_sample(self, train, sample_size):
+        _, train, _, _ = train_test_split(train, 
+                                          train.TARGET, 
+                                          stratify=train.TARGET,
+                                          test_size=sample_size,
+                                          random_state=SEED
+                                          )
+        return train
+
     def train_lgb(self, X, y, Xte, yte, **params):
+        np.random.seed(SEED)
+
         num_boost_round = params['num_boost_round']
         del params['num_boost_round']
 
         ltrain = lgb.Dataset(X, y, 
                             feature_name=X.columns.tolist())
         
-        m = None
+        m       = None
+        feat_df = None
+
+        # start time counter
+        t0 = time.clock()
 
         if len(yte):
             lval = lgb.Dataset(Xte, yte, feature_name=X.columns.tolist())
@@ -107,17 +123,19 @@ class BaseModel:
             feature_names = m.feature_name()
             feature_imp   = m.feature_importance()
 
-            print(pd.DataFrame({'features': feature_names,
+            feat_df = pd.DataFrame({'features': feature_names,
                                 'imp': feature_imp
-                                }).sort_values(by='imp', ascending=False).iloc[:20])
+                                }).sort_values(by='imp', ascending=False)
         
         else:
             m = lgb.train(params,
                           ltrain,
                           num_boost_round
                         )
+
+        print('Took: {} seconds to generate...'.format(time.clock() - t0))
         
-        return m
+        return m, feat_df
 
 
     def evaluate_lgb(self, Xte, yte, model):
