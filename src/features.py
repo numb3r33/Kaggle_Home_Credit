@@ -201,9 +201,28 @@ def bureau_features(bureau, data):
     latest_credit = bureau.groupby('SK_ID_CURR')['DAYS_CREDIT'].max()
     data.loc[:, 'latest_credit'] = data.SK_ID_CURR.map(latest_credit).astype(np.float32)
 
-    # day before current application date
-    credit_duration = (bureau.DAYS_CREDIT_ENDDATE - bureau.DAYS_CREDIT).map(np.abs).groupby(bureau.SK_ID_CURR).mean()
-    data.loc[:, 'credit_duration'] = data.SK_ID_CURR.map(credit_duration).replace([np.inf, -np.inf], np.nan).astype(np.float32)
+    # duration of active credits taken from Home Credit
+    res      = bureau.loc[(bureau.CREDIT_ACTIVE == 0) & (bureau.DAYS_CREDIT_ENDDATE > 0), ['SK_ID_CURR', 'DAYS_CREDIT', 'DAYS_CREDIT_ENDDATE']]
+    duration = (res.DAYS_CREDIT_ENDDATE - res.DAYS_CREDIT).astype(np.float32)
+
+    duration = duration.groupby(res.SK_ID_CURR).mean()
+    data.loc[:, 'credit_duration'] = data.SK_ID_CURR.map(duration)
+
+    del res, duration
+    gc.collect()
+
+    # duration of close credits taken from Home Credit
+    res  = bureau.loc[(bureau.CREDIT_ACTIVE == 2) & (bureau.DAYS_CREDIT_ENDDATE < 0), ['SK_ID_CURR', 'DAYS_CREDIT', 'DAYS_ENDDATE_FACT']]
+    d2   = -(res.DAYS_CREDIT - res.DAYS_ENDDATE_FACT).astype(np.float32)
+
+    d2   = d2.groupby(res.SK_ID_CURR).mean().astype(np.float32)
+    data.loc[:, 'closed_credit_duration']  = data.SK_ID_CURR.map(d2).astype(np.float32)
+
+    del d2, res
+    gc.collect()
+    
+    # ratio of active to closed loan duration
+    data.loc[:, 'div_deltas'] = (data.credit_duration / data.closed_credit_duration).replace([np.inf, -np.inf], np.nan).astype(np.float32)
 
     # deviation in difference between remaining duration of credit and how long before we applied for this credit
     diff_prev_curr_credit = bureau.DAYS_CREDIT_ENDDATE.fillna(0) - bureau.DAYS_CREDIT.fillna(0)
@@ -212,19 +231,36 @@ def bureau_features(bureau, data):
 
 
     # mean of difference between remaining duration of credit and how long before we applied for this credit
-    diff_prev_curr_credit = bureau.DAYS_CREDIT_ENDDATE - bureau.DAYS_CREDIT
+    diff_prev_curr_credit = (bureau.DAYS_CREDIT_ENDDATE - bureau.DAYS_CREDIT).astype(np.float32)
     diff_prev_curr_credit = diff_prev_curr_credit.groupby(bureau.SK_ID_CURR).mean()
     data.loc[:, 'mean_diff_prev_curr_credit'] = data.SK_ID_CURR.map(diff_prev_curr_credit).astype(np.float32)
 
-    # mean of difference between days since cb credit ended and how long before we applied for current credit
-    diff_prev_curr_credit = bureau.DAYS_ENDDATE_FACT - bureau.DAYS_CREDIT
-    diff_prev_curr_credit = diff_prev_curr_credit.groupby(bureau.SK_ID_CURR).mean()
-    data.loc[:, 'mean_diff_ended_curr_credit'] = data.SK_ID_CURR.map(diff_prev_curr_credit).astype(np.float32)
+    # difference between last ended loan and most recent applied loan
+    res = bureau.loc[bureau.CREDIT_ACTIVE == 2, ['SK_ID_CURR', 'DAYS_ENDDATE_FACT']]
+    res = res.groupby('SK_ID_CURR')['DAYS_ENDDATE_FACT'].max() # most recently ended credit for a client
 
-    # mean of difference between days last credit ended and remaining duration of credit
-    diff_prev_curr_credit = bureau.DAYS_ENDDATE_FACT - bureau.DAYS_CREDIT_ENDDATE
-    diff_prev_curr_credit = diff_prev_curr_credit.groupby(bureau.SK_ID_CURR).mean()
-    data.loc[:, 'mean_diff_prev_remaining_credit'] = data.SK_ID_CURR.map(diff_prev_curr_credit).astype(np.float32)
+    tmp = bureau.loc[bureau.CREDIT_ACTIVE == 0, ['SK_ID_CURR', 'DAYS_CREDIT']]
+    tmp = tmp.groupby('SK_ID_CURR')['DAYS_CREDIT'].max() # most recently applied credit at Home credit
+
+    res   = tmp.add(-res, fill_value=np.nan).astype(np.float32)
+    
+    data.loc[:, 'mean_diff_ended_curr_credit'] = data.SK_ID_CURR.map(res)
+
+    del res, tmp
+    gc.collect()
+
+    # difference between last ended loan and term of longest loan
+    res = bureau.loc[bureau.CREDIT_ACTIVE == 2, ['SK_ID_CURR', 'DAYS_ENDDATE_FACT']]
+    res = res.groupby('SK_ID_CURR')['DAYS_ENDDATE_FACT'].max() # most recently ended credit for a client
+
+    tmp   = bureau.loc[bureau.CREDIT_ACTIVE == 0, ['SK_ID_CURR', 'DAYS_CREDIT_ENDDATE']]
+    tmp   = bureau.groupby('SK_ID_CURR')['DAYS_CREDIT_ENDDATE'].max() # active credit to be expired soon
+
+    res  = tmp.add(-res, fill_value=np.nan).astype(np.float32)
+    data.loc[:, 'mean_diff_prev_remaining_credit']  = data.SK_ID_CURR.map(res)
+
+    del res, tmp
+    gc.collect()
 
     # mean of ratio of two differences
     diff1 = bureau.DAYS_ENDDATE_FACT - bureau.DAYS_CREDIT
@@ -237,10 +273,15 @@ def bureau_features(bureau, data):
     data.loc[:, 'num_nulls_enddate'] = data.SK_ID_CURR.map(num_nulls_enddate).fillna(-99).astype(np.int8)
 
     # ratio of debt to total credit sum
-    ratio_debt_total                = (bureau.AMT_CREDIT_SUM_DEBT / (bureau.AMT_CREDIT_SUM + 1))
-    ratio_debt_total                = ratio_debt_total.groupby(bureau.SK_ID_CURR).mean()
-    data.loc[:, 'ratio_debt_total'] = data.SK_ID_CURR.map(ratio_debt_total).astype(np.float32)
+    res         = bureau.loc[(bureau.CREDIT_ACTIVE == 0) & (bureau.AMT_CREDIT_SUM_DEBT > 0), ['SK_ID_CURR', 'CREDIT_ACTIVE', 'AMT_CREDIT_SUM_DEBT', 'AMT_CREDIT_SUM']]
+    total_sum   = res.groupby(res.SK_ID_CURR)['AMT_CREDIT_SUM'].sum().astype(np.float32)
+    total_debt  = res.groupby(res.SK_ID_CURR)['AMT_CREDIT_SUM_DEBT'].sum().astype(np.float32)
+    tmp         = total_debt.div(total_sum, fill_value=np.nan).replace([np.inf, -np.inf], np.nan).astype(np.float32)
 
+    data.loc[:, 'ratio_debt_total'] = data.SK_ID_CURR.map(tmp)
+
+    del res, tmp, total_sum, total_debt
+    gc.collect()
 
     # merge back with original dataframe
     data.loc[:, 'num_prev_loans']           = data.SK_ID_CURR.map(prev_num_loans).fillna(0).astype(np.float32).values
@@ -800,6 +841,31 @@ def prev_app_installments(prev_app, installments, data):
     del res, tmp
     gc.collect()
 
+    # ratio of maximum payment paid for an active loan w.r.t to income
+    tmp = prev_app.loc[prev_app.NAME_CONTRACT_STATUS == 0, ['SK_ID_CURR', 'SK_ID_PREV']]
+    tmp = tmp.merge(installments.loc[:, ['SK_ID_CURR', 'SK_ID_PREV', 'AMT_PAYMENT']], how='left')
+
+    tmp = tmp.set_index('SK_ID_CURR')['AMT_PAYMENT']
+    ss  = data.set_index('SK_ID_CURR')['AMT_INCOME_TOTAL']
+    res = tmp.div(ss, fill_value=np.nan)
+    res = res.reset_index()
+    res = res.groupby('SK_ID_CURR')[0].max()
+
+    data.loc[:, 'ratio_payment_income'] = data.SK_ID_CURR.map(res)
+
+    del tmp, res, ss
+    gc.collect()
+
+    # difference between when installments were supposed to be paid and when were they actually paid
+    tmp = prev_app.loc[prev_app.NAME_CONTRACT_STATUS == 0, ['SK_ID_CURR', 'SK_ID_PREV']]
+    tmp = tmp.merge(installments.loc[:, ['SK_ID_CURR', 'SK_ID_PREV', 'DAYS_INSTALMENT', 'DAYS_ENTRY_PAYMENT']], how='left')
+
+    res = (tmp.DAYS_INSTALMENT - tmp.DAYS_ENTRY_PAYMENT)
+    res = res.groupby(tmp.SK_ID_CURR).sum()
+    data.loc[:, 'delay_in_installment_payments'] = data.SK_ID_CURR.map(res).replace([np.inf, -np.inf], np.nan)
+
+    del tmp, res
+    gc.collect()
 
     return data, list(set(data.columns) - set(COLS))
 
@@ -881,5 +947,141 @@ def loan_stacking(bureau, prev_app, credit_bal, data):
     del res
     gc.collect()
 
+    # number of times previous application was rejected.
+    res = prev_app.loc[(prev_app.NAME_CONTRACT_STATUS == 2), :].groupby('SK_ID_CURR').size()
+    data.loc[:, 'num_applications_refused'] = data.SK_ID_CURR.map(res).fillna(-1).astype(np.int8)
+
+    del res
+    gc.collect()
+
+    # merge information about ownership of car or house
+    data.loc[:, 'own_house_car'] = pd.factorize(data.FLAG_OWN_CAR.astype(np.str) + '_' + data.FLAG_OWN_REALTY.astype(np.str))[0]
+    data.loc[:, 'own_house_car'] = data.own_house_car.astype(np.int8)
+    
+    # merge information about income and education status
+    data.loc[:, 'income_education'] = pd.factorize(data.NAME_INCOME_TYPE.astype(np.str) + '_' + data.NAME_EDUCATION_TYPE.astype(np.str))[0]
+    data.loc[:, 'income_education'] = data.income_education.astype(np.int8)
+
+    # merge housing and family type
+    data.loc[:, 'family_housing'] = pd.factorize(data.NAME_FAMILY_STATUS.astype(np.str) + '_' + data.NAME_HOUSING_TYPE.astype(np.str))[0]
+    data.loc[:, 'family_housing'] = data.family_housing.astype(np.int8)
+
+    # merge income, education, family and housing
+    data.loc[:, 'income_edu_fam_housing'] = pd.factorize(data.NAME_INCOME_TYPE.astype(np.str) + '_' +\
+                                                         data.NAME_EDUCATION_TYPE.astype(np.str) + '_' +\
+                                                         data.NAME_FAMILY_STATUS.astype(np.str) + '_' +\
+                                                         data.NAME_HOUSING_TYPE.astype(np.str)
+                                                        )[0]
+    data.loc[:, 'income_edu_fam_housing'] = data.income_edu_fam_housing.astype(np.int8)
+
+    # string representation of documents provided by client for current application
+    data.loc[:, 'documents_provided'] = data.loc[:, [f'FLAG_DOCUMENT_{i}' for i in range(2, 22)]]\
+                                            .apply(lambda x: ''.join(x.astype(np.str)), axis=1)
+    data.loc[:, 'documents_provided'] = pd.factorize(data.documents_provided)[0]
+    data.loc[:, 'documents_provided'] = data.documents_provided.astype(np.int8)
+
+    # string representation of phone, email information
+    data.loc[:, 'phone_email_info']   = data.loc[:, ['FLAG_MOBIL',
+                                                     'FLAG_EMP_PHONE',
+                                                     'FLAG_WORK_PHONE',
+                                                     'FLAG_CONT_MOBILE',
+                                                     'FLAG_PHONE',
+                                                     'FLAG_EMAIL'
+                                                    ]].apply(lambda x: ''.join(x.astype(np.str)), axis=1)
+    data.loc[:, 'phone_email_info']   = pd.factorize(data.phone_email_info)[0]
+    data.loc[:, 'phone_email_info']   = data.phone_email_info.astype(np.int8)
+
+    # check how many details are not presented correctly
+    data.loc[:, 'num_times_region_false_info'] = data.loc[:, ['REG_REGION_NOT_LIVE_REGION',
+                                                              'REG_REGION_NOT_WORK_REGION',
+                                                              'LIVE_REGION_NOT_WORK_REGION',
+                                                              'REG_CITY_NOT_LIVE_CITY',
+                                                              'REG_CITY_NOT_WORK_CITY',
+                                                              'LIVE_CITY_NOT_WORK_CITY'
+                                                             ]].apply(np.sum, axis=1)
+    data.loc[:, 'num_times_region_false_info'] = data.num_times_region_false_info.astype(np.int8)
+
+    # feature group statistics on some feature groups
+    data.loc[:, 'fg_avg'] = data.loc[:, [
+                                        'APARTMENTS_AVG',
+                                        'BASEMENTAREA_AVG',
+                                        'YEARS_BEGINEXPLUATATION_AVG',
+                                        'YEARS_BUILD_AVG',
+                                        'COMMONAREA_AVG',
+                                        'ELEVATORS_AVG',
+                                        'ENTRANCES_AVG',
+                                        'FLOORSMAX_AVG',
+                                        'FLOORSMIN_AVG',
+                                        'LANDAREA_AVG',
+                                        'LIVINGAPARTMENTS_AVG',
+                                        'LIVINGAREA_AVG',
+                                        'NONLIVINGAPARTMENTS_AVG',
+                                        'NONLIVINGAREA_AVG'
+                                    ]].apply(np.mean, axis=1)
+
+    data.loc[:, 'fg_mode'] = data.loc[:, [
+                                        'APARTMENTS_MODE',
+                                        'BASEMENTAREA_MODE',
+                                        'YEARS_BEGINEXPLUATATION_MODE',
+                                        'YEARS_BUILD_MODE',
+                                        'COMMONAREA_MODE',
+                                        'ELEVATORS_MODE',
+                                        'ENTRANCES_MODE',
+                                        'FLOORSMAX_MODE',
+                                        'FLOORSMIN_MODE',
+                                        'LANDAREA_MODE',
+                                        'LIVINGAPARTMENTS_MODE',
+                                        'LIVINGAREA_MODE',
+                                        'NONLIVINGAPARTMENTS_MODE',
+                                        'NONLIVINGAREA_MODE',
+                                        'TOTALAREA_MODE'
+                                    ]].apply(np.mean, axis=1)
+
 
     return data, list(set(data.columns) - set(COLS))
+
+def feature_groups(data):
+    COLS = data.columns.tolist()
+
+    # number of observations of surroundings exceeding day limit
+    data.loc[:, 'surroundings_past_by_mean'] = data.loc[:, ['OBS_30_CNT_SOCIAL_CIRCLE',
+                                                            'DEF_30_CNT_SOCIAL_CIRCLE',
+                                                            'OBS_60_CNT_SOCIAL_CIRCLE',
+                                                            'DEF_60_CNT_SOCIAL_CIRCLE']].apply(np.mean, axis=1)
+
+
+    # mean information about client surroundings
+    data.loc[:, 'fg_medi']  = data.loc[:, ['APARTMENTS_MEDI',
+                                            'BASEMENTAREA_MEDI',
+                                            'YEARS_BEGINEXPLUATATION_MEDI',
+                                            'YEARS_BUILD_MEDI',
+                                            'COMMONAREA_MEDI',
+                                            'ELEVATORS_MEDI',
+                                            'ENTRANCES_MEDI',
+                                            'FLOORSMAX_MEDI',
+                                            'FLOORSMIN_MEDI',
+                                            'LANDAREA_MEDI',
+                                            'LIVINGAPARTMENTS_MEDI',
+                                            'LIVINGAREA_MEDI',
+                                            'NONLIVINGAPARTMENTS_MEDI',
+                                            'NONLIVINGAREA_MEDI'
+                                        ]].apply(np.mean, axis=1)
+
+    # summarize information regarding queries to Home Credit about client.
+    data.loc[:, 'fg_enquiries'] = data.loc[:, ['AMT_REQ_CREDIT_BUREAU_HOUR',
+                                               'AMT_REQ_CREDIT_BUREAU_DAY',
+                                               'AMT_REQ_CREDIT_BUREAU_WEEK',
+                                               'AMT_REQ_CREDIT_BUREAU_MON',
+                                               'AMT_REQ_CREDIT_BUREAU_QRT',
+                                               'AMT_REQ_CREDIT_BUREAU_YEAR'
+                                               ]].apply(np.mean, axis=1)
+
+    # merge hour, weekday at which process was started
+    data.loc[:, 'hour_weekday_curr_app']  = data.HOUR_APPR_PROCESS_START.astype(np.str) + '_' +\
+                                            data.WEEKDAY_APPR_PROCESS_START.astype(np.str)
+
+    data.loc[:, 'hour_weekday_curr_app']  = pd.factorize(data.hour_weekday_curr_app)[0]
+    data.loc[:, 'hour_weekday_curr_app']  = data.hour_weekday_curr_app.astype(np.int8)
+
+
+    return data, list(set(data.columns) - set(COLS)) 

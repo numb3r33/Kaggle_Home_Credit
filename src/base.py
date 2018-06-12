@@ -60,7 +60,7 @@ class BaseModel:
     def fill_infrequent_values(self, data):
         # replace feature values with frequency less 20 with -100
         for f in data.select_dtypes(include=['int8']).columns:
-            if data[f].nunique() > 10:        
+            if data[f].nunique() > 2:        
                 low_freq_values = data[f].value_counts()
                 low_freq_values = low_freq_values[low_freq_values < 20].index.values
                 
@@ -124,14 +124,22 @@ class BaseModel:
             feature_imp   = m.feature_importance()
 
             feat_df = pd.DataFrame({'features': feature_names,
-                                'imp': feature_imp
-                                }).sort_values(by='imp', ascending=False)
+                                    'imp': feature_imp
+                                   }).sort_values(by='imp', ascending=False)
         
         else:
             m = lgb.train(params,
                           ltrain,
                           num_boost_round
                         )
+
+            # feature importances
+            feature_names = m.feature_name()
+            feature_imp   = m.feature_importance()
+
+            feat_df = pd.DataFrame({'features': feature_names,
+                                    'imp': feature_imp
+                                   }).sort_values(by='imp', ascending=False)
 
         print('Took: {} seconds to generate...'.format(time.clock() - t0))
         
