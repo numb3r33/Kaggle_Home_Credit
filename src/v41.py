@@ -121,13 +121,13 @@ PARAMS = {
     'seed': SEED
 }
 
-MODEL_FILENAME = 'v39_model.txt'
+MODEL_FILENAME = 'v40_model.txt'
 SAMPLE_SIZE = .15
 FREQ_ENCODING_COLS = ['ORGANIZATION_TYPE', 'ORGANIZATION_OCCUPATION']
 
 
 
-class Modelv39(BaseModel):
+class Modelv40(BaseModel):
     def __init__(self, **params):
         self.params  = params
         self.n_train = 307511 # TODO: find a to remove this constant
@@ -140,7 +140,7 @@ class Modelv39(BaseModel):
         
         df       = pd.concat(dfs)
         df.index = np.arange(len(df))
-        df       = super(Modelv39, self).reduce_mem_usage(df)
+        df       = super(Modelv40, self).reduce_mem_usage(df)
 
         return df	
 
@@ -212,7 +212,7 @@ class Modelv39(BaseModel):
 
     def create_folds(self, fold_name, seed):
         data     = pd.read_pickle(os.path.join(basepath, self.params['output_path'] + self.params['run_name'] + 'application_train.pkl'))
-        dtr, dte = super(Modelv39, self).create_fold(data, seed)
+        dtr, dte = super(Modelv40, self).create_fold(data, seed)
 
         dtr.index = np.arange(len(dtr))
         dte.index = np.arange(len(dte))
@@ -491,7 +491,7 @@ class Modelv39(BaseModel):
             data.index          = np.arange(len(data))
 
             # fill infrequent values
-            data = super(Modelv39, self).fill_infrequent_values(data)
+            data = super(Modelv40, self).fill_infrequent_values(data)
 
             data.iloc[:ntrain].loc[:, FEATURE_NAMES].to_pickle(os.path.join(basepath, self.params['output_path'] + self.params['run_name'] + f'loan_stacking_{fold_name}train.pkl'))
             data.iloc[ntrain:].loc[:, FEATURE_NAMES].to_pickle(os.path.join(basepath, self.params['output_path'] + self.params['run_name'] + f'loan_stacking_{fold_name}test.pkl'))
@@ -510,7 +510,7 @@ class Modelv39(BaseModel):
             data.index          = np.arange(len(data))
 
             # fill infrequent values
-            data = super(Modelv39, self).fill_infrequent_values(data)
+            data = super(Modelv40, self).fill_infrequent_values(data)
 
             data.iloc[:ntrain].loc[:, FEATURE_NAMES].to_pickle(os.path.join(basepath, self.params['output_path'] + self.params['run_name'] + f'feature_groups_{fold_name}train.pkl'))
             data.iloc[ntrain:].loc[:, FEATURE_NAMES].to_pickle(os.path.join(basepath, self.params['output_path'] + self.params['run_name'] + f'feature_groups_{fold_name}test.pkl'))
@@ -518,6 +518,33 @@ class Modelv39(BaseModel):
 
         else:
             print('Already generated features based on feature groups.')
+
+        if not os.path.exists(os.path.join(basepath, self.params['output_path'] + self.params['run_name'] + f'prev_app_pos_cash_{fold_name}train.pkl')):
+            print('Generating features based on previous application and pos cash ....')
+
+            prev_app   = pd.read_pickle(os.path.join(basepath, self.params['output_path'] + self.params['run_name'] + 'previous_application.pkl')) 
+            pos_cash = pd.read_pickle(os.path.join(basepath, self.params['output_path'] + self.params['run_name'] + 'POS_CASH_balance.pkl')) 
+
+            for col in prev_app.select_dtypes(include=['category']).columns:
+                prev_app.loc[:, col] = prev_app.loc[:, col].cat.codes
+
+            for col in pos_cash.select_dtypes(include=['category']).columns:
+                pos_cash.loc[:, col] = pos_cash.loc[:, col].cat.codes
+            
+            t0                  = time.clock()
+            data, FEATURE_NAMES = prev_app_pos(prev_app, pos_cash, data)
+            data.index          = np.arange(len(data))
+
+            # fill infrequent values
+            data = super(Modelv40, self).fill_infrequent_values(data)
+
+            data.iloc[:ntrain].loc[:, FEATURE_NAMES].to_pickle(os.path.join(basepath, self.params['output_path'] + self.params['run_name'] + f'prev_app_pos_cash_{fold_name}train.pkl'))
+            data.iloc[ntrain:].loc[:, FEATURE_NAMES].to_pickle(os.path.join(basepath, self.params['output_path'] + self.params['run_name'] + f'prev_app_pos_cash_{fold_name}test.pkl'))
+            print('\nTook: {} seconds'.format(time.clock() - t0))
+
+        else:
+            print('Already generated features based on previous application and pos cash.')
+        
 
     # This method currently takes care of loading engineered features from disk
     # and merging train and test to report back a dataframe (data) which can be used by
@@ -534,7 +561,8 @@ class Modelv39(BaseModel):
                      f'prev_app_credit_{fold_name}',				 
                      f'prev_app_installments_{fold_name}',
                      f'loan_stacking_{fold_name}',
-                     f'feature_groups_{fold_name}'
+                     f'feature_groups_{fold_name}',
+                     f'prev_app_pos_cash_{fold_name}'
                     ]
 
         train  = []
@@ -566,7 +594,7 @@ class Modelv39(BaseModel):
         if is_eval:
             yte = test.loc[:, 'TARGET']
         
-        return super(Modelv39, self).train_lgb(X, y, Xte, yte, **params)
+        return super(Modelv40, self).train_lgb(X, y, Xte, yte, **params)
 
     # This method just takes in a model and test dataset and returns predictions 
     # prints out AUC on the test dataset as well in the process.
@@ -577,7 +605,7 @@ class Modelv39(BaseModel):
         if is_eval:
             yte = test.loc[:, 'TARGET']
 
-        return super(Modelv39, self).evaluate_lgb(Xte, yte, model)
+        return super(Modelv40, self).evaluate_lgb(Xte, yte, model)
 
     # This method just takes a stratified sample of the training dataset and returns
     # back the sample.
@@ -586,7 +614,7 @@ class Modelv39(BaseModel):
         """
         Generates a stratified sample of provided sample_size
         """
-        return super(Modelv39, self).get_sample(train, sample_size)
+        return super(Modelv40, self).get_sample(train, sample_size)
 
     # This method would perform feature engineering on merged datasets.
     def fe(self, train, test):
@@ -644,7 +672,7 @@ if __name__ == '__main__':
             'run_name': run_name
         }
 
-        m  = Modelv39(**params)
+        m  = Modelv40(**params)
         m.preprocess()
 
     elif args.c:
@@ -662,7 +690,7 @@ if __name__ == '__main__':
             'run_name': run_name
         }  
 
-        m = Modelv39(**params)
+        m = Modelv40(**params)
         m.create_folds(fold_name, seed)
 
     elif args.features:
@@ -680,7 +708,7 @@ if __name__ == '__main__':
             'run_name': run_name
         }
 
-        m = Modelv39(**params)
+        m = Modelv40(**params)
         m.prepare_features(fold_name)
 
     elif args.t:
@@ -699,7 +727,7 @@ if __name__ == '__main__':
             'run_name': run_name
         }
 
-        m              = Modelv39(**params)
+        m              = Modelv40(**params)
         train, test    = m.merge_datasets(fold_name)
         train, test    = m.fe(train, test)
 
@@ -730,7 +758,7 @@ if __name__ == '__main__':
             # TODO: also can we make SIZE_MULT (1.2) a parameter as well. 
 
             # use best iteration found through different folds
-            PARAMS['num_boost_round'] = 1300
+            PARAMS['num_boost_round'] = 1163
             PARAMS['num_boost_round'] = int(1.2 * PARAMS['num_boost_round'])
             PARAMS['learning_rate']   /= 1.2
 
@@ -754,7 +782,7 @@ if __name__ == '__main__':
             print('Generating Submissions ...')
 
             # found through validation scores across multiple folds ( 3 in our current case )
-            HOLDOUT_SCORE = (0.7923 + 0.7917 + 0.7879) / 3
+            HOLDOUT_SCORE = (0.7924 + 0.7925 + 0.7880) / 3
 
             sub_identifier = "%s-%s-%.5f" % (datetime.now().strftime('%Y%m%d-%H%M'), MODEL_FILENAME, HOLDOUT_SCORE)
 

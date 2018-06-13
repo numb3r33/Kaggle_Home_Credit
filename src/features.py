@@ -279,8 +279,18 @@ def bureau_features(bureau, data):
     tmp         = total_debt.div(total_sum, fill_value=np.nan).replace([np.inf, -np.inf], np.nan).astype(np.float32)
 
     data.loc[:, 'ratio_debt_total'] = data.SK_ID_CURR.map(tmp)
-
+    
     del res, tmp, total_sum, total_debt
+    gc.collect()
+
+    # ratio of total debt to income
+    res = bureau.loc[(bureau.CREDIT_ACTIVE == 0) & (bureau.AMT_CREDIT_SUM_DEBT > 0), ['SK_ID_CURR', 'CREDIT_ACTIVE', 'AMT_CREDIT_SUM_DEBT', 'AMT_CREDIT_SUM']]
+    total_debt = res.groupby(res.SK_ID_CURR)['AMT_CREDIT_SUM_DEBT'].sum().astype(np.float32)
+
+    res = data.SK_ID_CURR.map(total_debt)
+    data.loc[:, 'total_debt_to_income'] = (res / data.AMT_INCOME_TOTAL).replace([np.inf, -np.inf], np.nan)
+
+    del res, total_debt
     gc.collect()
 
     # merge back with original dataframe
@@ -867,6 +877,17 @@ def prev_app_installments(prev_app, installments, data):
     del tmp, res
     gc.collect()
 
+    # difference between  installment amount and actual paid amount
+    tmp = prev_app.loc[prev_app.NAME_CONTRACT_STATUS == 0, ['SK_ID_CURR', 'SK_ID_PREV']]
+    tmp = tmp.merge(installments.loc[:, ['SK_ID_CURR', 'SK_ID_PREV', 'AMT_INSTALMENT', 'AMT_PAYMENT']], how='left')
+
+    res = (tmp.AMT_INSTALMENT - tmp.AMT_PAYMENT)
+    res = res.groupby(tmp.SK_ID_CURR).sum()
+    data.loc[:, 'delay_in_installment_amount'] = data.SK_ID_CURR.map(res).replace([np.inf, -np.inf], np.nan)
+
+    del tmp, res
+    gc.collect()
+
     return data, list(set(data.columns) - set(COLS))
 
 def loan_stacking(bureau, prev_app, credit_bal, data):
@@ -1083,5 +1104,20 @@ def feature_groups(data):
     data.loc[:, 'hour_weekday_curr_app']  = pd.factorize(data.hour_weekday_curr_app)[0]
     data.loc[:, 'hour_weekday_curr_app']  = data.hour_weekday_curr_app.astype(np.int8)
 
+
+    return data, list(set(data.columns) - set(COLS)) 
+
+def prev_app_pos(prev_app, pos_cash, data):
+    COLS = data.columns.tolist()
+
+    # all active cash loans
+    tmp = prev_app.loc[prev_app.NAME_CONTRACT_STATUS == 0, ['SK_ID_CURR', 'SK_ID_PREV']]
+    tmp = tmp.merge(pos_cash.loc[:, ['SK_ID_CURR', 'SK_ID_PREV', 'CNT_INSTALMENT_FUTURE']], how='left')
+
+    res = tmp.groupby('SK_ID_CURR')['CNT_INSTALMENT_FUTURE'].sum()
+    data.loc[:, 'total_remaining_cash_credit_term'] = data.SK_ID_CURR.map(res)
+
+    del res, tmp
+    gc.collect()
 
     return data, list(set(data.columns) - set(COLS)) 
