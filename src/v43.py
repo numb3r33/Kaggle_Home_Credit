@@ -116,9 +116,9 @@ PARAMS = {
     'num_boost_round': 5000,
     'boosting_type': 'gbdt',
     'objective': 'binary',
-    'learning_rate': .015,
+    'learning_rate': .02,
     'metric': 'auc',
-    'min_data_in_leaf': 100,
+    'min_data_in_leaf': 75,
     'num_leaves': 60,
     'feature_fraction': .3,
     'feature_fraction_seed': SEED,
@@ -770,7 +770,7 @@ if __name__ == '__main__':
             # TODO: also can we make SIZE_MULT (1.2) a parameter as well. 
 
             # use best iteration found through different folds
-            PARAMS['num_boost_round'] = 1700
+            PARAMS['num_boost_round'] = 1375
             PARAMS['num_boost_round'] = int(1.2 * PARAMS['num_boost_round'])
             PARAMS['learning_rate']   /= 1.2
 
@@ -794,7 +794,7 @@ if __name__ == '__main__':
             print('Generating Submissions ...')
 
             # found through validation scores across multiple folds ( 3 in our current case )
-            HOLDOUT_SCORE = (0.7928 + 0.7921 + 0.7880) / 3
+            HOLDOUT_SCORE = (0.7922 + 0.7926 + 0.7882) / 3
 
             sub_identifier = "%s-%s-%.5f" % (datetime.now().strftime('%Y%m%d-%H%M'), MODEL_FILENAME, HOLDOUT_SCORE)
 

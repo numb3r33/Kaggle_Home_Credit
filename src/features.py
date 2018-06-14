@@ -158,7 +158,6 @@ def current_application_features(data):
     
     return data, FEATURE_NAMES
 
-
 def bureau_features(bureau, data):
     COLS = data.columns.tolist()
 
@@ -201,14 +200,19 @@ def bureau_features(bureau, data):
     latest_credit = bureau.groupby('SK_ID_CURR')['DAYS_CREDIT'].max()
     data.loc[:, 'latest_credit'] = data.SK_ID_CURR.map(latest_credit).astype(np.float32)
 
-    # duration of active credits taken from Home Credit
-    res      = bureau.loc[(bureau.CREDIT_ACTIVE == 0) & (bureau.DAYS_CREDIT_ENDDATE > 0), ['SK_ID_CURR', 'DAYS_CREDIT', 'DAYS_CREDIT_ENDDATE']]
-    duration = (res.DAYS_CREDIT_ENDDATE - res.DAYS_CREDIT).astype(np.float32)
+    # credit duration
+    res = bureau.loc[(bureau.CREDIT_ACTIVE == 0) &\
+           (bureau.DAYS_CREDIT > -400) &\
+           (bureau.DAYS_CREDIT_ENDDATE > 0)
+           , ['SK_ID_CURR', 'SK_ID_BUREAU', 
+              'DAYS_CREDIT', 'DAYS_CREDIT_ENDDATE', 
+              'AMT_CREDIT_SUM']]
 
-    duration = duration.groupby(res.SK_ID_CURR).mean()
-    data.loc[:, 'credit_duration'] = data.SK_ID_CURR.map(duration)
+    res.loc[:, 'duration'] = (res.DAYS_CREDIT_ENDDATE - res.DAYS_CREDIT).astype(np.int32)
+    res = res.groupby('SK_ID_CURR')['duration'].min()
+    data.loc[:, 'credit_duration'] = data.SK_ID_CURR.map(res)
 
-    del res, duration
+    del res
     gc.collect()
 
     # duration of close credits taken from Home Credit
@@ -312,19 +316,12 @@ def bureau_features(bureau, data):
 
     gc.collect()
 
-    # interaction between credit amount and duration of credit
-    credit_times_duration = (bureau.AMT_CREDIT_SUM.fillna(0) *\
-                            (bureau.DAYS_CREDIT_ENDDATE - bureau.DAYS_CREDIT).map(np.abs))\
-                            .replace([np.inf, -np.inf], np.nan)
-    credit_times_duration = credit_times_duration.groupby(bureau.SK_ID_CURR).mean()
-    data.loc[:, 'credit_times_duration'] = data.SK_ID_CURR.map(credit_times_duration).astype(np.float32)
-
-    del credit_times_duration
-    gc.collect()
-
-    # number of loans reported to Home Credit for a person in last 2 years    
-    res = bureau.DAYS_CREDIT.map(lambda x: x > -(365 * 2)).astype(np.uint8)
-    res = res.groupby(bureau.SK_ID_CURR).sum()
+    # number of active loans reported to Home Credit for a person in last n number of days
+    res = bureau.loc[(bureau.CREDIT_ACTIVE == 0) &\
+           (bureau.DAYS_CREDIT > -400)
+           , ['SK_ID_CURR', 'SK_ID_BUREAU', 'DAYS_CREDIT']]\
+            .groupby('SK_ID_CURR').size()
+    
     data.loc[:, 'recent_bureau_loans'] = data.SK_ID_CURR.map(res).fillna(-1).astype(np.int8)
 
     del res
