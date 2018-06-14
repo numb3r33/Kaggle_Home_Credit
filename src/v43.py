@@ -114,30 +114,32 @@ COLS_TO_REMOVE = ['SK_ID_CURR',
 
 PARAMS = {
     'num_boost_round': 5000,
+    'boosting_type': 'gbdt',
     'objective': 'binary',
-    'learning_rate': .02,
+    'learning_rate': .015,
     'metric': 'auc',
     'min_data_in_leaf': 100,
     'num_leaves': 60,
     'feature_fraction': .3,
     'feature_fraction_seed': SEED,
-    'bagging_fraction': .9,
+    'bagging_fraction': .8,
     'bagging_fraction_seed': SEED,
     'lambda_l1': 5,
     'lambda_l2': 20,
-    'min_child_weight': 2,
+    'min_child_weight': .1,
+    'scale_pos_weight': 1.1,
     'nthread': 4,
     'verbose': -1,
     'seed': SEED
 }
 
-MODEL_FILENAME = 'v41_model.txt'
-SAMPLE_SIZE = .15
+MODEL_FILENAME = 'v43_model.txt'
+SAMPLE_SIZE = .3
 FREQ_ENCODING_COLS = ['ORGANIZATION_TYPE', 'ORGANIZATION_OCCUPATION']
 
 
 
-class Modelv41(BaseModel):
+class Modelv43(BaseModel):
     def __init__(self, **params):
         self.params  = params
         self.n_train = 307511 # TODO: find a to remove this constant
@@ -150,7 +152,7 @@ class Modelv41(BaseModel):
         
         df       = pd.concat(dfs)
         df.index = np.arange(len(df))
-        df       = super(Modelv41, self).reduce_mem_usage(df)
+        df       = super(Modelv43, self).reduce_mem_usage(df)
 
         return df	
 
@@ -222,7 +224,7 @@ class Modelv41(BaseModel):
 
     def create_folds(self, fold_name, seed):
         data     = pd.read_pickle(os.path.join(basepath, self.params['output_path'] + self.params['run_name'] + 'application_train.pkl'))
-        dtr, dte = super(Modelv41, self).create_fold(data, seed)
+        dtr, dte = super(Modelv43, self).create_fold(data, seed)
 
         dtr.index = np.arange(len(dtr))
         dte.index = np.arange(len(dte))
@@ -501,7 +503,7 @@ class Modelv41(BaseModel):
             data.index          = np.arange(len(data))
 
             # fill infrequent values
-            data = super(Modelv41, self).fill_infrequent_values(data)
+            data = super(Modelv43, self).fill_infrequent_values(data)
 
             data.iloc[:ntrain].loc[:, FEATURE_NAMES].to_pickle(os.path.join(basepath, self.params['output_path'] + self.params['run_name'] + f'loan_stacking_{fold_name}train.pkl'))
             data.iloc[ntrain:].loc[:, FEATURE_NAMES].to_pickle(os.path.join(basepath, self.params['output_path'] + self.params['run_name'] + f'loan_stacking_{fold_name}test.pkl'))
@@ -520,7 +522,7 @@ class Modelv41(BaseModel):
             data.index          = np.arange(len(data))
 
             # fill infrequent values
-            data = super(Modelv41, self).fill_infrequent_values(data)
+            data = super(Modelv43, self).fill_infrequent_values(data)
 
             data.iloc[:ntrain].loc[:, FEATURE_NAMES].to_pickle(os.path.join(basepath, self.params['output_path'] + self.params['run_name'] + f'feature_groups_{fold_name}train.pkl'))
             data.iloc[ntrain:].loc[:, FEATURE_NAMES].to_pickle(os.path.join(basepath, self.params['output_path'] + self.params['run_name'] + f'feature_groups_{fold_name}test.pkl'))
@@ -546,7 +548,7 @@ class Modelv41(BaseModel):
             data.index          = np.arange(len(data))
 
             # fill infrequent values
-            data = super(Modelv41, self).fill_infrequent_values(data)
+            data = super(Modelv43, self).fill_infrequent_values(data)
 
             data.iloc[:ntrain].loc[:, FEATURE_NAMES].to_pickle(os.path.join(basepath, self.params['output_path'] + self.params['run_name'] + f'prev_app_pos_cash_{fold_name}train.pkl'))
             data.iloc[ntrain:].loc[:, FEATURE_NAMES].to_pickle(os.path.join(basepath, self.params['output_path'] + self.params['run_name'] + f'prev_app_pos_cash_{fold_name}test.pkl'))
@@ -604,7 +606,7 @@ class Modelv41(BaseModel):
         if is_eval:
             yte = test.loc[:, 'TARGET']
         
-        return super(Modelv41, self).train_lgb(X, y, Xte, yte, **params)
+        return super(Modelv43, self).train_lgb(X, y, Xte, yte, **params)
 
     # This method just takes in a model and test dataset and returns predictions 
     # prints out AUC on the test dataset as well in the process.
@@ -615,7 +617,7 @@ class Modelv41(BaseModel):
         if is_eval:
             yte = test.loc[:, 'TARGET']
 
-        return super(Modelv41, self).evaluate_lgb(Xte, yte, model)
+        return super(Modelv43, self).evaluate_lgb(Xte, yte, model)
 
     # This method just takes a stratified sample of the training dataset and returns
     # back the sample.
@@ -624,7 +626,7 @@ class Modelv41(BaseModel):
         """
         Generates a stratified sample of provided sample_size
         """
-        return super(Modelv41, self).get_sample(train, sample_size)
+        return super(Modelv43, self).get_sample(train, sample_size)
 
     # This method would perform feature engineering on merged datasets.
     def fe(self, train, test):
@@ -682,7 +684,7 @@ if __name__ == '__main__':
             'run_name': run_name
         }
 
-        m  = Modelv41(**params)
+        m  = Modelv43(**params)
         m.preprocess()
 
     elif args.c:
@@ -700,7 +702,7 @@ if __name__ == '__main__':
             'run_name': run_name
         }  
 
-        m = Modelv41(**params)
+        m = Modelv43(**params)
         m.create_folds(fold_name, seed)
 
     elif args.features:
@@ -718,7 +720,7 @@ if __name__ == '__main__':
             'run_name': run_name
         }
 
-        m = Modelv41(**params)
+        m = Modelv43(**params)
         m.prepare_features(fold_name)
 
     elif args.t:
@@ -737,7 +739,7 @@ if __name__ == '__main__':
             'run_name': run_name
         }
 
-        m              = Modelv41(**params)
+        m              = Modelv43(**params)
         train, test    = m.merge_datasets(fold_name)
         train, test    = m.fe(train, test)
 
@@ -768,7 +770,7 @@ if __name__ == '__main__':
             # TODO: also can we make SIZE_MULT (1.2) a parameter as well. 
 
             # use best iteration found through different folds
-            PARAMS['num_boost_round'] = 1200
+            PARAMS['num_boost_round'] = 1700
             PARAMS['num_boost_round'] = int(1.2 * PARAMS['num_boost_round'])
             PARAMS['learning_rate']   /= 1.2
 
@@ -792,7 +794,7 @@ if __name__ == '__main__':
             print('Generating Submissions ...')
 
             # found through validation scores across multiple folds ( 3 in our current case )
-            HOLDOUT_SCORE = (0.7924 + 0.7917 + 0.7882) / 3
+            HOLDOUT_SCORE = (0.7928 + 0.7921 + 0.7880) / 3
 
             sub_identifier = "%s-%s-%.5f" % (datetime.now().strftime('%Y%m%d-%H%M'), MODEL_FILENAME, HOLDOUT_SCORE)
 

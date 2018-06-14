@@ -355,20 +355,13 @@ def feature_interactions(data):
 def bureau_and_balance(bureau, bureau_bal, data):
     COLS = data.columns.tolist()
 
-    prev_bal = bureau.loc[:, ['SK_ID_CURR', 'SK_ID_BUREAU']].merge(bureau_bal,
-                                                   on='SK_ID_BUREAU',
-                                                   how='left'
-                                                  )
+    res = bureau_bal.loc[bureau_bal.STATUS.isin([0, 1, 2, 3, 4, 5])].groupby('SK_ID_BUREAU').size().reset_index()
+    res = res.merge(bureau.loc[:, ['SK_ID_CURR', 'SK_ID_BUREAU']]).drop('SK_ID_BUREAU', axis=1)
+    res = res.groupby('SK_ID_CURR')[0].sum()
+    data.loc[:, 'mean_status'] = data.SK_ID_CURR.map(res)
 
-    mean_status                  = prev_bal.groupby('SK_ID_BUREAU')['STATUS'].mean().fillna(-1)
-    bureau.loc[:, 'mean_status'] = bureau.SK_ID_BUREAU.map(mean_status).astype(np.float32).values
-
-    mean_status                = bureau.groupby('SK_ID_CURR')['mean_status'].mean()
-    data.loc[:, 'mean_status'] = data.SK_ID_CURR.map(mean_status).values
-
-    # previous loans history
-    credit_history                = prev_bal.groupby('SK_ID_CURR').size().fillna(0)
-    data.loc[:, 'credit_history'] = data.SK_ID_CURR.map(credit_history).astype(np.float32).values 
+    del res
+    gc.collect()
 
     return data, list(set(data.columns) - set(COLS))
 
@@ -625,11 +618,27 @@ def credit_card_features(credit_bal, data):
 
     data.loc[:, 'diff_bal_credit'] = data.SK_ID_CURR.map(diff_bal_credit)
 
-    # mean of ratio of balance and credit limit
-    ratio_bal_credit = credit_bal.AMT_BALANCE / credit_bal.AMT_CREDIT_LIMIT_ACTUAL
-    ratio_bal_credit = ratio_bal_credit.groupby(credit_bal.SK_ID_CURR).mean()
+    # max balance to credit limit ratio
+    mask = (credit_bal.MONTHS_BALANCE >= -6) & (credit_bal.MONTHS_BALANCE <= -1) & (credit_bal.NAME_CONTRACT_STATUS == 0)
+    
+    tmp  = credit_bal.loc[mask, ['SK_ID_CURR', 'SK_ID_PREV', 'AMT_BALANCE', 'AMT_CREDIT_LIMIT_ACTUAL']]
+    res  = (tmp.AMT_BALANCE / tmp.AMT_CREDIT_LIMIT_ACTUAL).replace([np.inf, -np.inf], np.nan)
+    res  = res.groupby(tmp.SK_ID_CURR).max()
+    data.loc[:, 'max_bal_credit_limit'] = data.SK_ID_CURR.map(res)
+    
+    del res, tmp
+    gc.collect()
 
-    data.loc[:, 'ratio_bal_credit'] = data.SK_ID_CURR.map(ratio_bal_credit)
+    # difference of balance with total amount paid in a particular month
+    mask = (credit_bal.MONTHS_BALANCE >= -12) & (credit_bal.MONTHS_BALANCE <= -1) & (credit_bal.NAME_CONTRACT_STATUS == 0)
+    
+    tmp  = credit_bal.loc[mask, ['SK_ID_CURR', 'SK_ID_PREV', 'AMT_BALANCE', 'AMT_PAYMENT_TOTAL_CURRENT']]
+    res  = (tmp.AMT_BALANCE - tmp.AMT_PAYMENT_TOTAL_CURRENT)
+    res  = res.groupby(tmp.SK_ID_CURR).mean()
+    data.loc[:, 'mean_bal_payment_diff'] = data.SK_ID_CURR.map(res)
+    
+    del res, tmp
+    gc.collect()
 
     # aggregate features for MONTHS_BALANCE
     data, mb_cols = get_agg_features(data, credit_bal, 'MONTHS_BALANCE', 'SK_ID_CURR')
@@ -645,10 +654,27 @@ def credit_card_features(credit_bal, data):
     diff_min_installment_balance                = diff_min_installment_balance.groupby(credit_bal.SK_ID_CURR).mean().map(lambda x: np.log(x + 1))
     data.loc[:, 'diff_min_installment_balance'] = data.SK_ID_CURR.map(diff_min_installment_balance).astype(np.float32)
 
+    # difference between oldest credit limit and recent credit limit
+    rmax = credit_bal.loc[credit_bal.NAME_CONTRACT_STATUS == 0, :].groupby(['SK_ID_CURR', 'SK_ID_PREV'], as_index=False)['MONTHS_BALANCE'].max()
+    rmin = credit_bal.loc[credit_bal.NAME_CONTRACT_STATUS == 0, :].groupby(['SK_ID_CURR', 'SK_ID_PREV'], as_index=False)['MONTHS_BALANCE'].min()
+    rmax = credit_bal.loc[credit_bal.NAME_CONTRACT_STATUS == 0, ['SK_ID_CURR', 'SK_ID_PREV', 'MONTHS_BALANCE', 'AMT_CREDIT_LIMIT_ACTUAL']]\
+                .merge(rmax)
+    rmin = credit_bal.loc[credit_bal.NAME_CONTRACT_STATUS == 0, ['SK_ID_CURR', 'SK_ID_PREV', 'MONTHS_BALANCE', 'AMT_CREDIT_LIMIT_ACTUAL']]\
+                .merge(rmin)
+        
+    rmax = rmax.set_index(['SK_ID_CURR', 'SK_ID_PREV'])['AMT_CREDIT_LIMIT_ACTUAL']
+    rmin = rmin.set_index(['SK_ID_CURR', 'SK_ID_PREV'])['AMT_CREDIT_LIMIT_ACTUAL']
 
+    res  = (rmin - rmax).reset_index().drop('SK_ID_PREV', axis=1)
+    res  = res.groupby('SK_ID_CURR')['AMT_CREDIT_LIMIT_ACTUAL'].mean()
+    data.loc[:, 'range_min_max_credit_limit'] = data.SK_ID_CURR.map(res)
+
+    del rmax, rmin, res
+    gc.collect()
+    
     del mean_amt_balance, mean_credit_limit
     del total_paid_installments, mean_total_drawings, diff_bal_credit
-    del ratio_bal_credit, ratio_min_installment_balance, diff_min_installment_balance
+    del ratio_min_installment_balance, diff_min_installment_balance
     gc.collect()
 
     return data, list(set(data.columns) - set(COLS))
@@ -661,7 +687,10 @@ def get_installment_features(installments, data):
     data.loc[:, 'mean_installment'] = data.SK_ID_CURR.map(mean_installment)
 
     # mean payment against installment
-    data, ap_cols               = get_agg_features(data, installments, 'AMT_PAYMENT', 'SK_ID_CURR')
+    data, ap_cols   = get_agg_features(data, installments, 'AMT_PAYMENT', 'SK_ID_CURR')
+
+    # logarithm of the features
+    data  = log_features(data, ap_cols)
 
     # difference between actual day of installment versus when it was supposed to be paid
 
@@ -886,6 +915,33 @@ def prev_app_installments(prev_app, installments, data):
     data.loc[:, 'delay_in_installment_amount'] = data.SK_ID_CURR.map(res).replace([np.inf, -np.inf], np.nan)
 
     del tmp, res
+    gc.collect()
+
+    # deviation in delay in time to amount
+    tmp = prev_app.loc[prev_app.NAME_CONTRACT_STATUS == 0, ['SK_ID_CURR', 'SK_ID_PREV']]
+    tmp = tmp.merge(installments, how='left')
+
+    t   = (tmp.DAYS_INSTALMENT - tmp.DAYS_ENTRY_PAYMENT)
+    p   = (tmp.AMT_INSTALMENT - tmp.AMT_PAYMENT)
+    res = (t - p).groupby(tmp.SK_ID_CURR).std()
+
+    data.loc[:, 'ratio_time_amount_diff'] = data.SK_ID_CURR.map(res)
+
+    del res, tmp, t, p
+    gc.collect()
+
+    # number of times repayment amount was less than installment loan
+    tmp = prev_app.loc[prev_app.NAME_CONTRACT_STATUS == 0, ['SK_ID_CURR', 'SK_ID_PREV']]
+    tmp = tmp.merge(installments.loc[:, ['SK_ID_CURR', 'SK_ID_PREV', 'AMT_INSTALMENT', 'AMT_PAYMENT']], how='left')
+
+    tmp.loc[:, 'diff_inst_payment'] = (tmp.AMT_INSTALMENT - tmp.AMT_PAYMENT).astype(np.float32)
+    tmp.loc[:, 'neg_inst_payment']  = (tmp.diff_inst_payment > 0).astype(np.int8)
+
+    res = tmp.groupby(['SK_ID_CURR', 'SK_ID_PREV'], as_index=False)['neg_inst_payment'].sum().drop('SK_ID_PREV', axis=1)
+    res = res.groupby('SK_ID_CURR')['neg_inst_payment'].sum()
+    data.loc[:, 'num_times_le_repayment'] = data.SK_ID_CURR.map(res).fillna(-1).astype(np.int8)
+
+    del res, tmp
     gc.collect()
 
     return data, list(set(data.columns) - set(COLS))
