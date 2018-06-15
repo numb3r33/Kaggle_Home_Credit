@@ -58,7 +58,13 @@ def current_application_features(data):
     data.loc[:, 'EXT_3_2'] = data.loc[:, 'EXT_SOURCE_3'] / data.loc[:, 'EXT_SOURCE_2']
     data.loc[:, 'EXT_2_1'] = data.loc[:, 'EXT_SOURCE_2'] / data.loc[:, 'EXT_SOURCE_1']
     FEATURE_NAMES += ['EXT_3_1', 'EXT_3_2', 'EXT_2_1']
-    
+
+    # number of null values in external scores
+    data.loc[:, 'NUM_NULLS_EXT_SCORES'] = data.EXT_SOURCE_1.isnull().astype(np.int8) +\
+                                          data.EXT_SOURCE_2.isnull().astype(np.int8) +\
+                                          data.EXT_SOURCE_3.isnull().astype(np.int8)
+    FEATURE_NAMES += ['NUM_NULLS_EXT_SCORES']
+
     # relationship between amount credit and total income
     data.loc[:, 'ratio_credit_income'] = data.loc[:, 'AMT_CREDIT'] / data.loc[:, 'AMT_INCOME_TOTAL']
 
@@ -93,7 +99,7 @@ def current_application_features(data):
     FEATURE_NAMES += ['ratio_goods_credit', 'mult_goods_credit']
 
     # feature interaction between annuity and amount credit
-    data.loc[:, 'ratio_annuity_credit'] = data.loc[:, 'AMT_CREDIT'] / data.loc[:, 'AMT_ANNUITY'].astype(np.float32)
+    data.loc[:, 'ratio_annuity_credit'] = data.loc[:, 'AMT_CREDIT'] / data.loc[:, 'AMT_ANNUITY'].replace([np.inf, -np.inf], np.nan).astype(np.float32)
 
     # feature interaction between amount credit and age
     data.loc[:, 'ratio_credit_age'] = (data.AMT_CREDIT / (-data.DAYS_BIRTH / 365)).astype(np.float32)
@@ -552,8 +558,38 @@ def prev_app_features(prev_app, data):
     del res
     gc.collect()
 
-    return data, list(set(data.columns) - set(COLS))
+    # min of credit to goods price over different credits reported by Bureau
+    res = prev_app.loc[(prev_app.NAME_CONTRACT_STATUS == 0) &\
+             ((prev_app.DAYS_TERMINATION > 0) | (prev_app.DAYS_TERMINATION.isnull()))
+             , ['SK_ID_CURR',
+               'SK_ID_PREV',
+               'AMT_CREDIT',
+               'AMT_GOODS_PRICE'
+              ]]
 
+    tmp = (res.AMT_CREDIT / res.AMT_GOODS_PRICE).replace([np.inf, -np.inf], np.nan)
+    tmp = tmp.groupby(res.SK_ID_CURR).min()
+    data.loc[:, 'min_credit_goods_price_bureau'] = data.SK_ID_CURR.map(tmp)
+
+    del res, tmp
+    gc.collect()
+
+    # number of high interest loans and loans with no information taken 
+    # by person in question reported by Bureau
+
+    res = prev_app.loc[(prev_app.NAME_CONTRACT_STATUS == 0) &\
+                   ((prev_app.DAYS_TERMINATION > 0) | (prev_app.DAYS_TERMINATION.isnull())) &\
+                   (prev_app.NAME_YIELD_GROUP.isin([0, 1]) )
+             , ['SK_ID_CURR'
+              ]]
+    res = res.groupby(['SK_ID_CURR']).size()
+    data.loc[:, 'num_high_int_no_info_loans'] = data.SK_ID_CURR.map(res).fillna(-1).astype(np.int8)
+
+    del res
+    gc.collect()
+
+
+    return data, list(set(data.columns) - set(COLS))
 
 def pos_cash_features(pos_cash, data):
     COLS = data.columns.tolist()
