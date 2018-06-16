@@ -54,10 +54,8 @@ def current_application_features(data):
     FEATURE_NAMES += ['MEAN_EXTERNAL_SCORE']
     
     # feature interactions
-    data.loc[:, 'EXT_3_1'] = data.loc[:, 'EXT_SOURCE_3'] / data.loc[:, 'EXT_SOURCE_1']
-    data.loc[:, 'EXT_3_2'] = data.loc[:, 'EXT_SOURCE_3'] / data.loc[:, 'EXT_SOURCE_2']
-    data.loc[:, 'EXT_2_1'] = data.loc[:, 'EXT_SOURCE_2'] / data.loc[:, 'EXT_SOURCE_1']
-    FEATURE_NAMES += ['EXT_3_1', 'EXT_3_2', 'EXT_2_1']
+    data.loc[:, 'EXT_3_2'] = data.loc[:, 'EXT_SOURCE_3'] * data.loc[:, 'EXT_SOURCE_2']
+    FEATURE_NAMES += ['EXT_3_2']
 
     # number of null values in external scores
     data.loc[:, 'NUM_NULLS_EXT_SCORES'] = data.EXT_SOURCE_1.isnull().astype(np.int8) +\
