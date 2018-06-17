@@ -55,7 +55,28 @@ def current_application_features(data):
     
     # feature interactions
     data.loc[:, 'EXT_3_2'] = data.loc[:, 'EXT_SOURCE_3'] * data.loc[:, 'EXT_SOURCE_2']
-    FEATURE_NAMES += ['EXT_3_2']
+    data.loc[:, 'EXT_1_3'] = data.loc[:, 'EXT_SOURCE_1'] * data.loc[:, 'EXT_SOURCE_3']
+    data.loc[:, 'EXT_1_2'] = data.loc[:, 'EXT_SOURCE_1'] * data.loc[:, 'EXT_SOURCE_2']
+
+    data.loc[:, 'EXT_1_2_sum'] = data.loc[:, 'EXT_SOURCE_1'] + data.loc[:, 'EXT_SOURCE_2']
+    data.loc[:, 'EXT_1_3_sum'] = data.loc[:, 'EXT_SOURCE_1'] + data.loc[:, 'EXT_SOURCE_3']
+    data.loc[:, 'EXT_2_3_sum'] = data.loc[:, 'EXT_SOURCE_2'] + data.loc[:, 'EXT_SOURCE_3']
+    
+    data.loc[:, 'EXT_1_2_div'] = data.loc[:, 'EXT_SOURCE_1'] / data.loc[:, 'EXT_SOURCE_2']
+    data.loc[:, 'EXT_1_3_div'] = data.loc[:, 'EXT_SOURCE_1'] / data.loc[:, 'EXT_SOURCE_3']
+    data.loc[:, 'EXT_2_3_div'] = data.loc[:, 'EXT_SOURCE_2'] / data.loc[:, 'EXT_SOURCE_3']
+    
+
+    FEATURE_NAMES += ['EXT_3_2', 
+                      'EXT_1_3', 
+                      'EXT_1_2',
+                      'EXT_1_2_sum', 
+                      'EXT_1_3_sum', 
+                      'EXT_2_3_sum',
+                      'EXT_1_2_div', 
+                      'EXT_1_3_div', 
+                      'EXT_2_3_div'
+                     ]
 
     # number of null values in external scores
     data.loc[:, 'NUM_NULLS_EXT_SCORES'] = data.EXT_SOURCE_1.isnull().astype(np.int8) +\
@@ -586,6 +607,31 @@ def prev_app_features(prev_app, data):
     del res
     gc.collect()
 
+    #  difference between payment rate between approved and refused applications
+    r1 = (prev_app.loc[prev_app.NAME_CONTRACT_STATUS == 0, 'AMT_ANNUITY'] /\
+          prev_app.loc[prev_app.NAME_CONTRACT_STATUS == 0, 'AMT_CREDIT']).replace([np.inf, -np.inf], np.nan)
+    r1 = r1.reset_index()
+    r1.loc[:, 'index'] = prev_app.loc[prev_app.NAME_CONTRACT_STATUS == 0, 'SK_ID_CURR'].values
+    r1 = r1.rename(columns={'index': 'SK_ID_CURR',
+                            0: 'payment_rate'
+                        })
+    r1 = r1.groupby('SK_ID_CURR')['payment_rate'].max()
+
+    r2 = (prev_app.loc[prev_app.NAME_CONTRACT_STATUS == 2, 'AMT_ANNUITY'] /\
+          prev_app.loc[prev_app.NAME_CONTRACT_STATUS == 2, 'AMT_CREDIT']).replace([np.inf, -np.inf], np.nan)
+
+    r2 = r2.reset_index()
+    r2.loc[:, 'index'] = prev_app.loc[prev_app.NAME_CONTRACT_STATUS == 2, 'SK_ID_CURR'].values
+    r2 = r2.rename(columns={'index': 'SK_ID_CURR',
+                            0: 'payment_rate'
+                        })
+    r2 = r2.groupby('SK_ID_CURR')['payment_rate'].min()
+
+    res = r1.subtract(r2, fill_value=np.nan)
+    data.loc[:, 'max_approved_min_refused_payment_rate'] = data.SK_ID_CURR.map(res)
+
+    del r1, r2, res
+    gc.collect()
 
     return data, list(set(data.columns) - set(COLS))
 
@@ -878,6 +924,18 @@ def prev_app_credit_card(prev_app, credit_bal, data):
     res = res.groupby('SK_ID_CURR')['AMT_BALANCE'].apply(lambda x: np.sum(x == 0))
     data.loc[:, 'num_times_balance_zero'] = data.SK_ID_CURR.map(res).astype(np.float32)
 
+    # number of times money was withdrawn from ATM in last 6 months
+    res = prev_app.loc[prev_app.NAME_CONTRACT_STATUS == 0, ['SK_ID_CURR',
+                                                         'SK_ID_PREV']]\
+        .merge(credit_bal.loc[credit_bal.MONTHS_BALANCE > -6, 
+                              ['SK_ID_CURR', 'SK_ID_PREV', 'CNT_DRAWINGS_ATM_CURRENT'
+                              ]])
+    res  = res.groupby('SK_ID_CURR')['CNT_DRAWINGS_ATM_CURRENT'].sum()
+    data.loc[:, 'num_times_atm_withdrawn']  = data.SK_ID_CURR.map(res).fillna(-1).astype(np.int8)
+
+    del res
+    gc.collect()
+
     return data, list(set(data.columns) - set(COLS))
 
 def prev_app_installments(prev_app, installments, data):
@@ -933,6 +991,20 @@ def prev_app_installments(prev_app, installments, data):
     res = (tmp.DAYS_INSTALMENT - tmp.DAYS_ENTRY_PAYMENT)
     res = res.groupby(tmp.SK_ID_CURR).sum()
     data.loc[:, 'delay_in_installment_payments'] = data.SK_ID_CURR.map(res).replace([np.inf, -np.inf], np.nan)
+
+    del tmp, res
+    gc.collect()
+
+    # difference between when installments were supposed to be paid and when were they actually paid
+    # for applications that are still in progress.
+    tmp = prev_app.loc[(prev_app.NAME_CONTRACT_STATUS == 0) &\
+                       (prev_app.DAYS_TERMINATION > 0)
+                       , ['SK_ID_CURR', 'SK_ID_PREV']]
+    tmp = tmp.merge(installments.loc[:, ['SK_ID_CURR', 'SK_ID_PREV', 'DAYS_INSTALMENT', 'DAYS_ENTRY_PAYMENT']], how='left')
+
+    res = (tmp.DAYS_INSTALMENT - tmp.DAYS_ENTRY_PAYMENT)
+    res = res.groupby(tmp.SK_ID_CURR).sum()
+    data.loc[:, 'max_delay_in_installment_payments_running'] = data.SK_ID_CURR.map(res).replace([np.inf, -np.inf], np.nan)
 
     del tmp, res
     gc.collect()

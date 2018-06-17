@@ -4,6 +4,8 @@ import numpy as np
 import lightgbm as lgb
 
 from sklearn.model_selection import train_test_split
+from sklearn.model_selection import cross_val_predict
+from sklearn.model_selection import StratifiedKFold
 from sklearn.metrics import roc_auc_score
 from sklearn.externals import joblib
 
@@ -109,7 +111,7 @@ class BaseModel:
             valid_sets  = [ltrain, lval]
             valid_names = ['train', 'val']
 
-            early_stopping_rounds = 100
+            early_stopping_rounds = 200
 
             m = lgb.train(params, 
                         ltrain, 
@@ -160,3 +162,8 @@ class BaseModel:
             yhat = model.predict(Xte)
         
         return yhat, score
+
+    def oof_preds(self, X, y, model):
+        skf = StratifiedKFold(n_splits=3)
+        return cross_val_predict(model, X, y, cv=skf, method='predict_proba')
+        
