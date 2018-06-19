@@ -78,6 +78,9 @@ def current_application_features(data):
                       'EXT_2_3_div'
                      ]
 
+    # treat 365243 in days employed as null value
+    data.loc[:, 'DAYS_EMPLOYED'] = data.DAYS_EMPLOYED.replace({365243: np.nan})
+
     # number of null values in external scores
     data.loc[:, 'NUM_NULLS_EXT_SCORES'] = data.EXT_SOURCE_1.isnull().astype(np.int8) +\
                                           data.EXT_SOURCE_2.isnull().astype(np.int8) +\
@@ -102,6 +105,24 @@ def current_application_features(data):
     data.loc[:, 'age_plus_employed']  = data.loc[:, 'DAYS_BIRTH'] + data.loc[:, 'DAYS_EMPLOYED']
     data.loc[:, 'ratio_age_employed'] = ((data.DAYS_EMPLOYED) / (data.DAYS_BIRTH)).astype(np.float32)
     FEATURE_NAMES += ['age_plus_employed', 'ratio_age_employed']
+
+    # convert age, days employed into categorical variable and then concatenate those two.
+    age_categorical = pd.cut(-data.DAYS_BIRTH / 365, bins=20)
+    emp_categorical = pd.cut((-data.DAYS_EMPLOYED / 365), bins=15)
+
+    data.loc[:, 'age_emp_categorical'] = pd.factorize(age_categorical.astype(np.str) + '_' + emp_categorical.astype(np.str))[0]
+    FEATURE_NAMES += ['age_emp_categorical']
+    
+    # interaction between occupation type and age
+    data.loc[:, 'age_occupation'] = pd.factorize(age_categorical.astype(np.str) + '_' + data.OCCUPATION_TYPE.astype(np.str))[0]
+    FEATURE_NAMES += ['age_occupation']
+
+    # interaction between occupation type and employment
+    data.loc[:, 'emp_occupation'] = pd.factorize(emp_categorical.astype(np.str) + '_' + data.OCCUPATION_TYPE.astype(np.str))[0]
+    FEATURE_NAMES += ['emp_occupation']
+    
+    del age_categorical, emp_categorical
+    gc.collect()
 
     # ratio of value of goods against which loan is given to total income
     data.loc[:, 'ratio_goods_income'] = data.loc[:, 'AMT_GOODS_PRICE'] / data.loc[:, 'AMT_INCOME_TOTAL']
@@ -351,6 +372,20 @@ def bureau_features(bureau, data):
 
     del res
     gc.collect()
+
+    # comparison of oldest loan with employment status
+    oldest_credit = bureau.loc[bureau.DAYS_ENDDATE_FACT.isnull(), :].groupby('SK_ID_CURR')['DAYS_CREDIT'].min()
+    oldest_credit = data.SK_ID_CURR.map(oldest_credit)
+    data.loc[:, 'oldest_loan_employment'] = oldest_credit - data.DAYS_EMPLOYED.replace({365243: np.nan})
+
+    # comparison of oldest loan with age status
+    oldest_credit = bureau.loc[bureau.DAYS_ENDDATE_FACT.isnull(), :].groupby('SK_ID_CURR')['DAYS_CREDIT'].min()
+    oldest_credit = data.SK_ID_CURR.map(oldest_credit)
+    data.loc[:, 'oldest_loan_age'] = oldest_credit - data.DAYS_BIRTH
+
+    del oldest_credit
+    gc.collect()
+
 
     return data, list(set(data.columns) - set(COLS))
 
