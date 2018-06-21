@@ -248,21 +248,22 @@ def bureau_features(bureau, data):
 
     # credit duration
     res = bureau.loc[(bureau.CREDIT_ACTIVE == 0) &\
-           (bureau.DAYS_CREDIT > -400) &\
-           (bureau.DAYS_CREDIT_ENDDATE > 0)
-           , ['SK_ID_CURR', 'SK_ID_BUREAU', 
-              'DAYS_CREDIT', 'DAYS_CREDIT_ENDDATE', 
-              'AMT_CREDIT_SUM']]
+                     (bureau.DAYS_CREDIT_ENDDATE > 0)
+                    , ['SK_ID_CURR', 'SK_ID_BUREAU', 
+                        'DAYS_CREDIT', 'DAYS_CREDIT_ENDDATE', 
+                        'AMT_CREDIT_SUM']]
 
     res.loc[:, 'duration'] = (res.DAYS_CREDIT_ENDDATE - res.DAYS_CREDIT).astype(np.int32)
-    res = res.groupby('SK_ID_CURR')['duration'].min()
+    res = res.groupby('SK_ID_CURR')['duration'].mean()
     data.loc[:, 'credit_duration'] = data.SK_ID_CURR.map(res)
 
     del res
     gc.collect()
 
     # duration of close credits taken from Home Credit
-    res  = bureau.loc[(bureau.CREDIT_ACTIVE == 2) & (bureau.DAYS_CREDIT_ENDDATE < 0), ['SK_ID_CURR', 'DAYS_CREDIT', 'DAYS_ENDDATE_FACT']]
+    res  = bureau.loc[(bureau.CREDIT_ACTIVE == 2) &\
+                      (bureau.DAYS_CREDIT_ENDDATE < 0)
+                      , ['SK_ID_CURR', 'DAYS_CREDIT', 'DAYS_ENDDATE_FACT']]
     d2   = -(res.DAYS_CREDIT - res.DAYS_ENDDATE_FACT).astype(np.float32)
 
     d2   = d2.groupby(res.SK_ID_CURR).mean().astype(np.float32)
@@ -272,7 +273,8 @@ def bureau_features(bureau, data):
     gc.collect()
     
     # ratio of active to closed loan duration
-    data.loc[:, 'div_deltas'] = (data.credit_duration / data.closed_credit_duration).replace([np.inf, -np.inf], np.nan).astype(np.float32)
+    data.loc[:, 'div_deltas']  = (data.credit_duration / data.closed_credit_duration).replace([np.inf, -np.inf], np.nan).astype(np.float32)
+    data.loc[:, 'diff_deltas'] = data.credit_duration - data.closed_credit_duration
 
     # deviation in difference between remaining duration of credit and how long before we applied for this credit
     diff_prev_curr_credit = bureau.DAYS_CREDIT_ENDDATE.fillna(0) - bureau.DAYS_CREDIT.fillna(0)
@@ -305,6 +307,12 @@ def bureau_features(bureau, data):
 
     tmp   = bureau.loc[bureau.CREDIT_ACTIVE == 0, ['SK_ID_CURR', 'DAYS_CREDIT_ENDDATE']]
     tmp   = bureau.groupby('SK_ID_CURR')['DAYS_CREDIT_ENDDATE'].max() # active credit to be expired soon
+
+    # number of credits ended in last 365 days reported by Bureau
+    res = bureau.loc[(bureau.CREDIT_ACTIVE == 2) &\
+           (bureau.DAYS_ENDDATE_FACT > -365)
+          ].groupby('SK_ID_CURR').size()
+    data.loc[:, 'credits_ended_bureau'] = data.SK_ID_CURR.map(res).fillna(-1).astype(np.int8)
 
     res  = tmp.add(-res, fill_value=np.nan).astype(np.float32)
     data.loc[:, 'mean_diff_prev_remaining_credit']  = data.SK_ID_CURR.map(res)
@@ -783,7 +791,14 @@ def credit_card_features(credit_bal, data):
 
     del rmax, rmin, res
     gc.collect()
-    
+
+    # sum of total days past due on any previous credits in last 9 months
+    res = credit_bal.loc[(credit_bal.MONTHS_BALANCE > -9), :].groupby('SK_ID_CURR')['SK_DPD'].sum()
+    data.loc[:, 'total_days_past_due_prev_credits'] = data.SK_ID_CURR.map(res)
+
+    del res
+    gc.collect()
+
     del mean_amt_balance, mean_credit_limit
     del total_paid_installments, mean_total_drawings, diff_bal_credit
     del ratio_min_installment_balance, diff_min_installment_balance

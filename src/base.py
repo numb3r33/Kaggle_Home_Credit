@@ -2,6 +2,7 @@ import pandas as pd
 import numpy as np
 
 import lightgbm as lgb
+import xgboost as xgb
 
 from sklearn.model_selection import train_test_split
 from sklearn.model_selection import cross_val_predict
@@ -10,8 +11,6 @@ from sklearn.metrics import roc_auc_score
 from sklearn.externals import joblib
 
 import time
-
-SEED = 1231
 
 #TODO: Think what all methods can be moved to base class which would be beneficial for
 # other experiments.
@@ -81,17 +80,20 @@ class BaseModel:
                                             )
         return dtr, dte
 
-    def get_sample(self, train, sample_size):
+    def get_sample(self, train, sample_size, seed):
         _, train, _, _ = train_test_split(train, 
                                           train.TARGET, 
                                           stratify=train.TARGET,
                                           test_size=sample_size,
-                                          random_state=SEED
+                                          random_state=seed
                                           )
         return train
 
     def train_lgb(self, X, y, Xte, yte, **params):
-        np.random.seed(SEED)
+        print()
+        print('Train LightGBM classifier ...')
+        print('*' * 80)
+        print()
 
         num_boost_round = params['num_boost_round']
         del params['num_boost_round']
@@ -162,6 +164,77 @@ class BaseModel:
             yhat = model.predict(Xte)
         
         return yhat, score
+
+    def train_xgb(self, X, y, Xte, yte, **params):
+        print()
+        print('Training XGBOOST Classifier ....')
+        print('*' * 80)
+
+        num_boost_round = params['num_boost_round']
+        del params['num_boost_round']
+
+        dtrain = xgb.DMatrix(X, y, 
+                            feature_names=X.columns.tolist())
+        
+        m       = None
+        feat_df = None
+
+        # start time counter
+        t0 = time.clock()
+
+        if len(yte):
+            dval = xgb.DMatrix(Xte, yte, feature_names=X.columns.tolist())
+            
+            watchlist   = [(dtrain, 'train'), (dval, 'val')]
+
+            early_stopping_rounds = 200
+            m = xgb.train(params, 
+                          dtrain, 
+                          num_boost_round, 
+                          evals=watchlist, 
+                          early_stopping_rounds=early_stopping_rounds, 
+                          verbose_eval=100)
+            
+            # feature importances
+            feature_imp   = m.get_score()
+            feat_df       = pd.DataFrame({'features': list(feature_imp.keys()),
+                                    'imp': list(feature_imp.values())
+                                   }).sort_values(by='imp', ascending=False)
+        
+        else:
+            m = xgb.train(params,
+                          dtrain,
+                          num_boost_round
+                        )
+
+            # feature importances
+            feature_imp   = m.get_score()
+
+            feat_df = pd.DataFrame({'features': list(feature_imp.keys()),
+                                    'imp': list(feature_imp.values())
+                                   }).sort_values(by='imp', ascending=False)
+        
+        print('Took: {} seconds to generate...'.format(time.clock() - t0))
+        
+        return m, feat_df
+
+    def evaluate_xgb(self, Xte, yte, model):
+        yhat  = None
+        score = None
+
+        dval  = xgb.DMatrix(Xte, feature_names=Xte.columns.tolist())
+ 
+        if len(yte):
+            print('Best Iteration: {}'.format(model.best_iteration))
+            yhat  = model.predict(dval, ntree_limit=model.best_iteration)
+            
+            score = roc_auc_score(yte, yhat)
+            print('AUC: {}'.format(score))
+        else:
+            yhat = model.predict(dval)
+        
+        return yhat, score
+
 
     def oof_preds(self, X, y, model):
         skf = StratifiedKFold(n_splits=3)
