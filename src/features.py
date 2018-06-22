@@ -139,7 +139,7 @@ def current_application_features(data):
     FEATURE_NAMES += ['ratio_goods_credit', 'mult_goods_credit']
 
     # feature interaction between annuity and amount credit
-    data.loc[:, 'ratio_annuity_credit'] = data.loc[:, 'AMT_CREDIT'] / data.loc[:, 'AMT_ANNUITY'].replace([np.inf, -np.inf], np.nan).astype(np.float32)
+    data.loc[:, 'ratio_annuity_credit'] = data.loc[:, 'AMT_ANNUITY'] / data.loc[:, 'AMT_CREDIT'].replace([np.inf, -np.inf], np.nan).astype(np.float32)
 
     # feature interaction between amount credit and age
     data.loc[:, 'ratio_credit_age'] = (data.AMT_CREDIT / (-data.DAYS_BIRTH / 365)).astype(np.float32)
@@ -336,7 +336,9 @@ def bureau_features(bureau, data):
     total_debt  = res.groupby(res.SK_ID_CURR)['AMT_CREDIT_SUM_DEBT'].sum().astype(np.float32)
     tmp         = total_debt.div(total_sum, fill_value=np.nan).replace([np.inf, -np.inf], np.nan).astype(np.float32)
 
-    data.loc[:, 'ratio_debt_total'] = data.SK_ID_CURR.map(tmp)
+    data.loc[:, 'total_debt']            = data.SK_ID_CURR.map(total_debt)
+    data.loc[:, 'total_credit_sum']      = data.SK_ID_CURR.map(total_sum)
+    data.loc[:, 'ratio_debt_credit_sum'] = data.SK_ID_CURR.map(tmp)
     
     del res, tmp, total_sum, total_debt
     gc.collect()
@@ -792,9 +794,10 @@ def credit_card_features(credit_bal, data):
     del rmax, rmin, res
     gc.collect()
 
-    # sum of total days past due on any previous credits in last 9 months
-    res = credit_bal.loc[(credit_bal.MONTHS_BALANCE > -9), :].groupby('SK_ID_CURR')['SK_DPD'].sum()
-    data.loc[:, 'total_days_past_due_prev_credits'] = data.SK_ID_CURR.map(res)
+    # total number of drawings
+    res = credit_bal.loc[credit_bal.MONTHS_BALANCE > -9, :]
+    res = res.groupby('SK_ID_CURR').CNT_DRAWINGS_CURRENT.sum()
+    data.loc[:, 'total_atm_transactions'] = data.SK_ID_CURR.map(res)
 
     del res
     gc.collect()
@@ -986,6 +989,23 @@ def prev_app_credit_card(prev_app, credit_bal, data):
     del res
     gc.collect()
 
+    # remaining amount left to pay on credit of previous active applications
+    res = credit_bal.loc[credit_bal.NAME_CONTRACT_STATUS == 0, :]\
+                    .groupby(['SK_ID_CURR', 'SK_ID_PREV'], as_index=False)['AMT_PAYMENT_TOTAL_CURRENT'].sum()
+
+    ss  = prev_app.loc[(prev_app.NAME_CONTRACT_STATUS == 0) &\
+                       ((prev_app.DAYS_TERMINATION > 0) | (prev_app.DAYS_TERMINATION.isnull()))
+                       , ['SK_ID_CURR', 'SK_ID_PREV', 'AMT_CREDIT']]
+
+    zz  = ss.merge(res, how='left')
+    zz.loc[:, 'remaining_amount'] = zz.AMT_CREDIT - zz.AMT_PAYMENT_TOTAL_CURRENT
+    pp = zz.groupby('SK_ID_CURR')['remaining_amount'].sum()
+    data.loc[:, 'remaining_amount'] = data.SK_ID_CURR.map(pp)
+    data.loc[:, 'diff_rem_amount_income'] = data.remaining_amount - data.AMT_INCOME_TOTAL
+
+    del res, ss, zz, pp
+    gc.collect()
+    
     return data, list(set(data.columns) - set(COLS))
 
 def prev_app_installments(prev_app, installments, data):
