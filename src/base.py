@@ -71,6 +71,18 @@ class BaseModel:
         
         return data
 
+    def prepare_ohe(self, data, cols, drop_col=False):
+        for col in cols:
+            ohe_df = pd.get_dummies(data[col].astype(np.str), dummy_na=True, prefix=f'{col}_')
+
+            # drop the column passed
+            if drop_col:
+                data.drop(col, axis=1, inplace=True)
+            
+            data = pd.concat((data, ohe_df), axis=1)
+
+        return data
+
     def create_fold(self, data, seed):
         dtr, dte, _, _ = train_test_split(data, 
                                             data.TARGET, 

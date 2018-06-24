@@ -1340,13 +1340,41 @@ def prev_app_pos(prev_app, pos_cash, data):
     COLS = data.columns.tolist()
 
     # all active cash loans
-    tmp = prev_app.loc[prev_app.NAME_CONTRACT_STATUS == 0, ['SK_ID_CURR', 'SK_ID_PREV']]
-    tmp = tmp.merge(pos_cash.loc[:, ['SK_ID_CURR', 'SK_ID_PREV', 'CNT_INSTALMENT_FUTURE']], how='left')
+    tmp = prev_app.loc[(prev_app.NAME_CONTRACT_STATUS == 0) &\
+                       ((prev_app.DAYS_TERMINATION.isnull()) | (prev_app.DAYS_TERMINATION > 0))
+                    , ['SK_ID_CURR', 'SK_ID_PREV']]
+    res = pos_cash.groupby(['SK_ID_CURR', 'SK_ID_PREV'], as_index=False)['MONTHS_BALANCE'].max()
+    res = res.merge(pos_cash, how='left')
+    res = res.groupby('SK_ID_CURR')['CNT_INSTALMENT_FUTURE'].sum()
 
-    res = tmp.groupby('SK_ID_CURR')['CNT_INSTALMENT_FUTURE'].sum()
     data.loc[:, 'total_remaining_cash_credit_term'] = data.SK_ID_CURR.map(res)
 
     del res, tmp
     gc.collect()
 
-    return data, list(set(data.columns) - set(COLS)) 
+    return data, list(set(data.columns) - set(COLS))
+
+def prev_app_pos_credit(prev_app, pos_cash, credit_bal, data):
+    COLS = data.columns.tolist()
+
+    # total days past due
+    p  = prev_app.loc[prev_app.NAME_CONTRACT_STATUS == 0, ['SK_ID_PREV', 'SK_ID_CURR']]
+    c  = p.merge(pos_cash, how='left')
+    cc = p.merge(credit_bal, how='left')
+
+    c_dpd  = c.groupby(['SK_ID_CURR'])['SK_DPD'].sum()
+    cc_dpd = cc.groupby(['SK_ID_CURR'])['SK_DPD'].sum() 
+
+    res = c_dpd.add(cc_dpd, fill_value=np.nan)
+    res = data.SK_ID_CURR.map(res)
+
+    counts = res.value_counts()
+    res    = res.replace(counts[counts < 200].index, -100)
+
+    data.loc[:, 'total_cash_credit_dpd'] = res.fillna(-1).astype(np.int8)
+    
+    del p, c, cc, c_dpd, cc_dpd, res, counts
+    gc.collect()
+
+    return data, list(set(data.columns) - set(COLS))
+    
