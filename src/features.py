@@ -210,9 +210,6 @@ def bureau_features(bureau, data):
     # number of previous loans for a particular user
     prev_num_loans = bureau.groupby('SK_ID_CURR').size()
 
-    # number of previous active credits
-    num_active_credits = bureau.groupby('SK_ID_CURR')['CREDIT_ACTIVE'].sum()
-
     # aggregation features
     data, dc_cols  = get_agg_features(data, bureau, 'DAYS_CREDIT', 'SK_ID_CURR')
     data, acm_cols = get_agg_features(data, bureau, 'AMT_CREDIT_SUM', 'SK_ID_CURR')
@@ -355,7 +352,6 @@ def bureau_features(bureau, data):
 
     # merge back with original dataframe
     data.loc[:, 'num_prev_loans']           = data.SK_ID_CURR.map(prev_num_loans).fillna(0).astype(np.float32).values
-    data.loc[:, 'num_prev_active_credits']  = data.SK_ID_CURR.map(num_active_credits).fillna(0).astype(np.float32).values
     data.loc[:, 'mean_days_credit_end']     = data.SK_ID_CURR.map(mean_days_credit_end).fillna(0).values
     data.loc[:, 'mean_max_amt_overdue']     = data.SK_ID_CURR.map(mean_max_amt_overdue).fillna(0).values
     data.loc[:, 'mean_total_amt_overdue']   = data.SK_ID_CURR.map(mean_total_amt_overdue).values
@@ -365,7 +361,7 @@ def bureau_features(bureau, data):
     data.loc[:, 'num_diff_credits']         = data.SK_ID_CURR.map(num_diff_credits).fillna(0).values
     data.loc[:, 'mean_days_credit_update']  = data.SK_ID_CURR.map(mean_days_credit_update).fillna(0).values
 
-    del prev_num_loans, num_active_credits, mean_days_credit_end
+    del prev_num_loans, mean_days_credit_end
     del mean_max_amt_overdue, mean_total_amt_overdue, sum_num_times_prolonged
     del mean_cb_credit_annuity, std_cb_credit_annuity, num_diff_credits
     del mean_days_credit_update
@@ -374,7 +370,7 @@ def bureau_features(bureau, data):
 
     # number of active loans reported to Home Credit for a person in last n number of days
     res = bureau.loc[(bureau.CREDIT_ACTIVE == 0) &\
-           (bureau.DAYS_CREDIT > -400)
+           (bureau.DAYS_CREDIT > -(366 * 2))
            , ['SK_ID_CURR', 'SK_ID_BUREAU', 'DAYS_CREDIT']]\
             .groupby('SK_ID_CURR').size()
     
@@ -396,6 +392,22 @@ def bureau_features(bureau, data):
     del oldest_credit
     gc.collect()
 
+    # difference in number of loans taken from Credit Bureau in current year
+    # from previous year
+    curr_year = bureau.loc[(bureau.CREDIT_ACTIVE == 0) &\
+                       (bureau.DAYS_CREDIT >= -365)
+                      ].groupby('SK_ID_CURR').size()
+
+    prev_year = bureau.loc[(bureau.CREDIT_ACTIVE == 0) &\
+                        (bureau.DAYS_CREDIT < -365) &\
+                        (bureau.DAYS_CREDIT >= -365*2)
+                        ].groupby('SK_ID_CURR').size()
+
+    diff_curr_prev = curr_year.subtract(prev_year, fill_value=0)
+    data.loc[:, 'diff_curr_prev_num_credits'] = data.SK_ID_CURR.map(diff_curr_prev).fillna(-254).astype(np.int8)
+
+    del curr_year, prev_year, diff_curr_prev
+    gc.collect()
 
     return data, list(set(data.columns) - set(COLS))
 
@@ -552,12 +564,22 @@ def prev_app_features(prev_app, data):
     del prev_app_decision
     gc.collect()
 
-    # difference between termination of credit and day decision was made
-    diff_termination_decision                = prev_app.DAYS_TERMINATION.replace({365243: np.nan}) - prev_app.DAYS_DECISION
+    # difference between termination of credit and day decision was made ( aggregate statistics )
+    mask = prev_app.NAME_CONTRACT_STATUS == 0
+    diff_termination_decision                = prev_app.loc[mask].DAYS_TERMINATION.replace({365243: np.nan}) - prev_app.loc[mask].DAYS_DECISION
     diff_termination_decision                = diff_termination_decision.groupby(prev_app.SK_ID_CURR).mean()
     data.loc[:, 'diff_termination_decision'] = data.SK_ID_CURR.map(diff_termination_decision).astype(np.float32)
+    
+    diff_termination_decision                    = prev_app.loc[mask].DAYS_TERMINATION.replace({365243: np.nan}) - prev_app.loc[mask].DAYS_DECISION    
+    diff_termination_decision_sum                = diff_termination_decision.groupby(prev_app.SK_ID_CURR).sum()    
+    data.loc[:, 'diff_termination_decision_sum'] = data.SK_ID_CURR.map(diff_termination_decision_sum)
 
-    del diff_termination_decision
+    diff_termination_decision                    = prev_app.loc[mask].DAYS_TERMINATION.replace({365243: np.nan}) - prev_app.loc[mask].DAYS_DECISION    
+    diff_termination_decision_min                = diff_termination_decision.groupby(prev_app.SK_ID_CURR).min()    
+    data.loc[:, 'diff_termination_decision_min'] = data.SK_ID_CURR.map(diff_termination_decision_min)
+
+
+    del diff_termination_decision, diff_termination_decision_sum, diff_termination_decision_min
     gc.collect()
 
     # ratio of amt annuity and amt goods price
@@ -1004,6 +1026,74 @@ def prev_app_credit_card(prev_app, credit_bal, data):
     data.loc[:, 'diff_rem_amount_income'] = data.remaining_amount - data.AMT_INCOME_TOTAL
 
     del res, ss, zz, pp
+    gc.collect()
+
+    # difference in transaction activity
+
+    # current year transaction activity
+    res = prev_app.loc[(prev_app.NAME_CONTRACT_STATUS == 0), ['SK_ID_CURR', 'SK_ID_PREV']]
+    res = res.merge(credit_bal.loc[credit_bal.MONTHS_BALANCE > -12, :], on=['SK_ID_CURR', 'SK_ID_PREV'], how='left')
+
+    res = res.loc[:, ['SK_ID_CURR', 
+                    'CNT_DRAWINGS_ATM_CURRENT',
+                    'CNT_DRAWINGS_CURRENT',
+                    'CNT_DRAWINGS_OTHER_CURRENT',
+                    'CNT_DRAWINGS_POS_CURRENT'
+            ]]
+    total = res.CNT_DRAWINGS_ATM_CURRENT.fillna(0) + res.CNT_DRAWINGS_CURRENT.fillna(0) +\
+            res.CNT_DRAWINGS_OTHER_CURRENT.fillna(0) + res.CNT_DRAWINGS_POS_CURRENT.fillna(0)
+
+    total = total.groupby(res.SK_ID_CURR).sum()
+    t1    = data.SK_ID_CURR.map(total)
+
+    # previous year transaction activity
+    res = prev_app.loc[(prev_app.NAME_CONTRACT_STATUS == 0), ['SK_ID_CURR', 'SK_ID_PREV']]
+    res = res.merge(credit_bal.loc[credit_bal.MONTHS_BALANCE <= -12, :], on=['SK_ID_CURR', 'SK_ID_PREV'], how='left')
+
+    res = res.loc[:, ['SK_ID_CURR', 
+                    'CNT_DRAWINGS_ATM_CURRENT',
+                    'CNT_DRAWINGS_CURRENT',
+                    'CNT_DRAWINGS_OTHER_CURRENT',
+                    'CNT_DRAWINGS_POS_CURRENT'
+            ]]
+    total = res.CNT_DRAWINGS_ATM_CURRENT.fillna(0) + res.CNT_DRAWINGS_CURRENT.fillna(0) +\
+            res.CNT_DRAWINGS_OTHER_CURRENT.fillna(0) + res.CNT_DRAWINGS_POS_CURRENT.fillna(0)
+
+    total = total.groupby(res.SK_ID_CURR).sum()
+    t2    = data.SK_ID_CURR.map(total)
+
+    data.loc[:, 'diff_in_transaction_activity'] = t1.subtract(t2, fill_value=0)
+    
+    del t1, t2, total, res
+    gc.collect()
+
+    # change in credit limit over time
+    res = prev_app.loc[(prev_app.NAME_CONTRACT_STATUS == 0), ['SK_ID_CURR', 'SK_ID_PREV']]
+    res = res.merge(credit_bal, on=['SK_ID_CURR', 'SK_ID_PREV'], how='left')
+
+    min_ = res.groupby(['SK_ID_CURR', 'SK_ID_PREV'], as_index=False)['MONTHS_BALANCE'].min()\
+          .rename(columns={'MONTHS_BALANCE': 'MIN_MONTH'})
+    
+    max_ = res.groupby(['SK_ID_CURR', 'SK_ID_PREV'], as_index=False)['MONTHS_BALANCE'].max()\
+            .rename(columns={'MONTHS_BALANCE': 'MAX_MONTH'})
+
+    old = res.merge(min_, left_on=['SK_ID_CURR', 'SK_ID_PREV', 'MONTHS_BALANCE'],
+          right_on=['SK_ID_CURR', 'SK_ID_PREV', 'MIN_MONTH'],
+          how='inner'
+         )
+
+    new = res.merge(max_, left_on=['SK_ID_CURR', 'SK_ID_PREV', 'MONTHS_BALANCE'],
+            right_on=['SK_ID_CURR', 'SK_ID_PREV', 'MAX_MONTH'],
+            how='inner'
+            )
+
+    old = old.loc[:, ['SK_ID_CURR', 'SK_ID_PREV', 'AMT_CREDIT_LIMIT_ACTUAL']].set_index(['SK_ID_CURR', 'SK_ID_PREV'])
+    new = new.loc[:, ['SK_ID_CURR', 'SK_ID_PREV', 'AMT_CREDIT_LIMIT_ACTUAL']].set_index(['SK_ID_CURR', 'SK_ID_PREV'])
+    
+    tmp = old.subtract(new, fill_value=0).reset_index().groupby('SK_ID_CURR')['AMT_CREDIT_LIMIT_ACTUAL'].mean()
+    data.loc[:, 'change_in_credit_limit_ot'] = data.SK_ID_CURR.map(tmp)
+
+    del res, min_, max_, old, new, tmp
     gc.collect()
     
     return data, list(set(data.columns) - set(COLS))
