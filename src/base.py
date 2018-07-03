@@ -101,11 +101,15 @@ class BaseModel:
                                           )
         return train
 
-    def train_lgb(self, X, y, Xte, yte, **params):
+    def train_lgb(self, X, y, Xte, yte, seed=37, **params):
         print()
         print('Train LightGBM classifier ...')
         print('*' * 80)
         print()
+        
+        # add seed
+        params['feature_fraction_seed'] = seed
+        params['bagging_seed']          = seed + 3
 
         num_boost_round = params['num_boost_round']
         del params['num_boost_round']
@@ -117,8 +121,8 @@ class BaseModel:
         feat_df = None
 
         # start time counter
-        t0 = time.clock()
-
+        t0 = time.time()
+        
         if len(yte):
             lval = lgb.Dataset(Xte, yte, feature_name=X.columns.tolist())
             
@@ -157,7 +161,7 @@ class BaseModel:
                                     'imp': feature_imp
                                    }).sort_values(by='imp', ascending=False)
 
-        print('Took: {} seconds to generate...'.format(time.clock() - t0))
+        print('Took: {} seconds to generate...'.format(time.time() - t0))
         
         return m, feat_df
 
@@ -192,14 +196,14 @@ class BaseModel:
         feat_df = None
 
         # start time counter
-        t0 = time.clock()
+        t0 = time.time()
 
         if len(yte):
             dval = xgb.DMatrix(Xte, yte, feature_names=X.columns.tolist())
             
             watchlist   = [(dtrain, 'train'), (dval, 'val')]
 
-            early_stopping_rounds = 200
+            early_stopping_rounds = 40
             m = xgb.train(params, 
                           dtrain, 
                           num_boost_round, 
@@ -226,7 +230,7 @@ class BaseModel:
                                     'imp': list(feature_imp.values())
                                    }).sort_values(by='imp', ascending=False)
         
-        print('Took: {} seconds to generate...'.format(time.clock() - t0))
+        print('Took: {} seconds to generate...'.format(time.time() - t0))
         
         return m, feat_df
 

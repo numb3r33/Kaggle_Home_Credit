@@ -61,6 +61,10 @@ def current_application_features(data):
     data.loc[:, 'EXT_1_2_sum'] = data.loc[:, 'EXT_SOURCE_1'] + data.loc[:, 'EXT_SOURCE_2']
     data.loc[:, 'EXT_1_3_sum'] = data.loc[:, 'EXT_SOURCE_1'] + data.loc[:, 'EXT_SOURCE_3']
     data.loc[:, 'EXT_2_3_sum'] = data.loc[:, 'EXT_SOURCE_2'] + data.loc[:, 'EXT_SOURCE_3']
+
+    data.loc[:, 'EXT_1_2_mean'] = (data.loc[:, 'EXT_SOURCE_1'] + data.loc[:, 'EXT_SOURCE_2']) / 2
+    data.loc[:, 'EXT_2_3_mean'] = (data.loc[:, 'EXT_SOURCE_2'] + data.loc[:, 'EXT_SOURCE_3']) / 2
+    data.loc[:, 'EXT_1_3_mean'] = (data.loc[:, 'EXT_SOURCE_1'] + data.loc[:, 'EXT_SOURCE_3']) / 2
     
     data.loc[:, 'EXT_1_2_div'] = data.loc[:, 'EXT_SOURCE_1'] / data.loc[:, 'EXT_SOURCE_2']
     data.loc[:, 'EXT_1_3_div'] = data.loc[:, 'EXT_SOURCE_1'] / data.loc[:, 'EXT_SOURCE_3']
@@ -75,7 +79,10 @@ def current_application_features(data):
                       'EXT_2_3_sum',
                       'EXT_1_2_div', 
                       'EXT_1_3_div', 
-                      'EXT_2_3_div'
+                      'EXT_2_3_div',
+                      'EXT_1_2_mean',
+                      'EXT_2_3_mean',
+                      'EXT_1_3_mean'
                      ]
 
     # treat 365243 in days employed as null value
@@ -89,26 +96,30 @@ def current_application_features(data):
 
     # relationship between amount credit and total income
     data.loc[:, 'ratio_credit_income'] = data.loc[:, 'AMT_CREDIT'] / data.loc[:, 'AMT_INCOME_TOTAL']
+    data.loc[:, 'diff_credit_income']  = data.loc[:, 'AMT_CREDIT'] - data.loc[:, 'AMT_INCOME_TOTAL']
 
     # relationship between annual amount to be paid and income
     data.loc[:, 'ratio_annuity_income'] = data.loc[:, 'AMT_ANNUITY'] / data.loc[:, 'AMT_INCOME_TOTAL']
 
     # relationship between amount annuity and age
     data.loc[:, 'ratio_annuity_age'] = (data.loc[:, 'AMT_ANNUITY'] / (-data.loc[:, 'DAYS_BIRTH'] / 365)).astype(np.float32)
-    FEATURE_NAMES += ['ratio_credit_income', 'ratio_annuity_income', 'ratio_annuity_age']
+    FEATURE_NAMES += ['ratio_credit_income', 
+                      'diff_credit_income',
+                      'ratio_annuity_income', 
+                      'ratio_annuity_age']
     
     # number of missing values in an application
     data.loc[:, 'num_missing_values'] = data.loc[:, data.columns.drop('TARGET')].isnull().sum(axis=1).values
     FEATURE_NAMES += ['num_missing_values']
     
     # feature interaction between age and days employed
-    data.loc[:, 'age_plus_employed']  = data.loc[:, 'DAYS_BIRTH'] + data.loc[:, 'DAYS_EMPLOYED']
-    data.loc[:, 'ratio_age_employed'] = ((data.DAYS_EMPLOYED) / (data.DAYS_BIRTH)).astype(np.float32)
+    data.loc[:, 'age_plus_employed']  = data.loc[:, 'DAYS_BIRTH'] + data.loc[:, 'DAYS_EMPLOYED'].replace({365243: np.nan})
+    data.loc[:, 'ratio_age_employed'] = ((data.DAYS_EMPLOYED.replace({365243: np.nan})) / (data.DAYS_BIRTH)).astype(np.float32)
     FEATURE_NAMES += ['age_plus_employed', 'ratio_age_employed']
 
     # convert age, days employed into categorical variable and then concatenate those two.
     age_categorical = pd.cut(-data.DAYS_BIRTH / 365, bins=20)
-    emp_categorical = pd.cut((-data.DAYS_EMPLOYED / 365), bins=15)
+    emp_categorical = pd.cut((-data.DAYS_EMPLOYED.replace({365243: np.nan}) / 365), bins=15)
 
     data.loc[:, 'age_emp_categorical'] = pd.factorize(age_categorical.astype(np.str) + '_' + emp_categorical.astype(np.str))[0]
     FEATURE_NAMES += ['age_emp_categorical']
@@ -140,6 +151,7 @@ def current_application_features(data):
 
     # feature interaction between annuity and amount credit
     data.loc[:, 'ratio_annuity_credit'] = data.loc[:, 'AMT_ANNUITY'] / data.loc[:, 'AMT_CREDIT'].replace([np.inf, -np.inf], np.nan).astype(np.float32)
+    data.loc[:, 'diff_annuity_credit']  = data.loc[:, 'AMT_CREDIT'] - data.loc[:, 'AMT_ANNUITY']
 
     # feature interaction between amount credit and age
     data.loc[:, 'ratio_credit_age'] = (data.AMT_CREDIT / (-data.DAYS_BIRTH / 365)).astype(np.float32)
@@ -148,9 +160,21 @@ def current_application_features(data):
     data.loc[:, 'ratio_credit_id_change'] = (data.AMT_CREDIT / -data.DAYS_ID_PUBLISH).replace([np.inf, -np.inf], np.nan)
 
     # feature interaction between days id publish and age
-    data.loc[:, 'ratio_id_change_age'] = ((data.DAYS_ID_PUBLISH / (-data.DAYS_BIRTH / 365))).astype(np.float32)
-    FEATURE_NAMES += ['ratio_annuity_credit', 'ratio_credit_age', 'ratio_credit_id_change', 'ratio_id_change_age']
-    
+    data.loc[:, 'ratio_id_change_age'] = (data.DAYS_ID_PUBLISH / data.DAYS_BIRTH).astype(np.float32)
+    data.loc[:, 'diff_id_change_age']  = (data.DAYS_ID_PUBLISH - data.DAYS_BIRTH).astype(np.float32)
+    data.loc[:, 'ratio_reg_age']       = (data.DAYS_REGISTRATION / data.DAYS_BIRTH).astype(np.float32)
+    data.loc[:, 'diff_reg_age']        = (data.DAYS_REGISTRATION - data.DAYS_BIRTH).astype(np.float32)
+
+    FEATURE_NAMES += ['ratio_annuity_credit', 
+                      'diff_annuity_credit', 
+                      'ratio_credit_age', 
+                      'ratio_credit_id_change', 
+                      'ratio_id_change_age',
+                      'diff_id_change_age',
+                      'ratio_reg_age',
+                      'diff_reg_age'
+                    ]
+
 
     # ratio of annuity and external score
     data.loc[:, 'ratio_annuity_score_1'] = (data.loc[:, 'AMT_ANNUITY'] / data.loc[:, 'EXT_SOURCE_1']).replace([np.inf, -np.inf], np.nan)
@@ -211,12 +235,32 @@ def bureau_features(bureau, data):
     prev_num_loans = bureau.groupby('SK_ID_CURR').size()
 
     # aggregation features
-    data, dc_cols  = get_agg_features(data, bureau, 'DAYS_CREDIT', 'SK_ID_CURR')
-    data, acm_cols = get_agg_features(data, bureau, 'AMT_CREDIT_SUM', 'SK_ID_CURR')
+    res = bureau[bureau.CREDIT_ACTIVE == 0].groupby('SK_ID_CURR')['AMT_CREDIT_SUM'].min()
+    data.loc[:, 'AMT_CREDIT_SUM_min'] = data.SK_ID_CURR.map(res)
 
-    # logarithm of features
-    data  = log_features(data, acm_cols)
+    res = bureau[bureau.CREDIT_ACTIVE == 0].groupby('SK_ID_CURR')['AMT_CREDIT_SUM'].max()
+    data.loc[:, 'AMT_CREDIT_SUM_max'] = data.SK_ID_CURR.map(res)
 
+    data.loc[:, 'ratio_max_min_amt_credit_sum'] = data.AMT_CREDIT_SUM_max.div(data.AMT_CREDIT_SUM_min, fill_value=np.nan)
+
+    
+    # number of credits completed in current year
+    gp = (-bureau.loc[bureau.CREDIT_ACTIVE == 2, 'DAYS_CREDIT'] / 365).map(np.ceil)
+    num_closed_loans_recent_years = bureau.loc[bureau.CREDIT_ACTIVE == 2]\
+                                      .groupby(['SK_ID_CURR', gp])\
+                                      .size().unstack().fillna(0)
+    
+    r2 = data.loc[:, ['SK_ID_CURR']].merge(num_closed_loans_recent_years, 
+                                           left_on='SK_ID_CURR', 
+                                           right_index=True, 
+                                           how='left'
+                                          ).drop('SK_ID_CURR', axis=1).fillna(0)
+    data.loc[:, 'num_closed_loans_recent_years'] = r2[1].values
+
+    del gp, r2, num_closed_loans_recent_years
+    gc.collect()
+
+    
     # mean number of days of CB credit at the time of application
     mean_days_credit_end = bureau.groupby('SK_ID_CURR')['DAYS_CREDIT_ENDDATE'].mean()
 
@@ -225,6 +269,17 @@ def bureau_features(bureau, data):
 
     # mean of total amount overdue on any credit line
     mean_total_amt_overdue = bureau.groupby('SK_ID_CURR')['AMT_CREDIT_SUM_OVERDUE'].mean().map(lambda x: np.log(x + 1)).astype(np.float32)
+ 
+    # median of amount credit sum limit
+    median_amt_credit_sum_limit = bureau.loc[bureau.CREDIT_ACTIVE == 0].groupby('SK_ID_CURR')['AMT_CREDIT_SUM_LIMIT'].median()
+    data.loc[:, 'median_amt_credit_sum_limit'] = data.SK_ID_CURR.map(median_amt_credit_sum_limit)
+
+    # variance of amount credit sum limit
+    var_amt_credit_sum_limit   = bureau.loc[bureau.CREDIT_ACTIVE == 0].groupby('SK_ID_CURR')['AMT_CREDIT_SUM_LIMIT'].median()
+    data.loc[:, 'var_amt_credit_sum_limit']  = data.SK_ID_CURR.map(var_amt_credit_sum_limit)
+
+    del median_amt_credit_sum_limit, var_amt_credit_sum_limit
+    gc.collect()
 
     # sum of num times credit was prolonged
     sum_num_times_prolonged = bureau.groupby('SK_ID_CURR')['CNT_CREDIT_PROLONG'].sum()
@@ -240,7 +295,7 @@ def bureau_features(bureau, data):
     std_cb_credit_annuity  = bureau.groupby('SK_ID_CURR')['AMT_ANNUITY'].std().map(lambda x: np.log(x + 1)).astype(np.float32).astype(np.float32)
 
     # latest application reported to Home Credit
-    latest_credit = bureau.groupby('SK_ID_CURR')['DAYS_CREDIT'].max()
+    latest_credit = bureau[bureau.CREDIT_ACTIVE == 0].groupby('SK_ID_CURR')['DAYS_CREDIT'].max()
     data.loc[:, 'latest_credit'] = data.SK_ID_CURR.map(latest_credit).astype(np.float32)
 
     # credit duration
@@ -251,7 +306,7 @@ def bureau_features(bureau, data):
                         'AMT_CREDIT_SUM']]
 
     res.loc[:, 'duration'] = (res.DAYS_CREDIT_ENDDATE - res.DAYS_CREDIT).astype(np.int32)
-    res = res.groupby('SK_ID_CURR')['duration'].mean()
+    res = res.groupby('SK_ID_CURR')['duration'].median()
     data.loc[:, 'credit_duration'] = data.SK_ID_CURR.map(res)
 
     del res
@@ -270,7 +325,7 @@ def bureau_features(bureau, data):
     gc.collect()
     
     # ratio of active to closed loan duration
-    data.loc[:, 'div_deltas']  = (data.credit_duration / data.closed_credit_duration).replace([np.inf, -np.inf], np.nan).astype(np.float32)
+    data.loc[:, 'div_deltas']  = data.credit_duration.div(data.closed_credit_duration, fill_value=np.nan)
     data.loc[:, 'diff_deltas'] = data.credit_duration - data.closed_credit_duration
 
     # deviation in difference between remaining duration of credit and how long before we applied for this credit
@@ -332,12 +387,14 @@ def bureau_features(bureau, data):
     total_sum   = res.groupby(res.SK_ID_CURR)['AMT_CREDIT_SUM'].sum().astype(np.float32)
     total_debt  = res.groupby(res.SK_ID_CURR)['AMT_CREDIT_SUM_DEBT'].sum().astype(np.float32)
     tmp         = total_debt.div(total_sum, fill_value=np.nan).replace([np.inf, -np.inf], np.nan).astype(np.float32)
+    tmp_diff    = total_sum.subtract(total_debt, fill_value=0)
 
     data.loc[:, 'total_debt']            = data.SK_ID_CURR.map(total_debt)
     data.loc[:, 'total_credit_sum']      = data.SK_ID_CURR.map(total_sum)
     data.loc[:, 'ratio_debt_credit_sum'] = data.SK_ID_CURR.map(tmp)
-    
-    del res, tmp, total_sum, total_debt
+    data.loc[:, 'diff_debt_credit_sum']  = data.SK_ID_CURR.map(tmp_diff)
+
+    del res, tmp, total_sum, total_debt, tmp_diff
     gc.collect()
 
     # ratio of total debt to income
@@ -380,14 +437,14 @@ def bureau_features(bureau, data):
     gc.collect()
 
     # comparison of oldest loan with employment status
-    oldest_credit = bureau.loc[bureau.DAYS_ENDDATE_FACT.isnull(), :].groupby('SK_ID_CURR')['DAYS_CREDIT'].min()
+    oldest_credit = bureau.loc[(bureau.CREDIT_ACTIVE == 0) & (bureau.DAYS_ENDDATE_FACT.isnull()), :].groupby('SK_ID_CURR')['DAYS_CREDIT'].min()
     oldest_credit = data.SK_ID_CURR.map(oldest_credit)
     data.loc[:, 'oldest_loan_employment'] = oldest_credit - data.DAYS_EMPLOYED.replace({365243: np.nan})
 
     # comparison of oldest loan with age status
-    oldest_credit = bureau.loc[bureau.DAYS_ENDDATE_FACT.isnull(), :].groupby('SK_ID_CURR')['DAYS_CREDIT'].min()
+    oldest_credit = -bureau.loc[(bureau.CREDIT_ACTIVE == 0) & (bureau.DAYS_ENDDATE_FACT.isnull()), :].groupby('SK_ID_CURR')['DAYS_CREDIT'].min() / 365
     oldest_credit = data.SK_ID_CURR.map(oldest_credit)
-    data.loc[:, 'oldest_loan_age'] = oldest_credit - data.DAYS_BIRTH
+    data.loc[:, 'oldest_loan_age'] = (-data.DAYS_BIRTH / 365).subtract(oldest_credit, fill_value=0)
 
     del oldest_credit
     gc.collect()
@@ -408,6 +465,26 @@ def bureau_features(bureau, data):
 
     del curr_year, prev_year, diff_curr_prev
     gc.collect()
+
+    res = (-bureau.loc[bureau.DAYS_ENDDATE_FACT.isnull(), :].groupby('SK_ID_CURR')['DAYS_CREDIT'].max() / 365)
+    res = data.SK_ID_CURR.map(res)
+
+    data.loc[:, 'max_loan_age'] = (-data.DAYS_BIRTH / 365).subtract(res, fill_value=0)
+    
+    res = (-bureau.loc[bureau.DAYS_ENDDATE_FACT.isnull(), :].groupby('SK_ID_CURR')['DAYS_CREDIT'].median() / 365)
+    res = data.SK_ID_CURR.map(res)
+
+    data.loc[:, 'median_loan_age'] = (-data.DAYS_BIRTH / 365).subtract(res, fill_value=0)
+    
+    res = bureau.loc[bureau.CREDIT_ACTIVE == 2, ['SK_ID_CURR', 'DAYS_ENDDATE_FACT']]
+    res = res.groupby('SK_ID_CURR')['DAYS_ENDDATE_FACT'].median() # most recently ended credit for a client
+
+    tmp = bureau.loc[bureau.CREDIT_ACTIVE == 0, ['SK_ID_CURR', 'DAYS_CREDIT']]
+    tmp = tmp.groupby('SK_ID_CURR')['DAYS_CREDIT'].median() # most recently applied credit at Home credit
+
+    res   = tmp.div(res, fill_value=0)
+    data.loc[:, 'median_ratio_end_curr_credit'] = data.SK_ID_CURR.map(res)
+
 
     return data, list(set(data.columns) - set(COLS))
 
@@ -700,6 +777,48 @@ def prev_app_features(prev_app, data):
     del r1, r2, res
     gc.collect()
 
+
+    res  = prev_app.loc[prev_app.NAME_CONTRACT_STATUS == 0, ['SK_ID_CURR',
+                        'AMT_ANNUITY',
+                        'AMT_CREDIT',
+                        'CNT_PAYMENT']]
+
+    tmp  = res.AMT_CREDIT / (res.AMT_ANNUITY * res.CNT_PAYMENT) 
+    tmp  = tmp.groupby(res.SK_ID_CURR).mean()
+    data.loc[:, 'prev_app_rate']  = data.SK_ID_CURR.map(tmp)
+
+    del res, tmp
+    gc.collect()
+
+    max_credit_term = prev_app[prev_app.NAME_CONTRACT_STATUS == 0].groupby('SK_ID_CURR')['CNT_PAYMENT'].max()
+    data.loc[:, 'max_credit_term'] = data.SK_ID_CURR.map(max_credit_term)
+    
+    min_credit_term = prev_app[prev_app.NAME_CONTRACT_STATUS == 0].groupby('SK_ID_CURR')['CNT_PAYMENT'].max()
+    data.loc[:, 'min_credit_term'] = data.SK_ID_CURR.map(min_credit_term)
+    
+    data.loc[:, 'diff_max_min_credit_term'] = data.max_credit_term.subtract(data.min_credit_term, fill_value=0)
+    
+    
+    res                        = prev_app[prev_app.NAME_CONTRACT_STATUS == 0].groupby('SK_ID_CURR')['DAYS_DECISION'].min()
+    data.loc[:, 'most_oldest_prev_application'] = data.SK_ID_CURR.map(res)
+    
+    res                        = prev_app[prev_app.NAME_CONTRACT_STATUS == 0].groupby('SK_ID_CURR')['DAYS_DECISION'].median()
+    data.loc[:, 'median_prev_application']  = data.SK_ID_CURR.map(res)
+    
+    del res, max_credit_term, min_credit_term
+    gc.collect()
+
+
+    d = prev_app.loc[prev_app.NAME_CONTRACT_STATUS == 0, 'DAYS_DECISION']
+    f = prev_app.loc[prev_app.NAME_CONTRACT_STATUS == 0, 'DAYS_FIRST_DUE'].replace({365243: np.nan})
+    t = f.subtract(d)
+
+    t = t.groupby(prev_app.loc[prev_app.NAME_CONTRACT_STATUS == 0, 'SK_ID_CURR']).std()
+    data.loc[:, 'diff_first_due_days_var'] = data.SK_ID_CURR.map(t)
+
+    del d, f, t
+    gc.collect()
+
     return data, list(set(data.columns) - set(COLS))
 
 def pos_cash_features(pos_cash, data):
@@ -734,6 +853,27 @@ def pos_cash_features(pos_cash, data):
 
     del sum_remaining_installments
     gc.collect()
+
+
+    # installments left on cash and consumer loans for a user.
+    tmp = pos_cash.groupby(['SK_ID_CURR', 'SK_ID_PREV'], as_index=False)['MONTHS_BALANCE'].max()
+    tmp = tmp.merge(pos_cash.loc[:, ['SK_ID_CURR', 
+                                    'SK_ID_PREV', 
+                                    'MONTHS_BALANCE', 
+                                    'CNT_INSTALMENT_FUTURE'
+                                    ]], how='left')
+    
+    t = tmp.groupby('SK_ID_CURR')['CNT_INSTALMENT_FUTURE'].median()
+    data.loc[:, 'median_pos_installments_left'] = data.SK_ID_CURR.map(t)
+
+    t = tmp.groupby('SK_ID_CURR')['CNT_INSTALMENT_FUTURE'].min()
+    data.loc[:, 'min_pos_installments_left'] = data.SK_ID_CURR.map(t)
+
+    t = tmp.groupby('SK_ID_CURR')['CNT_INSTALMENT_FUTURE'].mean()
+    data.loc[:, 'mean_pos_installments_left'] = data.SK_ID_CURR.map(t) 
+
+    t = tmp.groupby('SK_ID_CURR')['CNT_INSTALMENT_FUTURE'].var()
+    data.loc[:, 'var_pos_installments_left'] = data.SK_ID_CURR.map(t) 
 
     return data, list(set(data.columns) - set(COLS))
 
@@ -795,7 +935,7 @@ def credit_card_features(credit_bal, data):
 
     # difference of minimum installment on credit card with amount balance
     diff_min_installment_balance                = (credit_bal.AMT_BALANCE - credit_bal.AMT_INST_MIN_REGULARITY).replace([np.inf, -np.inf], np.nan)
-    diff_min_installment_balance                = diff_min_installment_balance.groupby(credit_bal.SK_ID_CURR).mean().map(lambda x: np.log(x + 1))
+    diff_min_installment_balance                = diff_min_installment_balance.groupby(credit_bal.SK_ID_CURR).mean()
     data.loc[:, 'diff_min_installment_balance'] = data.SK_ID_CURR.map(diff_min_installment_balance).astype(np.float32)
 
     # difference between oldest credit limit and recent credit limit
@@ -829,6 +969,33 @@ def credit_card_features(credit_bal, data):
     del ratio_min_installment_balance, diff_min_installment_balance
     gc.collect()
 
+    # credit card line usage
+    tmp = credit_bal.loc[(credit_bal.NAME_CONTRACT_STATUS == 0) &\
+                     (credit_bal.AMT_CREDIT_LIMIT_ACTUAL > 0)
+                     , ['SK_ID_CURR', 'AMT_BALANCE',
+                        'AMT_CREDIT_LIMIT_ACTUAL'
+                     ]]
+
+    t    = tmp.AMT_BALANCE / tmp.AMT_CREDIT_LIMIT_ACTUAL
+    t1   = t.groupby(tmp.SK_ID_CURR).sum()
+    t2   = t.groupby(tmp.SK_ID_CURR).mean()
+    
+    data.loc[:, 'sum_line_usage']  = data.SK_ID_CURR.map(t1)
+    data.loc[:, 'mean_line_usage'] = data.SK_ID_CURR.map(t2)
+
+    del tmp, t1, t2
+    gc.collect()
+
+    t   = credit_bal[credit_bal.NAME_CONTRACT_STATUS == 0].CNT_INSTALMENT_MATURE_CUM == 0
+    t1  = t.groupby(credit_bal[credit_bal.NAME_CONTRACT_STATUS == 0].SK_ID_CURR).sum()
+    r   = t.groupby(credit_bal[credit_bal.NAME_CONTRACT_STATUS == 0].SK_ID_CURR).size()
+    tmp = t1 / r
+
+    data.loc[:, 'ratio_zero_installments'] = data.SK_ID_CURR.map(tmp)
+    
+    del t, t1, r, tmp
+    gc.collect()
+    
     return data, list(set(data.columns) - set(COLS))
 
 def get_installment_features(installments, data):
@@ -847,9 +1014,14 @@ def get_installment_features(installments, data):
     # difference between actual day of installment versus when it was supposed to be paid
 
     diff_actual_decided = -(installments.DAYS_ENTRY_PAYMENT - installments.DAYS_INSTALMENT)
-    diff_actual_decided = diff_actual_decided.groupby(installments.SK_ID_CURR).mean()
+    diff_actual_decided = diff_actual_decided.groupby(installments.SK_ID_CURR).median()
 
-    data.loc[:, 'diff_actual_decided'] = data.SK_ID_CURR.map(diff_actual_decided)
+    data.loc[:, 'median_diff_actual_decided'] = data.SK_ID_CURR.map(diff_actual_decided)
+
+    diff_actual_decided = -(installments.DAYS_ENTRY_PAYMENT - installments.DAYS_INSTALMENT)
+    diff_actual_decided = diff_actual_decided.groupby(installments.SK_ID_CURR).min()
+
+    data.loc[:, 'min_diff_actual_decided'] = data.SK_ID_CURR.map(diff_actual_decided)
 
     # ratio of installment to be paid versus actual amount paid
 
@@ -866,10 +1038,18 @@ def get_installment_features(installments, data):
     res = (installments.AMT_INSTALMENT - installments.AMT_PAYMENT)
     res = res.groupby(installments.SK_ID_CURR).mean()
 
-    data.loc[:, 'diff_actual_decided_amount'] = data.SK_ID_CURR.map(res)
+    data.loc[:, 'mean_diff_actual_decided_amount'] = data.SK_ID_CURR.map(res)
+
+    res = (installments.AMT_INSTALMENT - installments.AMT_PAYMENT)
+    res = res.groupby(installments.SK_ID_CURR).median()
+
+    data.loc[:, 'median_diff_actual_decided_amount'] = data.SK_ID_CURR.map(res)
+
 
     del res
     gc.collect()
+
+    data.loc[:, 'ratio_sum_payments_income'] = data.AMT_PAYMENT_sum.div(data.AMT_INCOME_TOTAL, fill_value=np.nan)
 
     return data, list(set(data.columns) - set(COLS))
 
@@ -969,7 +1149,25 @@ def prev_app_bureau(prev_app, bureau, data):
 
     data.loc[:, 'diff_termination_enddate'] = data.SK_ID_CURR.map(res).astype(np.float32)
 
-    del dcn, dd, dcu, df
+    del dcn, dd, dcu, df, res
+    gc.collect()
+
+
+    res = prev_app.loc[prev_app.NAME_CONTRACT_STATUS == 0, ['SK_ID_CURR',
+                                                           'DAYS_TERMINATION'
+                                                          ]]\
+        .merge(bureau.loc[bureau.CREDIT_ACTIVE == 2, ['SK_ID_CURR', 'DAYS_CREDIT']])
+    res.loc[:, 'DAYS_TERMINATION'] = res.DAYS_TERMINATION.replace({365243: np.nan})
+    
+    res.loc[:, 'prev_app_end_bureau_start'] = res.DAYS_CREDIT - res.DAYS_TERMINATION
+    tmp = res.groupby('SK_ID_CURR')['prev_app_end_bureau_start'].min()
+
+    data.loc[:, 'prev_app_end_bureau_start_min'] = data.SK_ID_CURR.map(tmp)
+    
+    tmp = res.groupby('SK_ID_CURR')['prev_app_end_bureau_start'].max()
+    data.loc[:, 'prev_app_end_bureau_start_max'] = data.SK_ID_CURR.map(tmp)
+    
+    del res, tmp
     gc.collect()
 
     return data, list(set(data.columns) - set(COLS))
@@ -1441,6 +1639,23 @@ def prev_app_pos(prev_app, pos_cash, data):
 
     del res, tmp
     gc.collect()
+
+    res = prev_app.loc[prev_app.NAME_CONTRACT_STATUS == 0, ['SK_ID_CURR',
+                                                           'SK_ID_PREV',
+                                                           'AMT_CREDIT',
+                                                           'AMT_ANNUITY',
+                                                           'RATE_DOWN_PAYMENT'
+                                                          ]].merge(pos_cash.loc[:, ['SK_ID_CURR',
+                                                                                    'SK_ID_PREV',
+                                                                                    'CNT_INSTALMENT',
+                                                                                    'CNT_INSTALMENT_FUTURE'
+                                                                                   ]],
+                                                                   how='left'
+                                                                  )
+    
+    res.loc[:, 'credit_share_left']  = (res.AMT_ANNUITY * res.CNT_INSTALMENT_FUTURE * res.RATE_DOWN_PAYMENT) / res.AMT_CREDIT
+    tmp                              = res.groupby('SK_ID_CURR')['credit_share_left'].mean()
+    data.loc[:, 'credit_share_left'] = data.SK_ID_CURR.map(tmp)
 
     return data, list(set(data.columns) - set(COLS))
 
