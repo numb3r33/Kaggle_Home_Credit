@@ -819,6 +819,36 @@ def prev_app_features(prev_app, data):
     del d, f, t
     gc.collect()
 
+    tmp = prev_app.loc[(prev_app.NAME_CONTRACT_STATUS == 0) &\
+                   (prev_app.CNT_PAYMENT > 0)
+                   , ['SK_ID_CURR',
+                      'AMT_CREDIT',
+                      'AMT_ANNUITY',
+                      'CNT_PAYMENT',
+                      'DAYS_DECISION'
+                     ]]
+
+    tmp.loc[:, 'per_month_annuity'] = tmp.AMT_CREDIT / tmp.CNT_PAYMENT
+    tmp.loc[:, 'diff_annuity']      = tmp.AMT_ANNUITY - tmp.per_month_annuity
+    tmp.loc[:, 'ratio_annuity']     = tmp.AMT_ANNUITY / tmp.per_month_annuity
+    tmp.loc[:, 'mult_ratio_annuity_days_decision'] = tmp.ratio_annuity * (-tmp.DAYS_DECISION / 365)
+
+
+    res = tmp.groupby('SK_ID_CURR')['per_month_annuity'].median()
+    data.loc[:, 'prev_app_ratio_annuity'] = data.SK_ID_CURR.map(res)
+
+    res = tmp.groupby('SK_ID_CURR')['mult_ratio_annuity_days_decision'].mean()
+    data.loc[:, 'mult_ratio_annuity_days_decision_mean'] = data.SK_ID_CURR.map(res)
+
+    res = tmp.groupby('SK_ID_CURR')['mult_ratio_annuity_days_decision'].max()
+    data.loc[:, 'mult_ratio_annuity_days_decision_max'] = data.SK_ID_CURR.map(res)
+    
+    del tmp, res
+    gc.collect()
+
+
+
+
     return data, list(set(data.columns) - set(COLS))
 
 def pos_cash_features(pos_cash, data):
@@ -1403,6 +1433,22 @@ def prev_app_installments(prev_app, installments, data):
     data.loc[:, 'num_times_le_repayment'] = data.SK_ID_CURR.map(res).fillna(-1).astype(np.int8)
 
     del res, tmp
+    gc.collect()
+
+    t = installments.groupby(['SK_ID_CURR', 'SK_ID_PREV'], as_index=False).agg({
+    'NUM_INSTALMENT_NUMBER': np.max,
+    'AMT_PAYMENT': np.sum
+    })
+
+    t = prev_app.loc[prev_app.NAME_CONTRACT_STATUS == 0, ['SK_ID_CURR', 'SK_ID_PREV', 'AMT_CREDIT', 'CNT_PAYMENT']]\
+            .merge(t, how='left')
+
+    r = (t.AMT_PAYMENT - t.AMT_CREDIT) * (t.CNT_PAYMENT - t.NUM_INSTALMENT_NUMBER)
+    r = r.groupby(t.SK_ID_CURR).mean()
+
+    data.loc[:, 'interaction_diff_credit_paid_term'] = data.SK_ID_CURR.map(r)
+
+    del t, r
     gc.collect()
 
     return data, list(set(data.columns) - set(COLS))
