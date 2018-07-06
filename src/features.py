@@ -192,15 +192,12 @@ def current_application_features(data):
     # ratio of owner's car age with his age
     data.loc[:, 'ratio_car_person_age'] = (data.OWN_CAR_AGE / -data.DAYS_BIRTH)
 
-    # difference credit and income
-    data.loc[:, 'diff_credit_income'] = data.AMT_CREDIT - data.AMT_INCOME_TOTAL
-
     # difference income total and annuity
     data.loc[:, 'diff_income_annuity']  = data.AMT_ANNUITY - data.AMT_INCOME_TOTAL
 
     # difference credit and goods price
     data.loc[:, 'diff_credit_goods'] = data.AMT_CREDIT - data.AMT_GOODS_PRICE
-    FEATURE_NAMES += ['ratio_car_person_age', 'diff_credit_income', 'diff_income_annuity', 'diff_credit_goods']
+    FEATURE_NAMES += ['ratio_car_person_age', 'diff_income_annuity', 'diff_credit_goods']
     
 
     # max, mean, std of feature groups related to days before any document was modified or changed
@@ -488,6 +485,7 @@ def bureau_features(bureau, data):
 
     return data, list(set(data.columns) - set(COLS))
 
+#TODO: Features here should be moved to feature engineering in corresponding model file.
 def feature_interactions(data):
     COLS = data.columns.tolist()
     
@@ -601,11 +599,19 @@ def prev_app_features(prev_app, data):
     del mean_last_decision
     gc.collect()
 
-    # mean of term of previous credit
-    mean_prev_credit = prev_app.groupby('SK_ID_CURR')['CNT_PAYMENT'].mean()
-    data.loc[:, 'mean_prev_credit'] = data.SK_ID_CURR.map(mean_prev_credit).astype(np.float32)
+    # mean of term of previous applications
+    mean_prev_app = prev_app.groupby('SK_ID_CURR')['CNT_PAYMENT'].mean()
+    data.loc[:, 'mean_prev_app'] = data.SK_ID_CURR.map(mean_prev_app).astype(np.float32)
 
-    del mean_prev_credit
+    # std of previous applications
+    std_prev_app  = prev_app.groupby('SK_ID_CURR')['CNT_PAYMENT'].std()
+    data.loc[:, 'std_prev_app']  = data.SK_ID_CURR.map(std_prev_app)
+
+    # skew of previous applications
+    skew_prev_app = prev_app.groupby('SK_ID_CURR')['CNT_PAYMENT'].skew()
+    data.loc[:, 'skew_prev_app'] = data.SK_ID_CURR.map(skew_prev_app)
+
+    del mean_prev_app, std_prev_app, skew_prev_app
     gc.collect()
 
     # deviation in hour, weekday at which previous application process started
