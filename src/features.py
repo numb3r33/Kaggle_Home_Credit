@@ -8,6 +8,18 @@ def frequency_encoding(data, cols):
         data.loc[:, col] = data.groupby(col)[col].transform(lambda x: len(x)).values
     return data
 
+def one_hot_encoding(data, cols, drop_col=True):
+    for col in cols:
+        ohe_df = pd.get_dummies(data[col].astype(np.str), dummy_na=True, prefix=f'{col}_')
+
+        # drop the column passed
+        if drop_col:
+            data.drop(col, axis=1, inplace=True)
+        
+        data = pd.concat((data, ohe_df), axis=1)
+
+    return data
+
 def get_agg_features(data, gp, f, on):
     agg         = gp.groupby(on)[f]\
                         .agg({np.mean, 
@@ -113,7 +125,7 @@ def current_application_features(data):
     FEATURE_NAMES += ['num_missing_values']
     
     # feature interaction between age and days employed
-    data.loc[:, 'age_plus_employed']  = data.loc[:, 'DAYS_BIRTH'] + data.loc[:, 'DAYS_EMPLOYED'].replace({365243: np.nan})
+    data.loc[:, 'age_plus_employed']  = data.loc[:, 'DAYS_BIRTH'] + data.loc[:, 'DAYS_EMPLOYED']
     data.loc[:, 'ratio_age_employed'] = ((data.DAYS_EMPLOYED.replace({365243: np.nan})) / (data.DAYS_BIRTH)).astype(np.float32)
     FEATURE_NAMES += ['age_plus_employed', 'ratio_age_employed']
 
@@ -297,16 +309,20 @@ def bureau_features(bureau, data):
 
     # credit duration
     res = bureau.loc[(bureau.CREDIT_ACTIVE == 0) &\
-                     (bureau.DAYS_CREDIT_ENDDATE > 0)
+                     (bureau.DAYS_CREDIT_ENDDATE.notnull())
                     , ['SK_ID_CURR', 'SK_ID_BUREAU', 
                         'DAYS_CREDIT', 'DAYS_CREDIT_ENDDATE', 
                         'AMT_CREDIT_SUM']]
 
     res.loc[:, 'duration'] = (res.DAYS_CREDIT_ENDDATE - res.DAYS_CREDIT).astype(np.int32)
+    res.loc[:, 'sum_to_duration'] = res.AMT_CREDIT_SUM / res.duration
+
+    tmp = res.groupby('SK_ID_CURR')['sum_to_duration'].min()
     res = res.groupby('SK_ID_CURR')['duration'].median()
     data.loc[:, 'credit_duration'] = data.SK_ID_CURR.map(res)
+    data.loc[:, 'sum_to_duration'] = data.SK_ID_CURR.map(tmp)
 
-    del res
+    del res, tmp
     gc.collect()
 
     # duration of close credits taken from Home Credit
@@ -583,6 +599,28 @@ def prev_app_features(prev_app, data):
     res = res.groupby(prev_app.SK_ID_CURR).sum()
     data.loc[:, 'past_annuity_to_credit_sum'] = data.SK_ID_CURR.map(res).astype(np.float32)
 
+    # ratio of annuity to credit, cnt_payment ( median )
+    res = ((prev_app.AMT_ANNUITY / prev_app.AMT_CREDIT) * prev_app.CNT_PAYMENT).replace([np.inf, -np.inf], np.nan)
+    res = res.groupby(prev_app.SK_ID_CURR).median()
+    data.loc[:, 'past_annuity_to_credit_cnt_payment_median'] = data.SK_ID_CURR.map(res).astype(np.float32)
+    
+    # ratio of annuity to credit, cnt_payment ( median )
+    res = ((prev_app.AMT_ANNUITY / prev_app.AMT_CREDIT) * prev_app.CNT_PAYMENT).replace([np.inf, -np.inf], np.nan)
+    res = res.groupby(prev_app.SK_ID_CURR).mean()
+    data.loc[:, 'past_annuity_to_credit_cnt_payment_mean'] = data.SK_ID_CURR.map(res).astype(np.float32)
+    
+    # ratio of annuity to credit, cnt_payment ( max )
+    res = ((prev_app.AMT_ANNUITY / prev_app.AMT_CREDIT) * prev_app.CNT_PAYMENT).replace([np.inf, -np.inf], np.nan)
+    res = res.groupby(prev_app.SK_ID_CURR).max()
+    data.loc[:, 'past_annuity_to_credit_cnt_payment_max'] = data.SK_ID_CURR.map(res).astype(np.float32)
+    
+    # ratio of annuity to credit, cnt_payment ( std )
+    res = ((prev_app.AMT_ANNUITY / prev_app.AMT_CREDIT) * prev_app.CNT_PAYMENT).replace([np.inf, -np.inf], np.nan)
+    res = res.groupby(prev_app.SK_ID_CURR).std()
+    data.loc[:, 'past_annuity_to_credit_cnt_payment_std'] = data.SK_ID_CURR.map(res).astype(np.float32)
+    
+    del res
+    gc.collect()
 
     # difference of down_payment * rate and annuity
     diff_dp_annuity = ((prev_app.AMT_DOWN_PAYMENT * prev_app.RATE_DOWN_PAYMENT) - prev_app.AMT_ANNUITY).replace([np.inf, -np.inf])
@@ -851,9 +889,6 @@ def prev_app_features(prev_app, data):
     
     del tmp, res
     gc.collect()
-
-
-
 
     return data, list(set(data.columns) - set(COLS))
 
@@ -1204,6 +1239,17 @@ def prev_app_bureau(prev_app, bureau, data):
     data.loc[:, 'prev_app_end_bureau_start_max'] = data.SK_ID_CURR.map(tmp)
     
     del res, tmp
+    gc.collect()
+
+    # total active loans reported by Credit Bureau and those held at Home Credit
+    bureau_loans       = bureau.loc[bureau.CREDIT_ACTIVE == 0].groupby('SK_ID_CURR').size()
+    home_credit_loans  = prev_app.loc[(prev_app.DAYS_TERMINATION.isnull()) |\
+                                     (prev_app.DAYS_TERMINATION == 365243.0), :].groupby('SK_ID_CURR').size()
+    total_active_loans = bureau_loans.add(home_credit_loans, fill_value=0)
+    data.loc[:, 'total_active_loans_across_credits'] = data.SK_ID_CURR.map(total_active_loans)
+
+
+    del bureau_loans, home_credit_loans, total_active_loans
     gc.collect()
 
     return data, list(set(data.columns) - set(COLS))
@@ -1734,4 +1780,62 @@ def prev_app_pos_credit(prev_app, pos_cash, credit_bal, data):
     gc.collect()
 
     return data, list(set(data.columns) - set(COLS))
+
+def prev_app_ohe(prev_app, data):
+    COLS = data.columns.tolist()
+
+    def merge(data, tmp):
+        data = data.merge(tmp, on='SK_ID_CURR', how='left')
+        cols = list(tmp.columns.drop('SK_ID_CURR'))
+        data.loc[:, cols] = data[cols].fillna(-999).astype(np.int16)
+
+        return data
+
+
+    # NAME_CONTRACT_STATUS
+    tmp         = prev_app.groupby(['SK_ID_CURR', 'NAME_CONTRACT_STATUS']).size().unstack().fillna(0).reset_index()
+    tmp.columns = [f'NAME_CONTRACT_STATUS_{col}' if col != 'SK_ID_CURR' else col for col in tmp.columns]
     
+    data        = merge(data, tmp)
+
+    del tmp
+    gc.collect()
+
+    # CODE REJECT REASON
+    tmp         = prev_app.groupby(['SK_ID_CURR', 'CODE_REJECT_REASON']).size().unstack().fillna(0).reset_index()
+    tmp.columns = [f'CODE_REJECT_REASON_{col}' if col != 'SK_ID_CURR' else col for col in tmp.columns]
+    
+    data        = merge(data, tmp)
+
+    del tmp
+    gc.collect()
+
+    # PRODUCT COMBINATION
+    tmp         = prev_app.groupby(['SK_ID_CURR', 'PRODUCT_COMBINATION']).size().unstack().fillna(0).reset_index()
+    tmp.columns = [f'PRODUCT_COMBINATION_{col}' if col != 'SK_ID_CURR' else col for col in tmp.columns]
+    
+    data        = merge(data, tmp)
+
+    del tmp
+    gc.collect()
+
+    # NAME_YIELD_GROUP
+    tmp         = prev_app.groupby(['SK_ID_CURR', 'NAME_YIELD_GROUP']).size().unstack().fillna(0).reset_index()
+    tmp.columns = [f'NAME_YIELD_GROUP_{col}' if col != 'SK_ID_CURR' else col for col in tmp.columns]
+    
+    data        = merge(data, tmp)
+
+    del tmp
+    gc.collect()
+
+    # NAME_GOODS_CATEGORY
+    tmp         = prev_app.groupby(['SK_ID_CURR', 'NAME_GOODS_CATEGORY']).size().unstack().fillna(0).reset_index()
+    tmp.columns = [f'NAME_GOODS_CATEGORY_{col}' if col != 'SK_ID_CURR' else col for col in tmp.columns]
+    
+    data        = merge(data, tmp)
+
+    del tmp
+    gc.collect()
+
+
+    return data, list(set(data.columns) - set(COLS))
