@@ -122,7 +122,14 @@ def current_application_features(data):
     
     # number of missing values in an application
     data.loc[:, 'num_missing_values'] = data.loc[:, data.columns.drop('TARGET')].isnull().sum(axis=1).values
-    FEATURE_NAMES += ['num_missing_values']
+    data.loc[:, 'num_nulls_freq']     = data.groupby('num_missing_values')['num_missing_values'].transform(lambda x: len(x))
+    mean_ext_source_2_by_num_nulls    = data.groupby('num_nulls_freq')['EXT_SOURCE_2'].mean()
+    mean_ext_source_3_by_num_nulls    = data.groupby('num_nulls_freq')['EXT_SOURCE_3'].mean()
+
+    data.loc[:, 'mean_EXT_SOURCE_2_num_nulls'] = data.num_nulls_freq.map(mean_ext_source_2_by_num_nulls)
+    data.loc[:, 'mean_EXT_SOURCE_2_num_nulls'] = data.num_nulls_freq.map(mean_ext_source_3_by_num_nulls)
+    
+    FEATURE_NAMES += ['num_missing_values', 'num_nulls_freq', 'mean_EXT_SOURCE_2_num_nulls']
     
     # feature interaction between age and days employed
     data.loc[:, 'age_plus_employed']  = data.loc[:, 'DAYS_BIRTH'] + data.loc[:, 'DAYS_EMPLOYED']
@@ -526,12 +533,34 @@ def bureau_and_balance(bureau, bureau_bal, data):
     COLS = data.columns.tolist()
 
     res = bureau_bal.loc[bureau_bal.STATUS.isin([0, 1, 2, 3, 4, 5])].groupby('SK_ID_BUREAU').size().reset_index()
-    res = res.merge(bureau.loc[:, ['SK_ID_CURR', 'SK_ID_BUREAU']]).drop('SK_ID_BUREAU', axis=1)
+    res = bureau.loc[:, ['SK_ID_CURR', 'SK_ID_BUREAU']].merge(res, how='left').drop('SK_ID_BUREAU', axis=1)
     res = res.groupby('SK_ID_CURR')[0].sum()
     data.loc[:, 'mean_status'] = data.SK_ID_CURR.map(res)
 
     del res
     gc.collect()
+
+    res = bureau_bal.groupby('SK_ID_BUREAU').size().reset_index().rename(columns={0: 'num_count'})
+    res = bureau.merge(res, how='left')
+    
+    median_num_bureau_balance = res.groupby('SK_ID_CURR')['num_count'].median()
+    data.loc[:, 'median_num_bureau_balance'] = data.SK_ID_CURR.map(median_num_bureau_balance)
+
+    mean_num_bureau_balance = res.groupby('SK_ID_CURR')['num_count'].mean()
+    data.loc[:, 'mean_num_bureau_balance'] = data.SK_ID_CURR.map(mean_num_bureau_balance)
+
+    max_num_bureau_balance = res.groupby('SK_ID_CURR')['num_count'].max()
+    data.loc[:, 'max_num_bureau_balance'] = data.SK_ID_CURR.map(max_num_bureau_balance)
+
+    min_num_bureau_balance = res.groupby('SK_ID_CURR')['num_count'].min()
+    data.loc[:, 'min_num_bureau_balance'] = data.SK_ID_CURR.map(min_num_bureau_balance)
+
+    std_num_bureau_balance = res.groupby('SK_ID_CURR')['num_count'].min()
+    data.loc[:, 'std_num_bureau_balance'] = data.SK_ID_CURR.map(std_num_bureau_balance)
+
+    del res
+    gc.collect()
+
 
     return data, list(set(data.columns) - set(COLS))
 

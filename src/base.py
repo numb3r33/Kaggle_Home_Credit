@@ -101,18 +101,16 @@ class BaseModel:
                                           )
         return train
 
-    def train_lgb(self, X, y, Xte, yte, seed=37, **params):
+    def train_lgb(self, X, y, Xte, yte, **params):
         print()
         print('Train LightGBM classifier ...')
-        print('*' * 80)
+        print('*' * 100)
         print()
-        
-        # add seed
-        params['feature_fraction_seed'] = seed
-        params['bagging_seed']          = seed + 3
 
-        num_boost_round = params['num_boost_round']
-        del params['num_boost_round']
+        num_boost_round       = params['num_boost_round']
+        early_stopping_rounds = params['early_stopping_rounds']
+
+        del params['num_boost_round'], params['early_stopping_rounds']
 
         ltrain = lgb.Dataset(X, y, 
                             feature_name=X.columns.tolist())
@@ -164,7 +162,28 @@ class BaseModel:
         print('Took: {} seconds to generate...'.format(time.time() - t0))
         
         return m, feat_df
+    
+    def cross_validate(self, Xtr, ytr, params):
+        num_boost_round       = params['num_boost_round']
+        early_stopping_rounds = params['early_stopping_rounds']
 
+        del params['num_boost_round'], params['early_stopping_rounds']
+
+        # start time counter
+        t0 = time.time()
+        
+        ltrain = lgb.Dataset(Xtr, ytr, feature_name=Xtr.columns.tolist())
+
+        cv     = lgb.cv(params, 
+                        ltrain, 
+                        num_boost_round=num_boost_round, 
+                        early_stopping_rounds=early_stopping_rounds,
+                        verbose_eval=20
+                    )
+
+        print('\nTook: {} seconds'.format(time.time() - t0))
+        
+        return pd.DataFrame(cv)
 
     def evaluate_lgb(self, Xte, yte, model):
         yhat  = None
