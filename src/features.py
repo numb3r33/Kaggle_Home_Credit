@@ -81,7 +81,12 @@ def current_application_features(data):
     data.loc[:, 'EXT_1_2_div'] = data.loc[:, 'EXT_SOURCE_1'] / data.loc[:, 'EXT_SOURCE_2']
     data.loc[:, 'EXT_1_3_div'] = data.loc[:, 'EXT_SOURCE_1'] / data.loc[:, 'EXT_SOURCE_3']
     data.loc[:, 'EXT_2_3_div'] = data.loc[:, 'EXT_SOURCE_2'] / data.loc[:, 'EXT_SOURCE_3']
-    
+
+    # Weighted combination of external mean scores
+    weights = [.4, 3, 1.2]
+    r1 = (data.EXT_SOURCE_1 * weights[0]).add(data.EXT_SOURCE_2 * weights[1], fill_value=0)
+    r2 = r1.add(data.EXT_SOURCE_3 * weights[2], fill_value=0)
+    data.loc[:, 'weighted_mean_external_scores'] = r2     
 
     FEATURE_NAMES += ['EXT_3_2', 
                       'EXT_1_3', 
@@ -94,7 +99,8 @@ def current_application_features(data):
                       'EXT_2_3_div',
                       'EXT_1_2_mean',
                       'EXT_2_3_mean',
-                      'EXT_1_3_mean'
+                      'EXT_1_3_mean',
+                      'weighted_mean_external_scores'
                      ]
 
     # treat 365243 in days employed as null value
@@ -154,6 +160,10 @@ def current_application_features(data):
     del age_categorical, emp_categorical
     gc.collect()
 
+    # children ratio
+    data.loc[:, 'children_ratio'] = data.loc[:, 'CNT_CHILDREN'] / data.loc[:, 'CNT_FAM_MEMBERS']
+    FEATURE_NAMES += ['children_ratio']
+
     # ratio of value of goods against which loan is given to total income
     data.loc[:, 'ratio_goods_income'] = data.loc[:, 'AMT_GOODS_PRICE'] / data.loc[:, 'AMT_INCOME_TOTAL']
     FEATURE_NAMES += ['ratio_goods_income']
@@ -210,13 +220,14 @@ def current_application_features(data):
     
     # ratio of owner's car age with his age
     data.loc[:, 'ratio_car_person_age'] = (data.OWN_CAR_AGE / -data.DAYS_BIRTH)
+    data.loc[:, 'car_to_employ_ratio']  = (data.OWN_CAR_AGE / data.DAYS_EMPLOYED)
 
     # difference income total and annuity
     data.loc[:, 'diff_income_annuity']  = data.AMT_ANNUITY - data.AMT_INCOME_TOTAL
 
     # difference credit and goods price
     data.loc[:, 'diff_credit_goods'] = data.AMT_CREDIT - data.AMT_GOODS_PRICE
-    FEATURE_NAMES += ['ratio_car_person_age', 'diff_income_annuity', 'diff_credit_goods']
+    FEATURE_NAMES += ['ratio_car_person_age', 'car_to_employ_ratio', 'diff_income_annuity', 'diff_credit_goods']
     
 
     # max, mean, std of feature groups related to days before any document was modified or changed
@@ -241,7 +252,18 @@ def current_application_features(data):
                       'mean_document_modified', 
                       'std_document_modified'
                       ]
-    
+
+    # income credit percentage
+    data['income_credit_percentage'] = data['AMT_INCOME_TOTAL'] / data['AMT_CREDIT']
+    data['income_per_child']      = data['AMT_INCOME_TOTAL'] / (1 + data['CNT_CHILDREN'])
+    data['income_per_person']     = data['AMT_INCOME_TOTAL'] / data['CNT_FAM_MEMBERS']
+    data['payment_rate']          = data['AMT_ANNUITY'] / data['AMT_CREDIT']
+    data['phone_to_birth_ratio']  = data['DAYS_LAST_PHONE_CHANGE'] / data['DAYS_BIRTH']
+    data['phone_to_employ_ratio'] = data['DAYS_LAST_PHONE_CHANGE'] / data['DAYS_EMPLOYED']
+    FEATURE_NAMES += ['income_credit_percentage', 'income_per_child', 'income_per_person',
+                      'payment_rate', 'phone_to_birth_ratio', 'phone_to_employ_ratio'
+                     ]
+
     return data, FEATURE_NAMES
 
 def bureau_features(bureau, data):
@@ -504,8 +526,31 @@ def bureau_features(bureau, data):
 
     res   = tmp.div(res, fill_value=0)
     data.loc[:, 'median_ratio_end_curr_credit'] = data.SK_ID_CURR.map(res)
+    
+    # total credit sum by credit types
+    res = bureau.groupby(['SK_ID_CURR', 'CREDIT_ACTIVE'])['AMT_CREDIT_SUM'].sum().unstack()
+    res = res[0].divide(res[2], fill_value=np.nan)
+    data.loc[:, 'total_credit_active_to_closed']  = data.SK_ID_CURR.map(res)
+    
+    # total credit sum debt by credit type
+    res = bureau.groupby(['SK_ID_CURR', 'CREDIT_ACTIVE'])['AMT_CREDIT_SUM_DEBT'].sum().unstack()
+    res = res[0].divide(res[2], fill_value=np.nan)
+    data.loc[:, 'total_credit_debt_active_to_closed']  = data.SK_ID_CURR.map(res)
 
+    # relationship between days credit update and total credit and debt amount reported
+    # to the credit bureau
+    days_credit_update_years = -bureau.DAYS_CREDIT_UPDATE / 365
+    tmp = bureau.AMT_CREDIT_SUM.map(np.log1p) / days_credit_update_years
+    tmp = tmp.groupby(bureau.SK_ID_CURR).sum()
+    data.loc[:, 'sum_credit_latest_update'] = data.SK_ID_CURR.map(tmp)
 
+    tmp = bureau.AMT_CREDIT_SUM_DEBT.map(np.log1p) / days_credit_update_years
+    tmp = tmp.groupby(bureau.SK_ID_CURR).sum()
+    data.loc[:, 'sum_debt_latest_update'] = data.SK_ID_CURR.map(tmp)
+
+    del tmp, days_credit_update_years
+    gc.collect()
+    
     return data, list(set(data.columns) - set(COLS))
 
 #TODO: Features here should be moved to feature engineering in corresponding model file.
@@ -992,6 +1037,13 @@ def credit_card_features(credit_bal, data):
     total_paid_installments                = credit_bal.groupby('SK_ID_CURR')['CNT_INSTALMENT_MATURE_CUM'].sum()
     data.loc[:, 'total_paid_installments'] = data.SK_ID_CURR.map(total_paid_installments)
 
+    # maximum number of credit card installments remaining
+    max_total_installments                 = credit_bal.groupby('SK_ID_CURR')['CNT_INSTALMENT_MATURE_CUM'].max()
+    data.loc[:, 'max_total_installments']  = data.SK_ID_CURR.map(max_total_installments)
+
+    del max_total_installments
+    gc.collect()
+
     # mean total drawings
     mean_total_drawings                = credit_bal.groupby('SK_ID_CURR')['AMT_DRAWINGS_CURRENT'].mean()
     data.loc[:, 'mean_total_drawings'] = data.SK_ID_CURR.map(mean_total_drawings)
@@ -1095,6 +1147,13 @@ def credit_card_features(credit_bal, data):
     
     del t, t1, r, tmp
     gc.collect()
+
+    # total credit card load
+    total_credits                     = credit_bal.groupby('SK_ID_CURR').size()
+    total_insallments_paid            = credit_bal.groupby('SK_ID_CURR')['CNT_INSTALMENT_MATURE_CUM'].sum()
+    total_installments_across_credits = total_credits.multiply(total_insallments_paid, fill_value=1)
+
+    data['total_installments_across_credits'] = data.SK_ID_CURR.map(total_installments_across_credits)
     
     return data, list(set(data.columns) - set(COLS))
 
