@@ -20,6 +20,13 @@ def one_hot_encoding(data, cols, drop_col=True):
 
     return data
 
+def merge(data, tmp):
+    data = data.merge(tmp, on='SK_ID_CURR', how='left')
+    cols = list(tmp.columns.drop('SK_ID_CURR'))
+    data.loc[:, cols] = data[cols].fillna(-999).astype(np.int16)
+
+    return data
+
 def get_agg_features(data, gp, f, on):
     agg         = gp.groupby(on)[f]\
                         .agg({np.mean, 
@@ -606,6 +613,18 @@ def bureau_and_balance(bureau, bureau_bal, data):
     del res
     gc.collect()
 
+    # treat status as string of characters
+    # this takes up to 4 minutes
+    first_character = bureau_bal.groupby(['SK_ID_BUREAU'])['STATUS'].first()
+    res = bureau.SK_ID_BUREAU.map(first_character)
+    tmp = bureau.groupby(['SK_ID_CURR', res]).size().unstack().fillna(0).astype(np.int).reset_index()
+    tmp.columns = [f'STATUS{col}' if col != 'SK_ID_CURR' else col for col in tmp.columns]
+    
+    data        = merge(data, tmp)
+
+    del tmp, res, first_character
+    gc.collect()
+    
 
     return data, list(set(data.columns) - set(COLS))
 
@@ -1583,12 +1602,17 @@ def prev_app_installments(prev_app, installments, data):
     t = prev_app.loc[prev_app.NAME_CONTRACT_STATUS == 0, ['SK_ID_CURR', 'SK_ID_PREV', 'AMT_CREDIT', 'CNT_PAYMENT']]\
             .merge(t, how='left')
 
-    r = (t.AMT_PAYMENT - t.AMT_CREDIT) * (t.CNT_PAYMENT - t.NUM_INSTALMENT_NUMBER)
-    r = r.groupby(t.SK_ID_CURR).mean()
+    res = (t.AMT_PAYMENT - t.AMT_CREDIT) * (t.CNT_PAYMENT - t.NUM_INSTALMENT_NUMBER)
+    res = res.groupby(t.SK_ID_CURR).mean()
 
-    data.loc[:, 'interaction_diff_credit_paid_term'] = data.SK_ID_CURR.map(r)
+    data.loc[:, 'interaction_diff_credit_paid_term'] = data.SK_ID_CURR.map(res)
+    
+    res = t.AMT_CREDIT - t.AMT_PAYMENT
+    res = res.groupby(t.SK_ID_CURR).min()
 
-    del t, r
+    data.loc[:, 'interaction_diff_credit_paid_term_min'] = data.SK_ID_CURR.map(res)
+
+    del t, res
     gc.collect()
 
     return data, list(set(data.columns) - set(COLS))
@@ -1871,14 +1895,6 @@ def prev_app_pos_credit(prev_app, pos_cash, credit_bal, data):
 
 def prev_app_ohe(prev_app, data):
     COLS = data.columns.tolist()
-
-    def merge(data, tmp):
-        data = data.merge(tmp, on='SK_ID_CURR', how='left')
-        cols = list(tmp.columns.drop('SK_ID_CURR'))
-        data.loc[:, cols] = data[cols].fillna(-999).astype(np.int16)
-
-        return data
-
 
     # NAME_CONTRACT_STATUS
     tmp         = prev_app.groupby(['SK_ID_CURR', 'NAME_CONTRACT_STATUS']).size().unstack().fillna(0).reset_index()
