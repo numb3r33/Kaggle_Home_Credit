@@ -557,6 +557,27 @@ def bureau_features(bureau, data):
 
     del tmp, days_credit_update_years
     gc.collect()
+
+    x = bureau.loc[bureau.CREDIT_ACTIVE == 2, ['SK_ID_CURR', 'AMT_CREDIT_SUM', 'AMT_CREDIT_MAX_OVERDUE']]
+    x.loc[:, 'r'] = x.AMT_CREDIT_MAX_OVERDUE / x.AMT_CREDIT_SUM
+
+    res = x.groupby('SK_ID_CURR')['r'].sum()
+    data.loc[:, 'max_overdue_credit_sum'] = data.SK_ID_CURR.map(res)
+    
+    res = x.groupby('SK_ID_CURR')['r'].mean()
+    data.loc[:, 'max_overdue_credit_mean'] = data.SK_ID_CURR.map(res)
+    
+    res = x.groupby('SK_ID_CURR')['r'].median()
+    data.loc[:, 'max_overdue_credit_median'] = data.SK_ID_CURR.map(res)
+    
+    res = x.groupby('SK_ID_CURR')['r'].max()
+    data.loc[:, 'max_overdue_credit_max'] = data.SK_ID_CURR.map(res)
+    
+    res = x.groupby('SK_ID_CURR')['r'].min()
+    data.loc[:, 'max_overdue_credit_min'] = data.SK_ID_CURR.map(res)
+    
+    del x, res
+    gc.collect()
     
     return data, list(set(data.columns) - set(COLS))
 
@@ -624,9 +645,27 @@ def bureau_and_balance(bureau, bureau_bal, data):
 
     del tmp, res, first_character
     gc.collect()
+
+    tmp = bureau.loc[bureau.CREDIT_ACTIVE == 0, ['SK_ID_CURR', 'SK_ID_BUREAU']]\
+                .merge(bureau_bal, on='SK_ID_BUREAU', how='left')
     
+    tmp.loc[:, 'status_unk'] = tmp.STATUS == 6
+
+    status_unk  = tmp.groupby(['SK_ID_CURR', 'SK_ID_BUREAU'])['status_unk'].sum()
+    status_size = tmp.groupby(['SK_ID_CURR', 'SK_ID_BUREAU']).size()
+
+    res = status_unk / status_size
+
+    res = res.reset_index().drop('SK_ID_BUREAU', axis=1)
+    res = res.groupby('SK_ID_CURR')[0].mean()
+    data.loc[:, 'completed_to_total'] = data.SK_ID_CURR.map(res)
+
+    del tmp, res, status_size, status_unk
+    gc.collect()
 
     return data, list(set(data.columns) - set(COLS))
+
+
 
 def prev_app_features(prev_app, data):
     COLS = data.columns.tolist()
@@ -1038,8 +1077,10 @@ def pos_cash_features(pos_cash, data):
 
     t = tmp.groupby('SK_ID_CURR')['CNT_INSTALMENT_FUTURE'].var()
     data.loc[:, 'var_pos_installments_left'] = data.SK_ID_CURR.map(t) 
-
+    
     return data, list(set(data.columns) - set(COLS))
+
+
 
 def credit_card_features(credit_bal, data):
     COLS = data.columns.tolist()
@@ -1867,7 +1908,29 @@ def prev_app_pos(prev_app, pos_cash, data):
     tmp                              = res.groupby('SK_ID_CURR')['credit_share_left'].mean()
     data.loc[:, 'credit_share_left'] = data.SK_ID_CURR.map(tmp)
 
+    # Months Balance info from pos_cash table.
+    m = prev_app.loc[(prev_app.NAME_CONTRACT_STATUS == 0) &\
+             (prev_app.NAME_CONTRACT_TYPE != 2)
+             , ['SK_ID_CURR', 'SK_ID_PREV']]\
+        .merge(pos_cash.loc[:, ['SK_ID_CURR', 'SK_ID_PREV', 'MONTHS_BALANCE']])
+
+    m = m.sort_values(by=['SK_ID_CURR', 'MONTHS_BALANCE'], ascending=[True, False])
+    f = m.groupby('SK_ID_CURR', as_index=False)['MONTHS_BALANCE'].first()
+    l = m.groupby('SK_ID_CURR', as_index=False)['MONTHS_BALANCE'].last()
+
+    tmp = 0 - l['MONTHS_BALANCE']
+    f.loc[:, 'diff'] = tmp
+
+    tmp = data.loc[:, ['SK_ID_CURR', 'TARGET']].merge(f.loc[:, ['SK_ID_CURR', 'diff']], on='SK_ID_CURR', how='left')
+    data.loc[:, 'pos_current_last_months_balance'] = tmp['diff']
+
+    del tmp, m, l, f
+    gc.collect()
+
+
     return data, list(set(data.columns) - set(COLS))
+
+
 
 def prev_app_pos_credit(prev_app, pos_cash, credit_bal, data):
     COLS = data.columns.tolist()
