@@ -665,8 +665,6 @@ def bureau_and_balance(bureau, bureau_bal, data):
 
     return data, list(set(data.columns) - set(COLS))
 
-
-
 def prev_app_features(prev_app, data):
     COLS = data.columns.tolist()
     
@@ -1080,8 +1078,6 @@ def pos_cash_features(pos_cash, data):
     
     return data, list(set(data.columns) - set(COLS))
 
-
-
 def credit_card_features(credit_bal, data):
     COLS = data.columns.tolist()
     
@@ -1232,15 +1228,52 @@ def get_installment_features(installments, data):
 
     # difference between actual day of installment versus when it was supposed to be paid
 
-    diff_actual_decided = -(installments.DAYS_ENTRY_PAYMENT - installments.DAYS_INSTALMENT)
-    diff_actual_decided = diff_actual_decided.groupby(installments.SK_ID_CURR).median()
+    tmp = (installments.DAYS_ENTRY_PAYMENT - installments.DAYS_INSTALMENT)
+    tmp = tmp.groupby(installments.SK_ID_CURR).median()
 
-    data.loc[:, 'median_diff_actual_decided'] = data.SK_ID_CURR.map(diff_actual_decided)
+    data.loc[:, 'median_diff_actual_decided'] = data.SK_ID_CURR.map(tmp)
 
-    diff_actual_decided = -(installments.DAYS_ENTRY_PAYMENT - installments.DAYS_INSTALMENT)
-    diff_actual_decided = diff_actual_decided.groupby(installments.SK_ID_CURR).min()
+    tmp = (installments.DAYS_ENTRY_PAYMENT - installments.DAYS_INSTALMENT)
+    tmp = tmp.groupby(installments.SK_ID_CURR).min()
 
-    data.loc[:, 'min_diff_actual_decided'] = data.SK_ID_CURR.map(diff_actual_decided)
+    data.loc[:, 'min_diff_actual_decided'] = data.SK_ID_CURR.map(tmp)
+
+    tmp = (installments.DAYS_ENTRY_PAYMENT - installments.DAYS_INSTALMENT)
+    tmp = tmp.groupby(installments.SK_ID_CURR).max()
+
+    data.loc[:, 'max_diff_actual_decided'] = data.SK_ID_CURR.map(tmp)
+
+    tmp = (installments.DAYS_ENTRY_PAYMENT - installments.DAYS_INSTALMENT)
+    tmp = tmp.groupby(installments.SK_ID_CURR).mean()
+
+    data.loc[:, 'mean_diff_actual_decided'] = data.SK_ID_CURR.map(tmp)
+
+    # difference between installment amount and paid amount for late days
+    td  = installments.DAYS_ENTRY_PAYMENT - installments.DAYS_INSTALMENT
+    tad = installments.AMT_PAYMENT - installments.AMT_INSTALMENT
+
+    x   = pd.DataFrame({'td': td, 'tad': tad})
+    
+    # mean
+    tmp = x[x['td'] > 0].groupby(installments.SK_ID_CURR)['tad'].apply(np.mean)
+    data.loc[:, 'mean_diff_installment_actual_late_days'] = data.SK_ID_CURR.map(tmp)
+    
+    # median
+    tmp = x[x['td'] > 0].groupby(installments.SK_ID_CURR)['tad'].apply(np.median)
+    data.loc[:, 'median_diff_installment_actual_late_days'] = data.SK_ID_CURR.map(tmp)
+    
+    # max
+    tmp = x[x['td'] > 0].groupby(installments.SK_ID_CURR)['tad'].apply(np.max)
+    data.loc[:, 'max_diff_installment_actual_late_days'] = data.SK_ID_CURR.map(tmp)
+    
+    # min
+    tmp = x[x['td'] > 0].groupby(installments.SK_ID_CURR)['tad'].apply(np.min)
+    data.loc[:, 'min_diff_installment_actual_late_days'] = data.SK_ID_CURR.map(tmp)
+    
+    # sum
+    tmp = x[x['td'] > 0].groupby(installments.SK_ID_CURR)['tad'].apply(np.sum)
+    data.loc[:, 'sum_diff_installment_actual_late_days'] = data.SK_ID_CURR.map(tmp)
+
 
     # ratio of installment to be paid versus actual amount paid
 
@@ -1249,7 +1282,7 @@ def get_installment_features(installments, data):
 
     data.loc[:, 'ratio_actual_decided_amount'] = data.SK_ID_CURR.map(res)
 
-    del mean_installment, diff_actual_decided, res
+    del mean_installment, res
     gc.collect()
 
     # differenece between actual installment amount vs what was paid
@@ -1929,8 +1962,6 @@ def prev_app_pos(prev_app, pos_cash, data):
 
 
     return data, list(set(data.columns) - set(COLS))
-
-
 
 def prev_app_pos_credit(prev_app, pos_cash, credit_bal, data):
     COLS = data.columns.tolist()
