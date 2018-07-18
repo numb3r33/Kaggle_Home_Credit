@@ -1303,6 +1303,24 @@ def get_installment_features(installments, data):
 
     data.loc[:, 'ratio_sum_payments_income'] = data.AMT_PAYMENT_sum.div(data.AMT_INCOME_TOTAL, fill_value=np.nan)
 
+    # compare installment number in case of late payments
+    
+    tmp  = installments.DAYS_INSTALMENT - installments.DAYS_ENTRY_PAYMENT
+    tmp  = installments.loc[tmp < 0, ['SK_ID_CURR', 'SK_ID_PREV', 'NUM_INSTALMENT_NUMBER']]
+
+    tmp = installments.groupby(['SK_ID_CURR', 'SK_ID_PREV'], as_index=False)['NUM_INSTALMENT_NUMBER'].max()
+    res = installments.groupby(['SK_ID_CURR', 'SK_ID_PREV'], as_index=False)['NUM_INSTALMENT_NUMBER'].min()
+
+    tmp = tmp.merge(res, on=['SK_ID_CURR', 'SK_ID_PREV'], how='left')
+    tmp.loc[:, 'd'] = tmp.NUM_INSTALMENT_NUMBER_x / tmp.NUM_INSTALMENT_NUMBER_y
+    res = tmp.groupby('SK_ID_CURR')['d'].sum()
+
+    data.loc[:, 'late_days_instalment_num_ratio'] = data.SK_ID_CURR.map(res)
+
+    del tmp, res
+    gc.collect()
+
+
     return data, list(set(data.columns) - set(COLS))
 
 def prev_curr_app_features(prev_app, data):

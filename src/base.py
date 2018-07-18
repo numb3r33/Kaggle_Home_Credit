@@ -139,7 +139,7 @@ class BaseModel:
             
             # feature importances
             feature_names = m.feature_name()
-            feature_imp   = m.feature_importance()
+            feature_imp   = m.feature_importance(importance_type='gain')
 
             feat_df = pd.DataFrame({'features': feature_names,
                                     'imp': feature_imp
@@ -153,7 +153,7 @@ class BaseModel:
 
             # feature importances
             feature_names = m.feature_name()
-            feature_imp   = m.feature_importance()
+            feature_imp   = m.feature_importance(importance_type='gain')
 
             feat_df = pd.DataFrame({'features': feature_names,
                                     'imp': feature_imp
