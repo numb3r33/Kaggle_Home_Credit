@@ -229,6 +229,9 @@ def current_application_features(data):
     data.loc[:, 'ratio_car_person_age'] = (data.OWN_CAR_AGE / -data.DAYS_BIRTH)
     data.loc[:, 'car_to_employ_ratio']  = (data.OWN_CAR_AGE / data.DAYS_EMPLOYED)
 
+    # difference of car age with age
+    data.loc[:, 'diff_car_age']         = (-data.DAYS_BIRTH / 365) - data.OWN_CAR_AGE
+    
     # difference income total and annuity
     data.loc[:, 'diff_income_annuity']  = data.AMT_ANNUITY - data.AMT_INCOME_TOTAL
 
@@ -577,6 +580,14 @@ def bureau_features(bureau, data):
     data.loc[:, 'max_overdue_credit_min'] = data.SK_ID_CURR.map(res)
     
     del x, res
+    gc.collect()
+
+    # difference between first bureau credit and employment date
+    latest_credit_date = bureau.groupby('SK_ID_CURR')['DAYS_CREDIT'].min()
+    latest_credit_date = data.SK_ID_CURR.map(latest_credit_date)
+    data.loc[:, 'diff_latest_credit_employed'] = latest_credit_date - data.DAYS_EMPLOYED.replace({365243: np.nan})
+
+    del latest_credit_date
     gc.collect()
     
     return data, list(set(data.columns) - set(COLS))
@@ -1020,7 +1031,13 @@ def prev_app_features(prev_app, data):
     del tmp, res
     gc.collect()
 
+    # difference between first previous application approved credit and employment date
+    first_prev_app_credit = prev_app[prev_app.NAME_CONTRACT_STATUS  == 0].groupby('SK_ID_CURR')['DAYS_DECISION'].min()
+    first_prev_app_credit = data.SK_ID_CURR.map(first_prev_app_credit)
+    data.loc[:, 'diff_first_prev_app_credit_employed'] = first_prev_app_credit - data.DAYS_EMPLOYED.replace({365243: np.nan})
+
     return data, list(set(data.columns) - set(COLS))
+
 
 def pos_cash_features(pos_cash, data):
     COLS = data.columns.tolist()
@@ -1876,6 +1893,26 @@ def loan_stacking(bureau, prev_app, credit_bal, data):
                                         'NONLIVINGAREA_MODE',
                                         'TOTALAREA_MODE'
                                     ]].apply(np.mean, axis=1)
+
+    # difference between latest bureau and previous application loan
+    t1 = prev_app[prev_app.NAME_CONTRACT_STATUS == 0].groupby('SK_ID_CURR')['DAYS_DECISION'].min()
+    t2 = bureau.groupby('SK_ID_CURR')['DAYS_CREDIT'].min()
+
+    t1 = data.SK_ID_CURR.map(t1)
+    t2 = data.SK_ID_CURR.map(t2)
+
+    data.loc[:, 'min_diff_bureau_prev_app_credit_date'] = (t1 - t2)
+
+    del t1, t2
+    gc.collect()
+
+    t1 = prev_app[prev_app.NAME_CONTRACT_STATUS == 0].groupby('SK_ID_CURR')['DAYS_DECISION'].max()
+    t2 = bureau.groupby('SK_ID_CURR')['DAYS_CREDIT'].max()
+
+    t1 = data.SK_ID_CURR.map(t1)
+    t2 = data.SK_ID_CURR.map(t2)
+
+    data.loc[:, 'max_diff_bureau_prev_app_credit_date'] = (t1 - t2)
 
 
     return data, list(set(data.columns) - set(COLS))
