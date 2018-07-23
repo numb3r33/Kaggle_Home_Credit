@@ -9,6 +9,8 @@ from sklearn.model_selection import cross_val_predict
 from sklearn.model_selection import StratifiedKFold
 from sklearn.metrics import roc_auc_score
 from sklearn.externals import joblib
+from sklearn.decomposition import PCA
+from sklearn.preprocessing import StandardScaler
 
 import time
 
@@ -163,19 +165,37 @@ class BaseModel:
         
         return m, feat_df
     
-    def cross_validate(self, Xtr, ytr, params):
+    def get_folds(self, X, cv_df):
+        for fold in range(cv_df.shape[1] - 1):
+            test_idx  = list(cv_df[f'F{fold}'].values)
+            train_idx = list(set(X.index) - set(test_idx))
+
+            yield train_idx, test_idx
+    
+    def cross_validate(self, Xtr, ytr, params, cv_adversarial_filepath=None):
         num_boost_round       = params['num_boost_round']
         early_stopping_rounds = params['early_stopping_rounds']
 
         del params['num_boost_round'], params['early_stopping_rounds']
 
         # start time counter
-        t0 = time.time()
+        t0     = time.time()
         
         ltrain = lgb.Dataset(Xtr, ytr, feature_name=Xtr.columns.tolist())
 
-        cv     = lgb.cv(params, 
-                        ltrain, 
+        if cv_adversarial_filepath is not None:
+            cv_df = pd.read_csv(cv_adversarial_filepath)
+
+            cv     = lgb.cv(params, 
+                            ltrain,
+                            folds=self.get_folds(Xtr, cv_df), 
+                            num_boost_round=num_boost_round, 
+                            early_stopping_rounds=early_stopping_rounds,
+                            verbose_eval=20
+                        )
+        else:
+            cv     = lgb.cv(params, 
+                        ltrain,
                         num_boost_round=num_boost_round, 
                         early_stopping_rounds=early_stopping_rounds,
                         verbose_eval=20
@@ -271,7 +291,48 @@ class BaseModel:
         return yhat, score
 
 
-    def oof_preds(self, X, y, model):
+    def oof_preds(self, X, y, model, **params):
         skf = StratifiedKFold(n_splits=3)
         return cross_val_predict(model, X, y, cv=skf, method='predict_proba')
-        
+
+    def add_pca_components(self, data, PCA_PARAMS):
+        data_copy = data.copy()
+
+        # preprocess for pca
+        SKIP_COLS = ['SK_ID_CURR', 'TARGET']
+        data_copy = data_copy.loc[:, data_copy.columns.drop(SKIP_COLS)]
+
+        for col in data_copy.columns:
+            # replace inf with np.nan
+            data_copy[col] = data_copy[col].replace([np.inf, -np.inf], np.nan)
+            
+            # fill missing values with median
+            if data_copy[col].isnull().sum():
+                if pd.isnull(data_copy[col].median()):
+                    data_copy[col] = data_copy[col].fillna(-1)
+                else:
+                    data_copy[col] = data_copy[col].fillna(data_copy[col].median())
+
+        pca       = self.fit_pca(data_copy, **PCA_PARAMS)
+        data_copy = self.transform_pca(data_copy)
+
+        data_copy = pd.DataFrame(data_copy, columns=[f'pca_{i}' for i in range(PCA_PARAMS['n_components'])])
+        data_copy.index = data.index
+
+        return data_copy
+    
+    def fit_pca(self, X, **pca_params):
+        scaler = StandardScaler()
+        X      = scaler.fit_transform(X)
+
+        pca = PCA(**pca_params)
+        pca.fit(X)
+
+        self.scaler = scaler
+        self.pca    = pca
+
+        return pca
+
+    def transform_pca(self, X):
+        X = self.scaler.transform(X)
+        return self.pca.transform(X)

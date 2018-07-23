@@ -274,6 +274,35 @@ def current_application_features(data):
                       'payment_rate', 'phone_to_birth_ratio', 'phone_to_employ_ratio'
                      ]
 
+    
+    # relationship of monthly amount paid, annual income and external source 2
+    data.loc[:, 'annuity_div_income_ext_source_2'] = ((data.AMT_ANNUITY * 12) / data.AMT_INCOME_TOTAL) * data.EXT_SOURCE_2
+    data.loc[:, 'annuity_sub_income_ext_source_2'] = ((data.AMT_ANNUITY * 12) - data.AMT_INCOME_TOTAL) * data.EXT_SOURCE_2
+    
+    # relationship of monthly amount paid, credit amount and external source 2
+    data.loc[:, 'annuity_div_credit_ext_source_2'] = ((data.AMT_ANNUITY * 12) / data.AMT_CREDIT) * data.EXT_SOURCE_2
+    data.loc[:, 'annuity_sub_credit_ext_source_2'] = ((data.AMT_ANNUITY * 12) - data.AMT_CREDIT) * data.EXT_SOURCE_2
+
+    FEATURE_NAMES += ['annuity_div_income_ext_source_2',
+                      'annuity_sub_income_ext_source_2',
+                      'annuity_div_credit_ext_source_2',
+                      'annuity_sub_credit_ext_source_2'
+                     ]
+
+    # merge social indicators
+    social_indicator = pd.factorize(data.NAME_EDUCATION_TYPE.astype(np.str) + '_' +\
+                       data.NAME_FAMILY_STATUS.astype(np.str) + '_' +\
+                       data.NAME_HOUSING_TYPE.astype(np.str) + '_' +\
+                       data.NAME_INCOME_TYPE.astype(np.str))[0]
+    social_indicator = pd.Series(social_indicator)
+    social_indicator_counts   = social_indicator.value_counts()
+    low_freq_social_indicator = social_indicator_counts[social_indicator_counts <= 8].index
+
+    social_indicator[social_indicator.isin(low_freq_social_indicator)] = -99
+    data.loc[:, 'social_indicator'] = social_indicator
+
+    FEATURE_NAMES += ['social_indicator']
+
     return data, FEATURE_NAMES
 
 def bureau_features(bureau, data):
@@ -1038,7 +1067,6 @@ def prev_app_features(prev_app, data):
 
     return data, list(set(data.columns) - set(COLS))
 
-
 def pos_cash_features(pos_cash, data):
     COLS = data.columns.tolist()
     
@@ -1075,11 +1103,7 @@ def pos_cash_features(pos_cash, data):
 
     # installments left on cash and consumer loans for a user.
     tmp = pos_cash.groupby(['SK_ID_CURR', 'SK_ID_PREV'], as_index=False)['MONTHS_BALANCE'].max()
-    tmp = tmp.merge(pos_cash.loc[:, ['SK_ID_CURR', 
-                                    'SK_ID_PREV', 
-                                    'MONTHS_BALANCE', 
-                                    'CNT_INSTALMENT_FUTURE'
-                                    ]], how='left')
+    tmp = tmp.merge(pos_cash, how='inner')
     
     t = tmp.groupby('SK_ID_CURR')['CNT_INSTALMENT_FUTURE'].median()
     data.loc[:, 'median_pos_installments_left'] = data.SK_ID_CURR.map(t)
@@ -1093,6 +1117,28 @@ def pos_cash_features(pos_cash, data):
     t = tmp.groupby('SK_ID_CURR')['CNT_INSTALMENT_FUTURE'].var()
     data.loc[:, 'var_pos_installments_left'] = data.SK_ID_CURR.map(t) 
     
+    total_dpd = tmp.groupby('SK_ID_CURR')['SK_DPD'].sum()
+    data.loc[:, 'most_recent_total_pos_cash_dpd'] = data.SK_ID_CURR.map(total_dpd)
+
+    mean_dpd  = tmp.groupby('SK_ID_CURR')['SK_DPD'].mean()
+    data.loc[:, 'most_recent_mean_pos_cash_dpd'] = data.SK_ID_CURR.map(mean_dpd)
+
+    max_dpd  = tmp.groupby('SK_ID_CURR')['SK_DPD'].max()
+    data.loc[:, 'most_recent_max_pos_cash_dpd'] = data.SK_ID_CURR.map(max_dpd)
+
+    min_dpd  = tmp.groupby('SK_ID_CURR')['SK_DPD'].min()
+    data.loc[:, 'most_recent_min_pos_cash_dpd'] = data.SK_ID_CURR.map(min_dpd)
+
+    std_dpd  = tmp.groupby('SK_ID_CURR')['SK_DPD'].std()
+    data.loc[:, 'most_recent_std_pos_cash_dpd'] = data.SK_ID_CURR.map(std_dpd)
+
+    total_credits = pos_cash.groupby('SK_ID_CURR').size()
+    tmp.loc[:, 'recent_status'] = (tmp.NAME_CONTRACT_STATUS == 4).astype(np.uint8)
+    completed_credits        = tmp.groupby('SK_ID_CURR')['recent_status'].sum()
+    ratio_completed_to_total = (completed_credits / total_credits).fillna(0)
+
+    data.loc[:, 'ratio_completed_to_total_pos_cash'] = data.SK_ID_CURR.map(ratio_completed_to_total)
+
     return data, list(set(data.columns) - set(COLS))
 
 def credit_card_features(credit_bal, data):
@@ -2022,22 +2068,40 @@ def prev_app_pos_credit(prev_app, pos_cash, credit_bal, data):
     COLS = data.columns.tolist()
 
     # total days past due
-    p  = prev_app.loc[prev_app.NAME_CONTRACT_STATUS == 0, ['SK_ID_PREV', 'SK_ID_CURR']]
-    c  = p.merge(pos_cash, how='left')
-    cc = p.merge(credit_bal, how='left')
+    mask = (prev_app.NAME_CONTRACT_STATUS == 0) &\
+           (prev_app.DAYS_DECISION >= -365)
 
+    p  = prev_app.loc[mask , ['SK_ID_PREV', 'SK_ID_CURR']]
+    c  = p.merge(pos_cash, how='inner')
+    cc = p.merge(credit_bal, how='inner')
+
+    # SUM
     c_dpd  = c.groupby(['SK_ID_CURR'])['SK_DPD'].sum()
     cc_dpd = cc.groupby(['SK_ID_CURR'])['SK_DPD'].sum() 
+
+    data.loc[:, 'cash_dpd_sum']   = data.SK_ID_CURR.map(c_dpd)
+    data.loc[:, 'credit_dpd_sum'] = data.SK_ID_CURR.map(cc_dpd) 
 
     res = c_dpd.add(cc_dpd, fill_value=np.nan)
     res = data.SK_ID_CURR.map(res)
 
-    counts = res.value_counts()
-    res    = res.replace(counts[counts < 200].index, -100)
-
     data.loc[:, 'total_cash_credit_dpd'] = res.fillna(-1).astype(np.int8)
     
-    del p, c, cc, c_dpd, cc_dpd, res, counts
+    # Std
+    c_dpd  = c.groupby(['SK_ID_CURR'])['SK_DPD'].std()
+    cc_dpd = cc.groupby(['SK_ID_CURR'])['SK_DPD'].std() 
+
+    data.loc[:, 'cash_dpd_std']   = data.SK_ID_CURR.map(c_dpd)
+    data.loc[:, 'credit_dpd_std'] = data.SK_ID_CURR.map(cc_dpd) 
+
+    # Max
+    c_dpd  = c.groupby(['SK_ID_CURR'])['SK_DPD'].max()
+    cc_dpd = cc.groupby(['SK_ID_CURR'])['SK_DPD'].max() 
+
+    data.loc[:, 'cash_dpd_max']   = data.SK_ID_CURR.map(c_dpd)
+    data.loc[:, 'credit_dpd_max'] = data.SK_ID_CURR.map(cc_dpd) 
+
+    del p, c, cc, c_dpd, cc_dpd, res
     gc.collect()
 
     return data, list(set(data.columns) - set(COLS))
