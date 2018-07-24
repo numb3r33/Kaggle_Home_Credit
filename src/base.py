@@ -298,30 +298,27 @@ class BaseModel:
         return cross_val_predict(model, X, y, cv=skf, method='predict_proba')
 
     def add_pca_components(self, data, PCA_PARAMS):
-        data_copy = data.copy()
-
         # preprocess for pca
         SKIP_COLS = ['SK_ID_CURR', 'TARGET']
-        data_copy = data_copy.loc[:, data_copy.columns.drop(SKIP_COLS)]
+        data = data.loc[:, data.columns.drop(SKIP_COLS)]
 
-        for col in data_copy.columns:
+        for col in data.columns:
             # replace inf with np.nan
-            data_copy[col] = data_copy[col].replace([np.inf, -np.inf], np.nan)
+            data[col] = data[col].replace([np.inf, -np.inf], np.nan)
             
             # fill missing values with median
-            if data_copy[col].isnull().sum():
-                if pd.isnull(data_copy[col].median()):
-                    data_copy[col] = data_copy[col].fillna(-1)
+            if data[col].isnull().sum():
+                if pd.isnull(data[col].median()):
+                    data[col] = data[col].fillna(-1)
                 else:
-                    data_copy[col] = data_copy[col].fillna(data_copy[col].median())
+                    data[col] = data[col].fillna(data[col].median())
 
-        pca       = self.fit_pca(data_copy, **PCA_PARAMS)
-        data_copy = self.transform_pca(data_copy)
+        pca  = self.fit_pca(data, **PCA_PARAMS)
+        data = self.transform_pca(data)
 
-        data_copy = pd.DataFrame(data_copy, columns=[f'pca_{i}' for i in range(PCA_PARAMS['n_components'])])
-        data_copy.index = data.index
-
-        return data_copy
+        data = pd.DataFrame(data, columns=[f'pca_{i}' for i in range(PCA_PARAMS['n_components'])])
+        
+        return data
     
     def fit_pca(self, X, **pca_params):
         scaler = StandardScaler()
