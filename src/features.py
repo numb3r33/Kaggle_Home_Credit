@@ -303,6 +303,33 @@ def current_application_features(data):
 
     FEATURE_NAMES += ['social_indicator']
 
+    # family related features
+    data['cnt_non_child'] = data['CNT_FAM_MEMBERS'] - data['CNT_CHILDREN']
+    data['child_to_non_child_ratio'] = data['CNT_CHILDREN'] / data['cnt_non_child']
+    data['income_per_non_child'] = data['AMT_INCOME_TOTAL'] / data['cnt_non_child']
+    data['credit_per_person'] = data['AMT_CREDIT'] / data['CNT_FAM_MEMBERS']
+    data['credit_per_child'] = data['AMT_CREDIT'] / (1 + data['CNT_CHILDREN'])
+    data['credit_per_non_child'] = data['AMT_CREDIT'] / data['cnt_non_child']
+
+    FEATURE_NAMES += ['cnt_non_child',
+                      'child_to_non_child_ratio',
+                      'income_per_non_child',
+                      'credit_per_person',
+                      'credit_per_child',
+                      'credit_per_non_child'
+                     ]
+
+    # relationship between age and external sources
+    data.loc[:, 'mult_age_ext_source_1'] = (-data.DAYS_BIRTH / 365) * data.EXT_SOURCE_1
+    data.loc[:, 'mult_age_ext_source_2'] = (-data.DAYS_BIRTH / 365) * data.EXT_SOURCE_2
+    data.loc[:, 'mult_age_ext_source_3'] = (-data.DAYS_BIRTH / 365) * data.EXT_SOURCE_3
+    
+    FEATURE_NAMES += ['mult_age_ext_source_1',
+                      'mult_age_ext_source_2',
+                      'mult_age_ext_source_3'
+                     ]
+                     
+
     return data, FEATURE_NAMES
 
 def bureau_features(bureau, data):
@@ -618,6 +645,19 @@ def bureau_features(bureau, data):
 
     del latest_credit_date
     gc.collect()
+
+    # debt to number of days remaining for active credit reported to Credit Bureau
+    debt      = bureau.loc[bureau.DAYS_CREDIT_ENDDATE > 0, 'AMT_CREDIT_SUM_DEBT']
+    days_left = bureau.loc[bureau.DAYS_CREDIT_ENDDATE > 0, 'DAYS_CREDIT_ENDDATE']
+
+    tmp       = debt / days_left
+    tmp       = tmp.groupby(bureau.loc[bureau.DAYS_CREDIT_ENDDATE > 0, 'SK_ID_CURR']).mean()
+    data.loc[:, 'debt_times_days_left_bureau_mean'] = data.SK_ID_CURR.map(tmp)
+
+    tmp       = debt * days_left
+    tmp       = tmp.groupby(bureau.loc[bureau.DAYS_CREDIT_ENDDATE > 0, 'SK_ID_CURR']).mean()
+    data.loc[:, 'debt_to_days_left_bureau_mean'] = data.SK_ID_CURR.map(tmp)
+
     
     return data, list(set(data.columns) - set(COLS))
 
