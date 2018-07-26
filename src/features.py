@@ -1105,6 +1105,28 @@ def prev_app_features(prev_app, data):
     first_prev_app_credit = data.SK_ID_CURR.map(first_prev_app_credit)
     data.loc[:, 'diff_first_prev_app_credit_employed'] = first_prev_app_credit - data.DAYS_EMPLOYED.replace({365243: np.nan})
 
+    # Represent contract status of previous application as string of characters
+    contract_status_str = prev_app.sort_values(by='DAYS_DECISION', ascending=False).groupby('SK_ID_CURR')['NAME_CONTRACT_STATUS']\
+                                  .apply(lambda x: ''.join([str(z) for z in x]))
+    
+    contract_status_str        = data.SK_ID_CURR.map(contract_status_str)
+    contract_status_str_counts = contract_status_str.value_counts()
+
+    contract_status_str[contract_status_str.isin((contract_status_str_counts <= 8).index.values)] = '-1'
+    contract_status_str = pd.factorize(contract_status_str)[0]
+    data.loc[:, 'contract_status_str'] = contract_status_str
+
+    del contract_status_str
+    gc.collect()
+
+    # max annuity of the approved previous credit and current annuity
+    max_annuity_prev_app = prev_app.loc[prev_app.NAME_CONTRACT_STATUS == 0, ['SK_ID_CURR', 'AMT_ANNUITY']]\
+                               .groupby('SK_ID_CURR')['AMT_ANNUITY'].max()
+
+    max_annuity_prev_app = data.SK_ID_CURR.map(max_annuity_prev_app)
+    data.loc[:, 'ratio_max_annuity_prev_app_curr_annuity'] = (data.AMT_ANNUITY / max_annuity_prev_app).replace([-np.inf, np.inf], np.nan)
+
+
     return data, list(set(data.columns) - set(COLS))
 
 def pos_cash_features(pos_cash, data):

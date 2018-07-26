@@ -166,7 +166,7 @@ class BaseModel:
         return m, feat_df
     
     def get_folds(self, X, cv_df):
-        FOLD_NUM = [0, 2, 3, 4, 5]
+        FOLD_NUM = [0, 1, 2, 3, 4]
         
         for fold in FOLD_NUM:
             test_idx  = list(cv_df[f'F{fold}'].values)
