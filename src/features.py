@@ -1611,6 +1611,35 @@ def prev_app_bureau(prev_app, bureau, data):
     del bureau_loans, home_credit_loans, total_active_loans
     gc.collect()
 
+    # relationship between loan start date from bureau and previous home credit applications
+    # and employment start date
+    mask   = bureau.CREDIT_ACTIVE == 0
+    bureau_credit_start = bureau.loc[mask, ['SK_ID_CURR', 'DAYS_CREDIT']]
+
+    mask = prev_app.NAME_CONTRACT_STATUS == 0
+    prev_app_start = prev_app.loc[mask, ['SK_ID_CURR', 'DAYS_DECISION']]
+
+    client_employ_bureau_loan_dates = data.loc[:, ['SK_ID_CURR', 'DAYS_EMPLOYED']]\
+                                           .merge(bureau_credit_start, how='left')
+    client_employ_bureau_loan_dates['DAYS_EMPLOYED'].replace({365243: np.nan}, inplace=True)
+
+    client_employ_hc_loan_dates = data.loc[:, ['SK_ID_CURR', 'DAYS_EMPLOYED']]\
+                                            .merge(prev_app_start, how='left')
+
+    client_employ_bureau_loan_dates.loc[:, 'diff_loan_before_employment'] = (client_employ_bureau_loan_dates.DAYS_CREDIT - client_employ_bureau_loan_dates.DAYS_EMPLOYED)
+    client_employ_hc_loan_dates.loc[:, 'diff_loan_before_employment'] = (client_employ_hc_loan_dates.DAYS_DECISION - client_employ_hc_loan_dates.DAYS_EMPLOYED)
+
+    btmp = client_employ_bureau_loan_dates.groupby('SK_ID_CURR')['diff_loan_before_employment'].sum()
+    htmp = client_employ_hc_loan_dates.groupby('SK_ID_CURR')['diff_loan_before_employment'].sum()
+    tmp  = btmp + htmp
+
+    data.loc[:, 'sum_bureau_prev_app_credit_start_employ_start'] = data.SK_ID_CURR.map(tmp)
+
+    del bureau_credit_start, prev_app_start, client_employ_bureau_loan_dates
+    del client_employ_hc_loan_dates, btmp, htmp, tmp
+    gc.collect()
+
+    
     return data, list(set(data.columns) - set(COLS))
 
 def prev_app_credit_card(prev_app, credit_bal, data):
