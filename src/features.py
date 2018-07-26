@@ -658,6 +658,41 @@ def bureau_features(bureau, data):
     tmp       = tmp.groupby(bureau.loc[bureau.DAYS_CREDIT_ENDDATE > 0, 'SK_ID_CURR']).mean()
     data.loc[:, 'debt_to_days_left_bureau_mean'] = data.SK_ID_CURR.map(tmp)
 
+    # credit to debt difference by remaining days
+    mask = (bureau.CREDIT_ACTIVE == 0) & (bureau.AMT_CREDIT_SUM_DEBT > 0) & (bureau.DAYS_CREDIT_ENDDATE > 0)
+    diff_credit_debt = bureau.loc[mask, 'AMT_CREDIT_SUM'] - bureau.loc[mask, 'AMT_CREDIT_SUM_DEBT']
+    ratio_diff_left_days = (diff_credit_debt / bureau.loc[mask, 'DAYS_CREDIT_ENDDATE']).replace([-np.inf, np.inf], np.nan)
+    
+    tmp = ratio_diff_left_days.groupby(bureau.loc[mask, 'SK_ID_CURR']).mean()
+    data.loc[:, 'mean_ratio_diff_credit_debt_left_days'] = data.SK_ID_CURR.map(tmp)
+
+    tmp = ratio_diff_left_days.groupby(bureau.loc[mask, 'SK_ID_CURR']).min()
+    data.loc[:, 'min_ratio_diff_credit_debt_left_days'] = data.SK_ID_CURR.map(tmp)
+    
+    tmp = ratio_diff_left_days.groupby(bureau.loc[mask, 'SK_ID_CURR']).max()
+    data.loc[:, 'max_ratio_diff_credit_debt_left_days'] = data.SK_ID_CURR.map(tmp)
+
+    tmp = ratio_diff_left_days.groupby(bureau.loc[mask, 'SK_ID_CURR']).sum()
+    data.loc[:, 'sum_ratio_diff_credit_debt_left_days'] = data.SK_ID_CURR.map(tmp)
+
+    # credit to debt difference by remaning days and age, employed since
+
+    mask = (bureau.CREDIT_ACTIVE == 0) & (bureau.AMT_CREDIT_SUM_DEBT > 0) & (bureau.DAYS_CREDIT_ENDDATE > 0)
+    diff_credit_debt = bureau.loc[mask, 'AMT_CREDIT_SUM'] - bureau.loc[mask, 'AMT_CREDIT_SUM_DEBT']
+    ratio_diff_left_days = (diff_credit_debt / bureau.loc[mask, 'DAYS_CREDIT_ENDDATE']).replace([-np.inf, np.inf], np.nan)
+    
+    tmp = ratio_diff_left_days.groupby(bureau.loc[mask, 'SK_ID_CURR']).mean()
+    data.loc[:, 'mean_ratio_diff_credit_debt_left_days_age_employed'] = (data.SK_ID_CURR.map(tmp)) * ((-data.DAYS_EMPLOYED.replace({365243: np.nan}) / 365) / (-data.DAYS_BIRTH / 365))
+
+    tmp = ratio_diff_left_days.groupby(bureau.loc[mask, 'SK_ID_CURR']).min()
+    data.loc[:, 'min_ratio_diff_credit_debt_left_days_age_employed'] = (data.SK_ID_CURR.map(tmp)) * ((-data.DAYS_EMPLOYED.replace({365243: np.nan}) / 365) / (-data.DAYS_BIRTH / 365))
+    
+    tmp = ratio_diff_left_days.groupby(bureau.loc[mask, 'SK_ID_CURR']).max()
+    data.loc[:, 'max_ratio_diff_credit_debt_left_days_age_employed'] = (data.SK_ID_CURR.map(tmp)) * ((-data.DAYS_EMPLOYED.replace({365243: np.nan}) / 365) / (-data.DAYS_BIRTH / 365))
+
+    tmp = ratio_diff_left_days.groupby(bureau.loc[mask, 'SK_ID_CURR']).sum()
+    data.loc[:, 'sum_ratio_diff_credit_debt_left_days_age_employed'] = (data.SK_ID_CURR.map(tmp)) * ((-data.DAYS_EMPLOYED.replace({365243: np.nan}) / 365) / (-data.DAYS_BIRTH / 365))
+
     
     return data, list(set(data.columns) - set(COLS))
 
