@@ -209,7 +209,7 @@ PARAMS = {
     'early_stopping_rounds': 100,
     'boosting_type': 'gbdt',
     'objective': 'binary',
-    'learning_rate': .1,
+    'learning_rate': .01,
     'metric': 'auc',
     'max_depth': 4,
     'num_leaves': 15,
