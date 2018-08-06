@@ -220,7 +220,7 @@ PARAMS = {
     'reg_lambda': 25,
     'min_data_in_leaf': 60,
     'min_child_weight': 10,
-    'nthread': 4,
+    'nthread': 8,
     'verbose': -1,
     'seed': SEED
 }
