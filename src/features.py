@@ -856,6 +856,33 @@ def bureau_and_balance(bureau, bureau_bal, data):
 
     del tmp, res, status_size, status_unk
     gc.collect()
+    
+    # Relationship between count of different status ( most recent ) for credits
+    # reported by Bureau and TARGET
+
+    data_bureau = data.loc[:, ['SK_ID_CURR', 'TARGET']]\
+                           .merge(bureau.loc[:, ['SK_ID_CURR',
+                                  'SK_ID_BUREAU'
+                                 ]], on='SK_ID_CURR', how='left')
+
+    most_recent_status = bureau_bal.groupby('SK_ID_BUREAU', as_index=False)['MONTHS_BALANCE'].max()
+    bureau_bal_recent  = bureau_bal.merge(most_recent_status, on=['SK_ID_BUREAU', 'MONTHS_BALANCE'], how='inner')
+
+    del most_recent_status
+    gc.collect()
+
+    data_bureau_bal = data_bureau.merge(bureau_bal_recent, on='SK_ID_BUREAU', how='left')
+
+    data_bureau_bal.loc[:, 'STATUS']  = data_bureau_bal.STATUS.astype(np.str)
+    data_bureau_bal.loc[:, 'STATUS']  = data_bureau_bal.STATUS.fillna('missing')
+
+    ss = data_bureau_bal.groupby(['SK_ID_CURR', 'STATUS']).size().unstack().fillna(0)
+    ss.loc[:, 'ratio_C_X'] = (ss['C'] + ss['X']) / ss['nan']
+
+    data.loc[:, 'ratio_sum_C_X_to_missing'] = data.SK_ID_CURR.map(ss.ratio_C_X)
+    
+    del ss, bureau_bal_recent, data_bureau_bal
+    gc.collect()
 
     return data, list(set(data.columns) - set(COLS))
 
