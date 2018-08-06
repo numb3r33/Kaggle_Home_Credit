@@ -103,7 +103,7 @@ class BaseModel:
                                           )
         return train
 
-    def train_lgb(self, X, y, Xte, yte, **params):
+    def train_lgb(self, X, y, Xte, yte, categorical_feature='auto', **params):
         print()
         print('Train LightGBM classifier ...')
         print('*' * 100)
@@ -115,14 +115,16 @@ class BaseModel:
         del params['num_boost_round'], params['early_stopping_rounds']
 
         ltrain = lgb.Dataset(X, y, 
-                            feature_name=X.columns.tolist())
+                            feature_name=X.columns.tolist(),
+                            categorical_feature=categorical_feature
+                            )
         
         m       = None
         feat_df = None
 
         # start time counter
         t0 = time.time()
-        
+
         if len(yte):
             lval = lgb.Dataset(Xte, yte, feature_name=X.columns.tolist())
             
@@ -174,7 +176,7 @@ class BaseModel:
 
             yield train_idx, test_idx
     
-    def cross_validate(self, Xtr, ytr, params, cv_adversarial_filepath=None):
+    def cross_validate(self, Xtr, ytr, params, cv_adversarial_filepath=None, categorical_feature='auto'):
         num_boost_round       = params['num_boost_round']
         early_stopping_rounds = params['early_stopping_rounds']
 
@@ -183,7 +185,7 @@ class BaseModel:
         # start time counter
         t0     = time.time()
         
-        ltrain = lgb.Dataset(Xtr, ytr, feature_name=Xtr.columns.tolist())
+        ltrain = lgb.Dataset(Xtr, ytr, feature_name=Xtr.columns.tolist(), categorical_feature=categorical_feature)
 
         if cv_adversarial_filepath is not None:
             cv_df = pd.read_csv(cv_adversarial_filepath)
@@ -193,11 +195,45 @@ class BaseModel:
                             folds=self.get_folds(Xtr, cv_df), 
                             num_boost_round=num_boost_round, 
                             early_stopping_rounds=early_stopping_rounds,
+                            seed=params['seed'],
                             verbose_eval=20
                         )
         else:
             cv     = lgb.cv(params, 
                         ltrain,
+                        num_boost_round=num_boost_round, 
+                        early_stopping_rounds=early_stopping_rounds,
+                        seed=params['seed'],
+                        verbose_eval=20
+                    )
+
+        print('\nTook: {} seconds'.format(time.time() - t0))
+        
+        return pd.DataFrame(cv)
+
+    def cross_validate_xgb(self, Xtr, ytr, params, cv_adversarial_filepath=None):
+        num_boost_round       = params['num_boost_round']
+        early_stopping_rounds = params['early_stopping_rounds']
+
+        del params['num_boost_round'], params['early_stopping_rounds']
+
+        # start time counter
+        t0     = time.time()
+        dtrain = xgb.DMatrix(Xtr, ytr, feature_names=Xtr.columns.tolist())
+
+        if cv_adversarial_filepath is not None:
+            cv_df = pd.read_csv(cv_adversarial_filepath)
+
+            cv     = xgb.cv(params, 
+                            dtrain,
+                            folds=self.get_folds(Xtr, cv_df), 
+                            num_boost_round=num_boost_round, 
+                            early_stopping_rounds=early_stopping_rounds,
+                            verbose_eval=20
+                        )
+        else:
+            cv     = xgb.cv(params, 
+                        dtrain,
                         num_boost_round=num_boost_round, 
                         early_stopping_rounds=early_stopping_rounds,
                         verbose_eval=20
@@ -334,4 +370,4 @@ class BaseModel:
 
     def transform_pca(self, X):
         X = self.scaler.transform(X)
-        return self.pca.transform(X)
+        return self.pca.transform(X)    

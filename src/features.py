@@ -77,6 +77,12 @@ def current_application_features(data):
     data.loc[:, 'EXT_1_3'] = data.loc[:, 'EXT_SOURCE_1'] * data.loc[:, 'EXT_SOURCE_3']
     data.loc[:, 'EXT_1_2'] = data.loc[:, 'EXT_SOURCE_1'] * data.loc[:, 'EXT_SOURCE_2']
 
+    # geometric mean
+    data.loc[:, 'EXT_1_2_gm'] = np.power(data.loc[:, 'EXT_SOURCE_1'] * data.loc[:, 'EXT_SOURCE_2'], 1 / 2)
+    data.loc[:, 'EXT_1_3_gm'] = np.power(data.loc[:, 'EXT_SOURCE_1'] * data.loc[:, 'EXT_SOURCE_3'], 1 / 2)
+    data.loc[:, 'EXT_2_3_gm'] = np.power(data.loc[:, 'EXT_SOURCE_2'] * data.loc[:, 'EXT_SOURCE_3'], 1 / 2)
+    data.loc[:, 'EXT_1_2_3_gm'] = np.power(data.loc[:, 'EXT_SOURCE_1'] * data.loc[:, 'EXT_SOURCE_2'] * data.loc[:, 'EXT_SOURCE_3'], 1 / 3)
+
     data.loc[:, 'EXT_1_2_sum'] = data.loc[:, 'EXT_SOURCE_1'] + data.loc[:, 'EXT_SOURCE_2']
     data.loc[:, 'EXT_1_3_sum'] = data.loc[:, 'EXT_SOURCE_1'] + data.loc[:, 'EXT_SOURCE_3']
     data.loc[:, 'EXT_2_3_sum'] = data.loc[:, 'EXT_SOURCE_2'] + data.loc[:, 'EXT_SOURCE_3']
@@ -93,11 +99,21 @@ def current_application_features(data):
     weights = [.4, 3, 1.2]
     r1 = (data.EXT_SOURCE_1 * weights[0]).add(data.EXT_SOURCE_2 * weights[1], fill_value=0)
     r2 = r1.add(data.EXT_SOURCE_3 * weights[2], fill_value=0)
-    data.loc[:, 'weighted_mean_external_scores'] = r2     
+    data.loc[:, 'weighted_mean_external_scores'] = r2
+
+    # nan median
+    data.loc[:, 'external_scores_nan_median'] = np.nanmedian(data.loc[:, ['EXT_SOURCE_1', 'EXT_SOURCE_2', 'EXT_SOURCE_3']], axis=1)   
+
+    # recent employment
+    data.loc[:, 'recent_employment'] = (data['DAYS_EMPLOYED'] < -2000).astype(np.uint8)
+    data.loc[:, 'young_age']         = (data['DAYS_BIRTH'] < -14000).astype(np.uint8)
 
     FEATURE_NAMES += ['EXT_3_2', 
                       'EXT_1_3', 
                       'EXT_1_2',
+                      'EXT_1_3_gm',
+                      'EXT_2_3_gm',
+                      'EXT_1_2_3_gm',
                       'EXT_1_2_sum', 
                       'EXT_1_3_sum', 
                       'EXT_2_3_sum',
@@ -107,7 +123,10 @@ def current_application_features(data):
                       'EXT_1_2_mean',
                       'EXT_2_3_mean',
                       'EXT_1_3_mean',
-                      'weighted_mean_external_scores'
+                      'weighted_mean_external_scores',
+                      'external_scores_nan_median',
+                      'recent_employment',
+                      'young_age'
                      ]
 
     # treat 365243 in days employed as null value
@@ -323,11 +342,23 @@ def current_application_features(data):
     data.loc[:, 'mult_age_ext_source_1'] = (-data.DAYS_BIRTH / 365) * data.EXT_SOURCE_1
     data.loc[:, 'mult_age_ext_source_2'] = (-data.DAYS_BIRTH / 365) * data.EXT_SOURCE_2
     data.loc[:, 'mult_age_ext_source_3'] = (-data.DAYS_BIRTH / 365) * data.EXT_SOURCE_3
-    
+
+    data.loc[:, 'div_age_ext_source_1']  = (-data.DAYS_BIRTH / 365) / data.EXT_SOURCE_1
+    data.loc[:, 'div_age_ext_source_2']  = (-data.DAYS_BIRTH / 365) / data.EXT_SOURCE_2
+    data.loc[:, 'div_age_ext_source_3']  = (-data.DAYS_BIRTH / 365) / data.EXT_SOURCE_3
+
     FEATURE_NAMES += ['mult_age_ext_source_1',
                       'mult_age_ext_source_2',
-                      'mult_age_ext_source_3'
+                      'mult_age_ext_source_3',
+                      'div_age_ext_source_1',
+                      'div_age_ext_source_2',
+                      'div_age_ext_source_3'
                      ]
+
+    # nulls in external scores
+    data.loc[:, 'null_scores_ext_scores'] = pd.factorize(data.EXT_SOURCE_1.isnull().astype(np.str) + '_' +\
+                                                         data.EXT_SOURCE_2.isnull().astype(np.str) + '_' +\
+                                                         data.EXT_SOURCE_3.isnull().astype(np.str))[0]
                      
 
     return data, FEATURE_NAMES
@@ -693,7 +724,55 @@ def bureau_features(bureau, data):
     tmp = ratio_diff_left_days.groupby(bureau.loc[mask, 'SK_ID_CURR']).sum()
     data.loc[:, 'sum_ratio_diff_credit_debt_left_days_age_employed'] = (data.SK_ID_CURR.map(tmp)) * ((-data.DAYS_EMPLOYED.replace({365243: np.nan}) / 365) / (-data.DAYS_BIRTH / 365))
 
+    # relationship between total debt from bureau credits with age
+    mask = (bureau.CREDIT_ACTIVE == 0) & (bureau.DAYS_CREDIT_ENDDATE > 0)
+    total_debt_bureau   = bureau.loc[mask, :].groupby('SK_ID_CURR')['AMT_CREDIT_SUM_DEBT'].sum()
+    total_credit_bureau = bureau.loc[mask, :].groupby('SK_ID_CURR')['AMT_CREDIT_SUM'].sum()
+
+    total_debt_bureau   = data.SK_ID_CURR.map(total_debt_bureau)
+    total_credit_bureau = data.SK_ID_CURR.map(total_credit_bureau) 
     
+    data.loc[:, 'debt_credit_bureau_ratio_with_age'] = (total_debt_bureau / total_credit_bureau) * (-data.DAYS_BIRTH / 365)
+
+    del total_debt_bureau, total_credit_bureau
+    gc.collect()
+
+    # relationship between bureau credit end date and employed since
+    mask = (bureau.CREDIT_ACTIVE == 0) & (bureau.DAYS_CREDIT_ENDDATE > 0)
+    total_enddate = bureau.loc[mask, :].groupby('SK_ID_CURR')['DAYS_CREDIT_ENDDATE'].sum()
+    total_enddate = data.SK_ID_CURR.map(total_enddate)
+    
+    mean_enddate = bureau.loc[mask, :].groupby('SK_ID_CURR')['DAYS_CREDIT_ENDDATE'].mean()
+    mean_enddate = data.SK_ID_CURR.map(mean_enddate)
+
+    max_enddate = bureau.loc[mask, :].groupby('SK_ID_CURR')['DAYS_CREDIT_ENDDATE'].max()
+    max_enddate = data.SK_ID_CURR.map(max_enddate)
+
+    min_enddate = bureau.loc[mask, :].groupby('SK_ID_CURR')['DAYS_CREDIT_ENDDATE'].min()
+    min_enddate = data.SK_ID_CURR.map(min_enddate)
+
+    data.loc[:, 'total_bureau_enddate_employed_since'] = total_enddate / (-data.DAYS_EMPLOYED.replace({365243: np.nan}) / 365)
+    data.loc[:, 'mean_bureau_enddate_employed_since'] = mean_enddate / (-data.DAYS_EMPLOYED.replace({365243: np.nan}) / 365)
+    data.loc[:, 'max_bureau_enddate_employed_since'] = max_enddate / (-data.DAYS_EMPLOYED.replace({365243: np.nan}) / 365)
+    data.loc[:, 'min_bureau_enddate_employed_since'] = min_enddate / (-data.DAYS_EMPLOYED.replace({365243: np.nan}) / 365)
+    
+    # debt to credit ratio with external scores
+    mask = (bureau.CREDIT_ACTIVE == 0) & (bureau.DAYS_CREDIT_ENDDATE > 0)
+    total_credit = bureau.loc[mask, :].groupby('SK_ID_CURR')['AMT_CREDIT_SUM'].sum()
+    max_credit   = bureau.loc[mask, :].groupby('SK_ID_CURR')['AMT_CREDIT_SUM'].max()
+
+    total_credit = data.SK_ID_CURR.map(total_credit)
+    max_credit   = data.SK_ID_CURR.map(max_credit)
+
+    total_debt = bureau.loc[mask, :].groupby('SK_ID_CURR')['AMT_CREDIT_SUM_DEBT'].sum()
+    max_debt   = bureau.loc[mask, :].groupby('SK_ID_CURR')['AMT_CREDIT_SUM_DEBT'].max()
+
+    total_debt = data.SK_ID_CURR.map(total_debt)
+    max_debt   = data.SK_ID_CURR.map(max_debt)
+
+    data.loc[:, 'debt_to_credit_ext_source_2_mult']     = (total_debt / total_credit) * data.EXT_SOURCE_2
+    data.loc[:, 'max_debt_to_credit_ext_source_2_mult'] = (max_debt / max_credit) * data.EXT_SOURCE_2
+
     return data, list(set(data.columns) - set(COLS))
 
 #TODO: Features here should be moved to feature engineering in corresponding model file.
@@ -1088,8 +1167,12 @@ def prev_app_features(prev_app, data):
     data.loc[:, 'diff_max_min_credit_term'] = data.max_credit_term.subtract(data.min_credit_term, fill_value=0)
     
     
-    res                        = prev_app[prev_app.NAME_CONTRACT_STATUS == 0].groupby('SK_ID_CURR')['DAYS_DECISION'].min()
+    res                                         = prev_app[prev_app.NAME_CONTRACT_STATUS == 0].groupby('SK_ID_CURR')['DAYS_DECISION'].min()
     data.loc[:, 'most_oldest_prev_application'] = data.SK_ID_CURR.map(res)
+
+    res = prev_app.groupby('SK_ID_CURR')['DAYS_DECISION'].min()
+    data.loc[:, 'new_user_date'] = data.SK_ID_CURR.map(res)
+
     
     res                        = prev_app[prev_app.NAME_CONTRACT_STATUS == 0].groupby('SK_ID_CURR')['DAYS_DECISION'].median()
     data.loc[:, 'median_prev_application']  = data.SK_ID_CURR.map(res)
@@ -1161,8 +1244,52 @@ def prev_app_features(prev_app, data):
     max_annuity_prev_app = data.SK_ID_CURR.map(max_annuity_prev_app)
     data.loc[:, 'ratio_max_annuity_prev_app_curr_annuity'] = (data.AMT_ANNUITY / max_annuity_prev_app).replace([-np.inf, np.inf], np.nan)
 
+    # months still left on payment
+    mask = (prev_app.NAME_CONTRACT_STATUS == 0) & (prev_app.CNT_PAYMENT > 0) &\
+           ((-prev_app.DAYS_DECISION / 30) < (prev_app.CNT_PAYMENT))
+
+    months_left_to_pay = (prev_app.loc[mask, 'CNT_PAYMENT']) - (-prev_app.loc[mask, 'DAYS_DECISION'] / 30) 
+    months_left_to_pay = months_left_to_pay.groupby(prev_app.loc[mask, 'SK_ID_CURR']).mean()
+
+    data.loc[:, 'months_left_to_pay'] = data.SK_ID_CURR.map(months_left_to_pay)
+
+    # difference between actual and proposed termination
+    mask = (prev_app.DAYS_TERMINATION.notnull()) & (prev_app.DAYS_TERMINATION != 365243)
+
+    a = prev_app.loc[mask,'CNT_PAYMENT'] - (-prev_app.loc[mask, 'DAYS_DECISION'] / 30)
+    b = prev_app.loc[mask, 'DAYS_TERMINATION']
+
+    tmp = (a - b).groupby(prev_app.loc[mask, 'SK_ID_CURR']).mean()
+    data.loc[:, 'actual_proposed_termination'] = data.SK_ID_CURR.map(tmp)
+
+    del a, b, tmp
+    gc.collect()
+
+    # relationship between number of loans in last 6 months compared
+    # with number of loans in 12 months
+    last_6_months = prev_app.loc[(prev_app.NAME_CONTRACT_STATUS == 0) &\
+                             (prev_app.DAYS_DECISION >= -180)
+                            ]
+
+    last_6_months = last_6_months.groupby('SK_ID_CURR').size()
+    last_6_months = data.SK_ID_CURR.map(last_6_months)
+
+    last_12_months = prev_app.loc[(prev_app.NAME_CONTRACT_STATUS == 0) &\
+                                (prev_app.DAYS_DECISION < -180) &\
+                                (prev_app.DAYS_DECISION >= -365)
+                                ]
+
+    last_12_months = last_12_months.groupby('SK_ID_CURR').size()
+    last_12_months = data.SK_ID_CURR.map(last_12_months)
+
+    data.loc[:, 'ratio_6_12_prev_app_months'] = last_6_months.divide(last_12_months, fill_value=np.nan)
+    data.loc[:, 'diff_6_12_prev_app_months']  = last_12_months.subtract(last_6_months, fill_value=0)
+
+    del last_6_months, last_12_months
+    gc.collect()
 
     return data, list(set(data.columns) - set(COLS))
+
 
 def pos_cash_features(pos_cash, data):
     COLS = data.columns.tolist()
@@ -1480,6 +1607,27 @@ def get_installment_features(installments, data):
     del tmp, res
     gc.collect()
 
+    # number of late days in payment
+    is_late = installments.DAYS_INSTALMENT < installments.DAYS_ENTRY_PAYMENT
+    is_late = is_late.groupby(installments.SK_ID_CURR).sum()
+    data.loc[:, 'num_late_payments_in_installments'] = data.SK_ID_CURR.map(is_late)
+
+    del is_late
+    gc.collect()
+
+    # ratio of max and min installment during the course of prev home credits
+    max_installment = installments.groupby(['SK_ID_CURR', 'SK_ID_PREV'])['AMT_INSTALMENT'].max()
+    min_installment = installments.groupby(['SK_ID_CURR', 'SK_ID_PREV'])['AMT_INSTALMENT'].min()
+
+    ratio_max_min   = max_installment.divide(min_installment, fill_value=np.nan).replace([-np.inf, np.inf], np.nan)
+
+    tmp = ratio_max_min.reset_index()
+    tmp = tmp.groupby('SK_ID_CURR')['AMT_INSTALMENT'].sum()
+
+    data.loc[:, 'max_to_min_instalment_amount_prev_credit'] = data.SK_ID_CURR.map(tmp)
+
+    del tmp
+    gc.collect()
 
     return data, list(set(data.columns) - set(COLS))
 
@@ -1639,6 +1787,40 @@ def prev_app_bureau(prev_app, bureau, data):
     del client_employ_hc_loan_dates, btmp, htmp, tmp
     gc.collect()
 
+    # total debt(bureau + prev_app) and total debt by income
+    mask = (bureau.CREDIT_ACTIVE == 0)
+    total_bureau_debt = bureau.loc[mask, :].groupby('SK_ID_CURR')['AMT_CREDIT_SUM_DEBT'].sum()
+
+    mask = (prev_app.NAME_CONTRACT_STATUS == 0) & (prev_app.DAYS_TERMINATION > 0) & (prev_app.CNT_PAYMENT > 0) &\
+           (-prev_app.DAYS_DECISION / 30 < prev_app.CNT_PAYMENT)
+
+    remaining_months = prev_app.loc[mask].CNT_PAYMENT - (-prev_app.loc[mask].DAYS_DECISION / 30)
+    prev_app_debt    = prev_app.loc[mask].AMT_ANNUITY * remaining_months
+
+    total_debt = total_bureau_debt.add(prev_app_debt, fill_value=0)
+    data.loc[:, 'total_bureau_prev_app_live_debt'] = (data.SK_ID_CURR.map(total_debt))
+    data.loc[:, 'total_bureau_prev_app_live_debt_to_income'] = data.total_bureau_prev_app_live_debt / data.AMT_INCOME_TOTAL
+
+    # total credit
+    mask = (bureau.CREDIT_ACTIVE == 0)
+    total_bureau_credit = bureau.loc[mask, :].groupby('SK_ID_CURR')['AMT_CREDIT_SUM'].sum()
+
+    mask = (prev_app.NAME_CONTRACT_STATUS == 0) & (prev_app.DAYS_TERMINATION > 0) & (prev_app.CNT_PAYMENT > 0) &\
+        (-prev_app.DAYS_DECISION / 30 < prev_app.CNT_PAYMENT)
+
+    remaining_months = prev_app.loc[mask].CNT_PAYMENT - (-prev_app.loc[mask].DAYS_DECISION / 30)
+    prev_app_credit = prev_app.loc[mask].AMT_ANNUITY * remaining_months
+
+    total_credit = total_bureau_credit.add(prev_app_credit, fill_value=0)
+    total_credit = (data.SK_ID_CURR.map(total_credit))
+
+    data.loc[:, 'total_live_debt_credit'] = data.total_bureau_prev_app_live_debt.div(total_credit, fill_value=np.nan).replace([-np.inf, np.inf], np.nan)
+    
+    del total_bureau_debt, remaining_months, prev_app_debt
+    del total_debt, total_bureau_credit, prev_app_credit
+    del total_credit
+    gc.collect()
+
     
     return data, list(set(data.columns) - set(COLS))
 
@@ -1762,6 +1944,18 @@ def prev_app_credit_card(prev_app, credit_bal, data):
     data.loc[:, 'change_in_credit_limit_ot'] = data.SK_ID_CURR.map(tmp)
 
     del res, min_, max_, old, new, tmp
+    gc.collect()
+
+    # difference between cnt payment and actual duration
+    tmp = installments.groupby(['SK_ID_CURR', 'SK_ID_PREV']).reset_index().rename(columns={0: 'actual_duration'})
+    tmp = prev_app.loc[:, ['SK_ID_CURR', 'SK_ID_PREV', 'CNT_PAYMENT']]\
+              .merge(tmp, how='inner')
+
+    tmp.loc[:, 'diff_cnt_payment'] = tmp.CNT_PAYMENT - tmp.actual_duration
+    res = tmp.groupby('SK_ID_CURR')['diff_cnt_payment'].max()
+    data.loc[:, 'max_diff_actual_planned_duration_prev_credit'] = data.SK_ID_CURR.map(res)
+    
+    del tmp, res
     gc.collect()
     
     return data, list(set(data.columns) - set(COLS))
@@ -1894,6 +2088,20 @@ def prev_app_installments(prev_app, installments, data):
     data.loc[:, 'interaction_diff_credit_paid_term_min'] = data.SK_ID_CURR.map(res)
 
     del t, res
+    gc.collect()
+
+    # difference between current payment duration versus actual installment count
+    mask = prev_app.NAME_CONTRACT_STATUS == 0
+
+    x      = prev_app.loc[mask].groupby(['SK_ID_CURR', 'SK_ID_PREV'], as_index=False)['CNT_PAYMENT'].sum()
+    inst_x = installments.groupby(['SK_ID_CURR', 'SK_ID_PREV']).size().reset_index().rename(columns={0: 'inst_size'})
+
+    tmp = x.merge(inst_x)
+    tmp.loc[:, 'diff'] = tmp.CNT_PAYMENT - tmp.inst_size
+    tmp = tmp.groupby('SK_ID_CURR')['diff'].sum()
+    data.loc[:, 'diff_actual_duration_installment_count'] = data.SK_ID_CURR.map(tmp)
+
+    del tmp, x, inst_x
     gc.collect()
 
     return data, list(set(data.columns) - set(COLS))

@@ -183,7 +183,118 @@ COLS_TO_REMOVE = ['SK_ID_CURR',
                   'ORGANIZATION_TYPE__12',
                   'NAME_EDUCATION_TYPE__3',
                   'ORGANIZATION_TYPE__36',
-                  'ORGANIZATION_TYPE__34'
+                  'ORGANIZATION_TYPE__34',
+                  'total_bureau_prev_app_live_debt',
+                  'total_bureau_prev_app_live_debt_to_income',
+                  'total_live_debt_credit',
+                  'external_scores_nan_median',
+                  'months_left_to_pay',
+                  'new_user_date',
+                  'recent_employment',
+                  'young_age',
+                  'actual_proposed_termination',
+                  'completed_to_total',
+                  'mean_status',
+                  'median_num_bureau_balance',
+                  'EXT_3_2', 
+                  'EXT_1_3', 
+                  'EXT_1_2',
+                  'EXT_1_3_gm',
+                  'EXT_2_3_gm',
+                  'EXT_1_2_3_gm',
+                  'EXT_1_2_sum', 
+                  'EXT_1_3_sum', 
+                  'EXT_2_3_sum',
+                  'EXT_1_2_div', 
+                  'EXT_1_3_div', 
+                  'EXT_2_3_div',
+                  'EXT_1_2_mean',
+                  'EXT_2_3_mean',
+                  'EXT_1_3_mean',
+                  'weighted_mean_external_scores',
+                  'external_scores_nan_median',
+                  'EXT_SOURCE_DEV',
+                  'EXT_SOURCE_SUM',
+                  'MEAN_EXTERNAL_SCORE',
+                  'mean_EXT_SOURCE_2_num_nulls',
+                  'ratio_annuity_score_1',
+                  'ratio_annuity_score_2',
+                  'ratio_annuity_score_3',
+                  'ratio_credit_annuity_score_1',
+                  'ratio_credit_annuity_score_2',
+                  'ratio_credit_annuity_score_3',
+                  'annuity_div_income_ext_source_2',
+                  'annuity_sub_income_ext_source_2',
+                  'annuity_div_credit_ext_source_2',
+                  'annuity_sub_credit_ext_source_2',
+                  'mult_age_ext_source_1',
+                  'mult_age_ext_source_2',
+                  'mult_age_ext_source_3',
+                  'div_age_ext_source_1',
+                  'div_age_ext_source_2',
+                  'div_age_ext_source_3',
+                  'debt_to_credit_ext_source_2_mult',
+                  'max_debt_to_credit_ext_source_2_mult',
+                  'diff_code_gender_organization_type_source_2_mean',
+                  'diff_code_gender_occupation_source_3_mean',
+                  'diff_family_income_ext_source_3_mean',
+                  'diff_education_occupation_source_3_mean',
+                  'diff_income_type_education_type_source_2_mean',
+                  'diff_family_income_ext_source_2_mean',
+                  'diff_organization_ext_source_3_mean',
+                  'diff_occupation_source_3_mean',
+                  'diff_name_income_type_occupation_source_2_mean',
+                  'diff_organization_ext_source_2_mean',
+                  'mean_CODE_GENDER_OCCUPATION_TYPE_EXT_SOURCE_2',
+                  'mean_CODE_GENDER_NAME_EDUCATION_TYPE_EXT_SOURCE_2',
+                  'diff_organization_ext_source_1_mean',
+                  'diff_income_ext_source_1_mean',
+                  'var_CODE_GENDER_NAME_EDUCATION_TYPE_EXT_SOURCE_2',
+                  'mean_CODE_GENDER_OCCUPATION_TYPE_EXT_SOURCE_1',
+                  'mean_CODE_GENDER_NAME_EDUCATION_TYPE_EXT_SOURCE_1',
+                  'diff_code_gender_organization_type_source_1_mean',
+                  'ext_3_age',
+                  'EXT_SOURCE_3',
+                  'ext_2_age',
+                  'diff_occupation_source_2_mean',
+                  'diff_education_occupation_source_2_mean',
+                  'ratio_annuity_credit_ext_source_3'
+                  'add_mult_age_employed_ext_2',
+                  'EXT_SOURCE_2',
+                  'region_ext_source_3',
+                  'mult_annuity_credit_ext_source_3',
+                  'diff_code_gender_occupation_source_2_mean',
+                  'diff_income_ext_source_3_mean',
+                  'EXT_SOURCE_1',
+                  'ratio_annuity_credit_ext_source_2',
+                  'diff_family_education_ext_source_3_mean',
+                  'mult_annuity_credit_ext_source_2',
+                  'diff_family_income_ext_source_1_mean',
+                  'diff_code_gender_name_education_type_source_2_mean',
+                  'diff_education_ext_source_1_mean',
+                  'add_rate_ext_2',
+                  'diff_income_ext_source_2_mean',
+                  'diff_family_education_ext_source_1_mean',
+                  'diff_education_ext_source_2_mean',
+                  'diff_education_ext_source_3_mean',
+                  'diff_code_gender_occupation_source_1_mean',
+                  'diff_code_gender_name_education_type_source_1_mean',
+                  'mean_OCCUPATION_TYPE_ORGANIZATION_TYPE_EXT_SOURCE_2',
+                  'mean_NAME_EDUCATION_TYPE_OCCUPATION_TYPE_EXT_SOURCE_2',
+                  'mean_NAME_INCOME_TYPE_OCCUPATION_TYPE_EXT_SOURCE_2',
+                  'mean_NAME_EDUCATION_TYPE_OCCUPATION_TYPE_EXT_SOURCE_1',
+                  'mean_NAME_FAMILY_STATUS_NAME_EDUCATION_TYPE_EXT_SOURCE_2',
+                  'rate_annuity_region_ext_source_2',
+                  'mean_OCCUPATION_TYPE_ratio_annuity_credit',
+                  'diff_family_education_ext_source_2_mean',
+                  'ratio_annuity_credit_ext_source_1',
+                  'mean_NAME_EDUCATION_TYPE_EXT_SOURCE_2',
+                  'mean_NAME_EDUCATION_TYPE_OCCUPATION_TYPE_REG_CITY_NOT_WORK_CITY_EXT_SOURCE_2',
+                  'ratio_annuity_credit_ext_source_3',
+                  'add_mult_age_employed_ext_2',
+                  'diff_education_occupation_source_1_mean',
+                  'mult_annuity_credit_ext_source_1',
+                  'mean_NAME_INCOME_TYPE_NAME_EDUCATION_TYPE_EXT_SOURCE_2'
                 ] 
 
 PARAMS = {
@@ -193,13 +304,18 @@ PARAMS = {
     'objective': 'binary',
     'learning_rate': .02,
     'metric': 'auc',
-    'max_depth': 6,
-    'num_leaves': 20,
-    'sub_feature': .05,
+    'max_depth': 4,
+    'num_leaves': 58,
+    'sub_feature': 0.10,
     'feature_fraction_seed': SEED,
-    'min_data_in_leaf': 100,
+    'bagging_fraction': 0.89,
+    'bagging_seed': SEED,
+    'min_data_in_leaf': 57,
     'max_bin': 300,
-    'reg_lambda': 100,
+    'lambda_l1': 0.05,
+    'lambda_l2': 51,
+    'min_split_gain': 0.05,
+    'min_child_weight': 77,
     'nthread': 4,
     'verbose': -1,
     'seed': SEED
@@ -212,7 +328,7 @@ PCA_PARAMS = {
 }
 
 
-MODEL_FILENAME           = 'v85'
+MODEL_FILENAME           = 'v91'
 SAMPLE_SIZE              = .1
 
 # NOTE: column in frequency encoded columns
@@ -231,7 +347,7 @@ OHE_COLS           = [
                      ]
 
 
-class Modelv85(BaseModel):
+class Modelv91(BaseModel):
     def __init__(self, **params):
         self.params  = params
         self.n_train = 307511 # TODO: find a way to remove this constant
@@ -244,12 +360,12 @@ class Modelv85(BaseModel):
         
         df       = pd.concat(dfs)
         df.index = np.arange(len(df))
-        df       = super(Modelv85, self).reduce_mem_usage(df)
+        df       = super(Modelv91, self).reduce_mem_usage(df)
 
         return df
     
     def reduce_mem_usage(self, df):
-        return super(Modelv85, self).reduce_mem_usage(df)
+        return super(Modelv91, self).reduce_mem_usage(df)
     
     def preprocess(self):
         
@@ -270,7 +386,7 @@ class Modelv85(BaseModel):
             data.index = np.arange(len(data))
 
             # fill infrequent values
-            data = super(Modelv85, self).fill_infrequent_values(data)
+            data = super(Modelv91, self).fill_infrequent_values(data)
 
             data.iloc[:ntrain].loc[:, FEATURE_NAMES].to_pickle(os.path.join(basepath, self.params['output_path'] + 'feature_groups/' + f'current_application_train.pkl'))
             data.iloc[ntrain:].loc[:, FEATURE_NAMES].to_pickle(os.path.join(basepath, self.params['output_path'] + 'feature_groups/' + f'current_application_test.pkl'))
@@ -292,7 +408,7 @@ class Modelv85(BaseModel):
             data.index          = np.arange(len(data))
 
             # fill infrequent values
-            data = super(Modelv85, self).fill_infrequent_values(data)
+            data = super(Modelv91, self).fill_infrequent_values(data)
 
             data.iloc[:ntrain].loc[:, FEATURE_NAMES].to_pickle(os.path.join(basepath, self.params['output_path'] + 'feature_groups/' + f'bureau_train.pkl'))
             data.iloc[ntrain:].loc[:, FEATURE_NAMES].to_pickle(os.path.join(basepath, self.params['output_path'] + 'feature_groups/' + f'bureau_test.pkl'))
@@ -321,7 +437,7 @@ class Modelv85(BaseModel):
             data.index          = np.arange(len(data))
 
             # fill infrequent values
-            data = super(Modelv85, self).fill_infrequent_values(data)
+            data = super(Modelv91, self).fill_infrequent_values(data)
 
             data.iloc[:ntrain].loc[:, FEATURE_NAMES].to_pickle(os.path.join(basepath, self.params['output_path'] + 'feature_groups/' + f'bureau_bal_train.pkl'))
             data.iloc[ntrain:].loc[:, FEATURE_NAMES].to_pickle(os.path.join(basepath, self.params['output_path'] + 'feature_groups/' + f'bureau_bal_test.pkl'))
@@ -344,7 +460,7 @@ class Modelv85(BaseModel):
             data.index          = np.arange(len(data))
 
             # fill infrequent values
-            data = super(Modelv85, self).fill_infrequent_values(data)
+            data = super(Modelv91, self).fill_infrequent_values(data)
 
             del prev_app
             gc.collect()
@@ -369,7 +485,7 @@ class Modelv85(BaseModel):
             data.index          = np.arange(len(data))
 
             # fill infrequent values
-            data = super(Modelv85, self).fill_infrequent_values(data)
+            data = super(Modelv91, self).fill_infrequent_values(data)
 
             del pos_cash
             gc.collect()
@@ -395,7 +511,7 @@ class Modelv85(BaseModel):
             data.index          = np.arange(len(data))
 
             # fill infrequent values
-            data = super(Modelv85, self).fill_infrequent_values(data)
+            data = super(Modelv91, self).fill_infrequent_values(data)
 
             del credit_bal
             gc.collect()
@@ -420,7 +536,7 @@ class Modelv85(BaseModel):
             data.index          = np.arange(len(data))
 
             # fill infrequent values
-            data = super(Modelv85, self).fill_infrequent_values(data)
+            data = super(Modelv91, self).fill_infrequent_values(data)
 
             del installments
             gc.collect()
@@ -450,7 +566,7 @@ class Modelv85(BaseModel):
             data.index          = np.arange(len(data))
 
             # fill infrequent values
-            data = super(Modelv85, self).fill_infrequent_values(data)
+            data = super(Modelv91, self).fill_infrequent_values(data)
 
             del bureau, prev_app
             gc.collect()
@@ -481,7 +597,7 @@ class Modelv85(BaseModel):
             data.index          = np.arange(len(data))
 
             # fill infrequent values
-            data = super(Modelv85, self).fill_infrequent_values(data)
+            data = super(Modelv91, self).fill_infrequent_values(data)
 
             del credit_bal, prev_app
             gc.collect()
@@ -512,7 +628,7 @@ class Modelv85(BaseModel):
             data.index          = np.arange(len(data))
 
             # fill infrequent values
-            data = super(Modelv85, self).fill_infrequent_values(data)
+            data = super(Modelv91, self).fill_infrequent_values(data)
 
             del installments, prev_app
             gc.collect()
@@ -546,7 +662,7 @@ class Modelv85(BaseModel):
             data.index          = np.arange(len(data))
 
             # fill infrequent values
-            data = super(Modelv85, self).fill_infrequent_values(data)
+            data = super(Modelv91, self).fill_infrequent_values(data)
 
             data.iloc[:ntrain].loc[:, FEATURE_NAMES].to_pickle(os.path.join(basepath, self.params['output_path'] + 'feature_groups/' + f'loan_stacking_train.pkl'))
             data.iloc[ntrain:].loc[:, FEATURE_NAMES].to_pickle(os.path.join(basepath, self.params['output_path'] + 'feature_groups/' + f'loan_stacking_test.pkl'))
@@ -565,7 +681,7 @@ class Modelv85(BaseModel):
             data.index          = np.arange(len(data))
 
             # fill infrequent values
-            data = super(Modelv85, self).fill_infrequent_values(data)
+            data = super(Modelv91, self).fill_infrequent_values(data)
 
             data.iloc[:ntrain].loc[:, FEATURE_NAMES].to_pickle(os.path.join(basepath, self.params['output_path'] + 'feature_groups/' + f'feature_groups_train.pkl'))
             data.iloc[ntrain:].loc[:, FEATURE_NAMES].to_pickle(os.path.join(basepath, self.params['output_path'] + 'feature_groups/' + f'feature_groups_test.pkl'))
@@ -591,7 +707,7 @@ class Modelv85(BaseModel):
             data.index          = np.arange(len(data))
 
             # fill infrequent values
-            data = super(Modelv85, self).fill_infrequent_values(data)
+            data = super(Modelv91, self).fill_infrequent_values(data)
 
             data.iloc[:ntrain].loc[:, FEATURE_NAMES].to_pickle(os.path.join(basepath, self.params['output_path'] + 'feature_groups/' + f'prev_app_pos_cash_train.pkl'))
             data.iloc[ntrain:].loc[:, FEATURE_NAMES].to_pickle(os.path.join(basepath, self.params['output_path'] + 'feature_groups/' + f'prev_app_pos_cash_test.pkl'))
@@ -623,7 +739,7 @@ class Modelv85(BaseModel):
             data.index          = np.arange(len(data))
 
             # fill infrequent values
-            data = super(Modelv85, self).fill_infrequent_values(data)
+            data = super(Modelv91, self).fill_infrequent_values(data)
 
             data.iloc[:ntrain].loc[:, FEATURE_NAMES].to_pickle(os.path.join(basepath, self.params['output_path'] + 'feature_groups/' + f'prev_app_pos_cash_credit_bal_train.pkl'))
             data.iloc[ntrain:].loc[:, FEATURE_NAMES].to_pickle(os.path.join(basepath, self.params['output_path'] + 'feature_groups/' + f'prev_app_pos_cash_credit_bal_test.pkl'))
@@ -646,7 +762,7 @@ class Modelv85(BaseModel):
             data.index          = np.arange(len(data))
 
             # fill infrequent values
-            data = super(Modelv85, self).fill_infrequent_values(data)
+            data = super(Modelv91, self).fill_infrequent_values(data)
 
             data.iloc[:ntrain].loc[:, FEATURE_NAMES].to_pickle(os.path.join(basepath, self.params['output_path'] + 'feature_groups/' + f'prev_app_ohe_train.pkl'))
             data.iloc[ntrain:].loc[:, FEATURE_NAMES].to_pickle(os.path.join(basepath, self.params['output_path'] + 'feature_groups/' + f'prev_app_ohe_test.pkl'))
@@ -674,7 +790,7 @@ class Modelv85(BaseModel):
             data.index = np.arange(len(data))
 
             # fill infrequent values
-            data = super(Modelv85, self).fill_infrequent_values(data)
+            data = super(Modelv91, self).fill_infrequent_values(data)
 
             data.iloc[:ntrain].loc[:, FEATURE_NAMES].to_pickle(os.path.join(basepath, self.params['output_path'] + 'feature_groups/' + f'current_application_train.pkl'))
             data.iloc[ntrain:].loc[:, FEATURE_NAMES].to_pickle(os.path.join(basepath, self.params['output_path'] + 'feature_groups/' + f'current_application_test.pkl'))
@@ -696,7 +812,7 @@ class Modelv85(BaseModel):
             data.index          = np.arange(len(data))
 
             # fill infrequent values
-            data = super(Modelv85, self).fill_infrequent_values(data)
+            data = super(Modelv91, self).fill_infrequent_values(data)
 
             data.iloc[:ntrain].loc[:, FEATURE_NAMES].to_pickle(os.path.join(basepath, self.params['output_path'] + 'feature_groups/' + f'bureau_train.pkl'))
             data.iloc[ntrain:].loc[:, FEATURE_NAMES].to_pickle(os.path.join(basepath, self.params['output_path'] + 'feature_groups/' + f'bureau_test.pkl'))
@@ -725,7 +841,7 @@ class Modelv85(BaseModel):
             data.index          = np.arange(len(data))
 
             # fill infrequent values
-            data = super(Modelv85, self).fill_infrequent_values(data)
+            data = super(Modelv91, self).fill_infrequent_values(data)
 
             data.iloc[:ntrain].loc[:, FEATURE_NAMES].to_pickle(os.path.join(basepath, self.params['output_path'] + 'feature_groups/' + f'bureau_bal_train.pkl'))
             data.iloc[ntrain:].loc[:, FEATURE_NAMES].to_pickle(os.path.join(basepath, self.params['output_path'] + 'feature_groups/' + f'bureau_bal_test.pkl'))
@@ -748,7 +864,7 @@ class Modelv85(BaseModel):
             data.index          = np.arange(len(data))
 
             # fill infrequent values
-            data = super(Modelv85, self).fill_infrequent_values(data)
+            data = super(Modelv91, self).fill_infrequent_values(data)
 
             del prev_app
             gc.collect()
@@ -773,7 +889,7 @@ class Modelv85(BaseModel):
             data.index          = np.arange(len(data))
 
             # fill infrequent values
-            data = super(Modelv85, self).fill_infrequent_values(data)
+            data = super(Modelv91, self).fill_infrequent_values(data)
 
             del pos_cash
             gc.collect()
@@ -799,7 +915,7 @@ class Modelv85(BaseModel):
             data.index          = np.arange(len(data))
 
             # fill infrequent values
-            data = super(Modelv85, self).fill_infrequent_values(data)
+            data = super(Modelv91, self).fill_infrequent_values(data)
 
             del credit_bal
             gc.collect()
@@ -824,7 +940,7 @@ class Modelv85(BaseModel):
             data.index          = np.arange(len(data))
 
             # fill infrequent values
-            data = super(Modelv85, self).fill_infrequent_values(data)
+            data = super(Modelv91, self).fill_infrequent_values(data)
 
             del installments
             gc.collect()
@@ -854,7 +970,7 @@ class Modelv85(BaseModel):
             data.index          = np.arange(len(data))
 
             # fill infrequent values
-            data = super(Modelv85, self).fill_infrequent_values(data)
+            data = super(Modelv91, self).fill_infrequent_values(data)
 
             del bureau, prev_app
             gc.collect()
@@ -885,7 +1001,7 @@ class Modelv85(BaseModel):
             data.index          = np.arange(len(data))
 
             # fill infrequent values
-            data = super(Modelv85, self).fill_infrequent_values(data)
+            data = super(Modelv91, self).fill_infrequent_values(data)
 
             del credit_bal, prev_app
             gc.collect()
@@ -916,7 +1032,7 @@ class Modelv85(BaseModel):
             data.index          = np.arange(len(data))
 
             # fill infrequent values
-            data = super(Modelv85, self).fill_infrequent_values(data)
+            data = super(Modelv91, self).fill_infrequent_values(data)
 
             del installments, prev_app
             gc.collect()
@@ -950,7 +1066,7 @@ class Modelv85(BaseModel):
             data.index          = np.arange(len(data))
 
             # fill infrequent values
-            data = super(Modelv85, self).fill_infrequent_values(data)
+            data = super(Modelv91, self).fill_infrequent_values(data)
 
             data.iloc[:ntrain].loc[:, FEATURE_NAMES].to_pickle(os.path.join(basepath, self.params['output_path'] + 'feature_groups/' + f'loan_stacking_train.pkl'))
             data.iloc[ntrain:].loc[:, FEATURE_NAMES].to_pickle(os.path.join(basepath, self.params['output_path'] + 'feature_groups/' + f'loan_stacking_test.pkl'))
@@ -969,7 +1085,7 @@ class Modelv85(BaseModel):
             data.index          = np.arange(len(data))
 
             # fill infrequent values
-            data = super(Modelv85, self).fill_infrequent_values(data)
+            data = super(Modelv91, self).fill_infrequent_values(data)
 
             data.iloc[:ntrain].loc[:, FEATURE_NAMES].to_pickle(os.path.join(basepath, self.params['output_path'] + 'feature_groups/' + f'feature_groups_train.pkl'))
             data.iloc[ntrain:].loc[:, FEATURE_NAMES].to_pickle(os.path.join(basepath, self.params['output_path'] + 'feature_groups/' + f'feature_groups_test.pkl'))
@@ -995,7 +1111,7 @@ class Modelv85(BaseModel):
             data.index          = np.arange(len(data))
 
             # fill infrequent values
-            data = super(Modelv85, self).fill_infrequent_values(data)
+            data = super(Modelv91, self).fill_infrequent_values(data)
 
             data.iloc[:ntrain].loc[:, FEATURE_NAMES].to_pickle(os.path.join(basepath, self.params['output_path'] + 'feature_groups/' + f'prev_app_pos_cash_train.pkl'))
             data.iloc[ntrain:].loc[:, FEATURE_NAMES].to_pickle(os.path.join(basepath, self.params['output_path'] + 'feature_groups/' + f'prev_app_pos_cash_test.pkl'))
@@ -1027,7 +1143,7 @@ class Modelv85(BaseModel):
             data.index          = np.arange(len(data))
 
             # fill infrequent values
-            data = super(Modelv85, self).fill_infrequent_values(data)
+            data = super(Modelv91, self).fill_infrequent_values(data)
 
             data.iloc[:ntrain].loc[:, FEATURE_NAMES].to_pickle(os.path.join(basepath, self.params['output_path'] + 'feature_groups/' + f'prev_app_pos_cash_credit_bal_train.pkl'))
             data.iloc[ntrain:].loc[:, FEATURE_NAMES].to_pickle(os.path.join(basepath, self.params['output_path'] + 'feature_groups/' + f'prev_app_pos_cash_credit_bal_test.pkl'))
@@ -1050,7 +1166,7 @@ class Modelv85(BaseModel):
             data.index          = np.arange(len(data))
 
             # fill infrequent values
-            data = super(Modelv85, self).fill_infrequent_values(data)
+            data = super(Modelv91, self).fill_infrequent_values(data)
 
             data.iloc[:ntrain].loc[:, FEATURE_NAMES].to_pickle(os.path.join(basepath, self.params['output_path'] + 'feature_groups/' + f'prev_app_ohe_train.pkl'))
             data.iloc[ntrain:].loc[:, FEATURE_NAMES].to_pickle(os.path.join(basepath, self.params['output_path'] + 'feature_groups/' + f'prev_app_ohe_test.pkl'))
@@ -1237,7 +1353,7 @@ class Modelv85(BaseModel):
         data, feat_name = self.feature_interaction(data, ['CODE_GENDER', 'NAME_EDUCATION_TYPE'], 'OWN_CAR_AGE', np.sum, 'sum')
         
 
-        # Gender, Occupation and Ext scores    
+        # Gender, Occupation and other features    
         data, feat_name = self.feature_interaction(data, ['CODE_GENDER', 'OCCUPATION_TYPE'], 'EXT_SOURCE_2', np.mean, 'mean')
         data.loc[:, 'diff_code_gender_occupation_source_2_mean'] = data[feat_name] - data['EXT_SOURCE_2']
 
@@ -1246,7 +1362,7 @@ class Modelv85(BaseModel):
         
         data, feat_name = self.feature_interaction(data, ['CODE_GENDER', 'OCCUPATION_TYPE'], 'EXT_SOURCE_3', np.mean, 'mean')
         data.loc[:, 'diff_code_gender_occupation_source_3_mean'] = data[feat_name] - data['EXT_SOURCE_3']
-                
+        
         
         # Gender, Organization and other features
         data, feat_name = self.feature_interaction(data, ['CODE_GENDER', 'ORGANIZATION_TYPE'], 'EXT_SOURCE_2', np.mean, 'mean')
@@ -1365,18 +1481,55 @@ class Modelv85(BaseModel):
         data, feat_name = self.feature_interaction(data, ['NAME_EDUCATION_TYPE'], 'EXT_SOURCE_3', np.mean, 'mean')
         data.loc[:, 'diff_education_ext_source_3_mean'] = data[feat_name] - data['EXT_SOURCE_3']
 
+        # Family Type and Income Type
+        data, feat_name = self.feature_interaction(data, ['NAME_FAMILY_STATUS', 'NAME_INCOME_TYPE'], 'EXT_SOURCE_1', np.mean, 'mean')
+        data.loc[:, 'diff_family_income_ext_source_1_mean'] = data[feat_name] - data['EXT_SOURCE_1']
+
+        data, feat_name = self.feature_interaction(data, ['NAME_FAMILY_STATUS', 'NAME_INCOME_TYPE'], 'EXT_SOURCE_2', np.mean, 'mean')
+        data.loc[:, 'diff_family_income_ext_source_2_mean'] = data[feat_name] - data['EXT_SOURCE_2']
+
+        data, feat_name = self.feature_interaction(data, ['NAME_FAMILY_STATUS', 'NAME_INCOME_TYPE'], 'EXT_SOURCE_3', np.mean, 'mean')
+        data.loc[:, 'diff_family_income_ext_source_3_mean'] = data[feat_name] - data['EXT_SOURCE_3']
+
+        # Family Type and Education Type
+        data, feat_name = self.feature_interaction(data, ['NAME_FAMILY_STATUS', 'NAME_EDUCATION_TYPE'], 'EXT_SOURCE_1', np.mean, 'mean')
+        data.loc[:, 'diff_family_education_ext_source_1_mean'] = data[feat_name] - data['EXT_SOURCE_1']
+
+        data, feat_name = self.feature_interaction(data, ['NAME_FAMILY_STATUS', 'NAME_EDUCATION_TYPE'], 'EXT_SOURCE_2', np.mean, 'mean')
+        data.loc[:, 'diff_family_education_ext_source_2_mean'] = data[feat_name] - data['EXT_SOURCE_2']
+
+        data, feat_name = self.feature_interaction(data, ['NAME_FAMILY_STATUS', 'NAME_EDUCATION_TYPE'], 'EXT_SOURCE_3', np.mean, 'mean')
+        data.loc[:, 'diff_family_education_ext_source_3_mean'] = data[feat_name] - data['EXT_SOURCE_3']
+
+        # Family Type, Organization Type
+        data, feat_name = self.feature_interaction(data, ['NAME_FAMILY_STATUS', 'ORGANIZATION_TYPE'], 'EXT_SOURCE_1', np.mean, 'mean')
+        data.loc[:, 'diff_family_organization_ext_source_1_mean'] = data[feat_name] - data['EXT_SOURCE_1']
+
+        data, feat_name = self.feature_interaction(data, ['NAME_FAMILY_STATUS', 'ORGANIZATION_TYPE'], 'EXT_SOURCE_2', np.mean, 'mean')
+        data.loc[:, 'diff_family_organization_ext_source_2_mean'] = data[feat_name] - data['EXT_SOURCE_2']
+
+        data, feat_name = self.feature_interaction(data, ['NAME_FAMILY_STATUS', 'ORGANIZATION_TYPE'], 'EXT_SOURCE_3', np.mean, 'mean')
+        data.loc[:, 'diff_family_organization_ext_source_3_mean'] = data[feat_name] - data['EXT_SOURCE_3']
+
+        # Family Type, Occupation Type
+        data, feat_name = self.feature_interaction(data, ['NAME_FAMILY_STATUS', 'OCCUPATION_TYPE'], 'EXT_SOURCE_1', np.mean, 'mean')
+        data.loc[:, 'diff_family_occupation_ext_source_1_mean'] = data[feat_name] - data['EXT_SOURCE_1']
+
+        data, feat_name = self.feature_interaction(data, ['NAME_FAMILY_STATUS', 'OCCUPATION_TYPE'], 'EXT_SOURCE_2', np.mean, 'mean')
+        data.loc[:, 'diff_family_occupation_ext_source_2_mean'] = data[feat_name] - data['EXT_SOURCE_2']
+
+        data, feat_name = self.feature_interaction(data, ['NAME_FAMILY_STATUS', 'OCCUPATION_TYPE'], 'EXT_SOURCE_3', np.mean, 'mean')
+        data.loc[:, 'diff_family_occupation_ext_source_3_mean'] = data[feat_name] - data['EXT_SOURCE_3']
+
 
         # frequency encoding of some of the categorical variables.
         data = frequency_encoding(data, FREQ_ENCODING_COLS)
-
-        # feature preprocessing
-        # data = self.feature_preprocessing(data)
 
         # add pca components
         if os.path.exists(os.path.join(basepath, self.params['output_path'] + f'{self.params["data_folder"]}pca.pkl')):
             pca_components = pd.read_pickle(os.path.join(basepath, self.params['output_path'] + f'{self.params["data_folder"]}pca.pkl'))
         else:
-            pca_components = super(Modelv85, self).add_pca_components(data.copy(), PCA_PARAMS)
+            pca_components = super(Modelv91, self).add_pca_components(data.copy(), PCA_PARAMS)
             pca_components.to_pickle(os.path.join(basepath, self.params['output_path'] + f'{self.params["data_folder"]}pca.pkl'))
         
         pca_components.index = data.index
@@ -1386,7 +1539,7 @@ class Modelv85(BaseModel):
         # one hot encoding of some of the categorical variables controlled by a flag
         # if flag is True then one hot encoding else do frequency encoding.
         if compute_ohe:
-            data = super(Modelv85, self).prepare_ohe(data, OHE_COLS, drop_col=True)
+            data = super(Modelv91, self).prepare_ohe(data, OHE_COLS, drop_col=True)
         else:
             data = frequency_encoding(data, OHE_COLS)
         
@@ -1419,7 +1572,7 @@ class Modelv85(BaseModel):
         if is_eval:
             yte = test.loc[:, TARGET_NAME]
         
-        return super(Modelv85, self).train_lgb(X, y, Xte, yte, **params)
+        return super(Modelv91, self).train_lgb(X, y, Xte, yte, **params)
 
     # This method just takes in a model and test dataset and returns predictions 
     # prints out AUC on the test dataset as well in the process.
@@ -1430,14 +1583,13 @@ class Modelv85(BaseModel):
         if is_eval:
             yte = test.loc[:, TARGET_NAME]
 
-        return super(Modelv85, self).evaluate_lgb(Xte, yte, model)
+        return super(Modelv91, self).evaluate_lgb(Xte, yte, model)
 
     def cross_validate(self, train, feature_list, params, cv_adversarial_filepath=None, TARGET_NAME='TARGET'):
         Xtr = train.loc[:, feature_list]
         ytr = train.loc[:, TARGET_NAME]
 
-        return super(Modelv85, self).cross_validate(Xtr, ytr, params, cv_adversarial_filepath=cv_adversarial_filepath)
-
+        return super(Modelv91, self).cross_validate(Xtr, ytr, params, cv_adversarial_filepath=cv_adversarial_filepath)
 
 
 if __name__ == '__main__':
@@ -1469,7 +1621,7 @@ if __name__ == '__main__':
             'output_path': output_path
         }
 
-        m  = Modelv85(**params)
+        m  = Modelv91(**params)
         m.preprocess()
 
     elif args.features:
@@ -1484,7 +1636,7 @@ if __name__ == '__main__':
             'output_path': output_path,
         }
 
-        m = Modelv85(**params)
+        m = Modelv91(**params)
         m.prepare_features()
 
     elif args.v is not None and len(args.v):
@@ -1511,13 +1663,14 @@ if __name__ == '__main__':
         
         # Set seed to Params
         PARAMS['seed'] = SEED
+        PARAMS['early_stopping_rounds'] = None
         PARAMS['feature_fraction_seed'] = SEED
         PARAMS['bagging_seed'] = SEED
 
         print('*' * 100)
         print('PARAMS: {}'.format(PARAMS))
 
-        m   = Modelv85(**params)
+        m   = Modelv91(**params)
             
         if os.path.exists(os.path.join(basepath, output_path + f'{data_folder}data.h5')):
             print('Loading dataset from disk ...')
@@ -1540,8 +1693,6 @@ if __name__ == '__main__':
 
         itr    = np.array(list(set(data.iloc[:m.n_train].index) - set(ite)))
         
-        # train  = data.iloc[:m.n_train].iloc[itr]
-        # test   = data.iloc[:m.n_train].iloc[ite]
         train    = data.loc[data.index.isin(itr)]
         test     = data.loc[data.index.isin(ite)]
 
@@ -1611,7 +1762,7 @@ if __name__ == '__main__':
             'data_folder': data_folder
         }
 
-        m   = Modelv85(**params)
+        m   = Modelv91(**params)
             
         if os.path.exists(os.path.join(basepath, output_path + f'{data_folder}data.h5')):
             print('Loading dataset from disk ...')
@@ -1680,7 +1831,7 @@ if __name__ == '__main__':
             'data_folder': data_folder
         }
 
-        m   = Modelv85(**params)
+        m   = Modelv91(**params)
         
         # Load or save data from/ on disk
         if os.path.exists(os.path.join(basepath, output_path + f'{data_folder}data.h5')):
@@ -1739,7 +1890,7 @@ if __name__ == '__main__':
         sub['TARGET']  = preds
 
         sub.to_csv(os.path.join(basepath, 'submissions/%s.csv'%(sub_identifier)), index=False)
-    
+
     elif args.ensemble:
 
         input_path      = args.input_path
@@ -1748,15 +1899,17 @@ if __name__ == '__main__':
         CV_SEED         = args.cv_seed
         
 
-        output_files = []
+        output_files = ['../submissions/20180804-2157-v91-0.7970021936230548_0.00847147567949533-660-dataset2.csv',
+                        '../submissions/20180728-1221-v86-0.8005097999514833_0.008897132704518855-None-dataset2.csv'
+                       ]
 
         ensemble_preds = 0
+        weights        = [.2, .8]
 
-        for f in output_files:
+        for index, f in enumerate(output_files):
             sub = pd.read_csv(f)['TARGET'].values
-            ensemble_preds += sub
+            ensemble_preds = ensemble_preds + (sub * weights[index])
         
-        ensemble_preds /= len(output_files)
         HOLDOUT_SCORE   = joblib.load(os.path.join(basepath, output_path + f'{data_folder}{MODEL_FILENAME}_{CV_SEED}_cv.pkl'))
     
         sub_identifier = "%s-%s-%s-%s" % (datetime.now().strftime('%Y%m%d-%H%M'), MODEL_FILENAME, HOLDOUT_SCORE, data_folder[:-1])
