@@ -878,7 +878,7 @@ def bureau_and_balance(bureau, bureau_bal, data):
 
     ss = data_bureau_bal.groupby(['SK_ID_CURR', 'STATUS']).size().unstack().fillna(0)
     print(ss.columns)
-    ss.loc[:, 'ratio_C_X'] = (ss['6'] + ss['7']) / ss['-1']
+    ss.loc[:, 'ratio_C_X'] = (ss['6.0'] + ss['7.0']) / ss['nan']
 
     data.loc[:, 'ratio_sum_C_X_to_missing'] = data.SK_ID_CURR.map(ss.ratio_C_X)
     
