@@ -205,25 +205,26 @@ COLS_TO_REMOVE = ['SK_ID_CURR',
                 ] 
 
 PARAMS = {
-    'num_boost_round': 10000,
+    'num_boost_round': 20000,
     'early_stopping_rounds': 100,
-    'boosting_type': 'gbdt',
     'objective': 'binary',
+    'boosting_type': 'gbdt',
     'learning_rate': .01,
     'metric': 'auc',
     'max_depth': 4,
-    'num_leaves': 15,
-    'sub_feature': 0.1,
+    'num_leaves': 30,
+    'sub_feature': 0.03,
     'feature_fraction_seed': SEED,
     'bagging_fraction': 0.9,
     'bagging_seed': SEED,
-    'reg_lambda': 25,
-    'min_data_in_leaf': 60,
+    'reg_lambda': 75,
+    'min_data_in_leaf': 100,
     'min_child_weight': 10,
     'nthread': 8,
     'verbose': -1,
     'seed': SEED
 }
+
 
 PCA_PARAMS = {
     'n_components': 10,
@@ -1856,6 +1857,7 @@ if __name__ == '__main__':
         PARAMS['seed'] = SEED
         PARAMS['feature_fraction_seed'] = SEED
         PARAMS['bagging_seed'] = SEED
+        PARAMS['early_stopping_rounds'] = None # explicitly make it None
 
         print('*' * 100)
         print('PARAMS: {}'.format(PARAMS))

@@ -2471,6 +2471,15 @@ def prev_app_pos_credit(prev_app, pos_cash, credit_bal, data):
 def prev_app_ohe(prev_app, data):
     COLS = data.columns.tolist()
 
+    # NAME_CONTRACT_TYPE
+    tmp         = prev_app.groupby(['SK_ID_CURR', 'NAME_CONTRACT_TYPE']).size().unstack().fillna(0).reset_index()
+    tmp.columns = [f'NAME_CONTRACT_TYPE{col}' if col != 'SK_ID_CURR' else col for col in tmp.columns]
+    
+    data        = merge(data, tmp)
+
+    del tmp
+    gc.collect()
+
     # NAME_CONTRACT_STATUS
     tmp         = prev_app.groupby(['SK_ID_CURR', 'NAME_CONTRACT_STATUS']).size().unstack().fillna(0).reset_index()
     tmp.columns = [f'NAME_CONTRACT_STATUS_{col}' if col != 'SK_ID_CURR' else col for col in tmp.columns]
@@ -2516,5 +2525,31 @@ def prev_app_ohe(prev_app, data):
     del tmp
     gc.collect()
 
+    # WEEKDAY_APPR_PROCESS_START
+    tmp         = prev_app.groupby(['SK_ID_CURR', 'WEEKDAY_APPR_PROCESS_START']).size().unstack().fillna(0).reset_index()
+    tmp.columns = [f'WEEKDAY_APPR_PROCESS_START_{col}' if col != 'SK_ID_CURR' else col for col in tmp.columns]
+    
+    data        = merge(data, tmp)
+
+    del tmp
+    gc.collect()
+
+    # HOUR_APPR_PROCESS_START
+    tmp         = prev_app.groupby(['SK_ID_CURR', 'HOUR_APPR_PROCESS_START']).size().unstack().fillna(0).reset_index()
+    tmp.columns = [f'HOUR_APPR_PROCESS_START_{col}' if col != 'SK_ID_CURR' else col for col in tmp.columns]
+    
+    data        = merge(data, tmp)
+
+    del tmp
+    gc.collect()
+
+    # CHANNEL_TYPE
+    tmp         = prev_app.groupby(['SK_ID_CURR', 'CHANNEL_TYPE']).size().unstack().fillna(0).reset_index()
+    tmp.columns = [f'CHANNEL_TYPE_{col}' if col != 'SK_ID_CURR' else col for col in tmp.columns]
+    
+    data        = merge(data, tmp)
+
+    del tmp
+    gc.collect()
 
     return data, list(set(data.columns) - set(COLS))
