@@ -352,14 +352,11 @@ class BaseModel:
         return data
 
     def oof_preds(self, X, y, Xte, model):
-        oof_preds = cross_val_predict(model, X.values[:1000], y.values[:1000], cv=3, method='predict_proba')
+        oof_preds = cross_val_predict(model, X.values, y.values, cv=5, method='predict_proba')
 
-        model.fit(X.values[:1000], y.values[:1000])
+        model.fit(X.values, y.values)
         test_preds = model.predict_proba(Xte)[:, 1]
 
-        print(oof_preds.shape)
-        print(test_preds.shape)
-        
         return oof_preds[:, 1], test_preds
     
     def fit_pca(self, X, **pca_params):
