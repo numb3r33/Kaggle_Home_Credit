@@ -316,7 +316,7 @@ PARAMS = {
     'lambda_l2': 51,
     'min_split_gain': 0.05,
     'min_child_weight': 77,
-    'nthread': 4,
+    'nthread': 8,
     'verbose': -1,
     'seed': SEED
 }
@@ -2187,7 +2187,6 @@ if __name__ == '__main__':
         oof_preds, test_preds = m.oof_preds(train, test, feature_list, model)
 
         np.save(os.path.join(basepath, output_path + f'{data_folder}{MODEL_FILENAME}_{SEED}_oof_preds.npy'), oof_preds)
-        np.save(os.path.join(basepath, output_path + f'{data_folder}target.npy'), train.TARGET.values)
         np.save(os.path.join(basepath, output_path + f'{data_folder}{MODEL_FILENAME}_{SEED}_test.npy'), test_preds)
 
         
