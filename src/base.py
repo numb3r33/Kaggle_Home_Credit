@@ -352,12 +352,13 @@ class BaseModel:
         return data
 
     def oof_preds(self, X, y, Xte, model):
-        oof_preds = cross_val_predict(model, X, y, cv=5, n_jobs=-1)
+        oof_preds = cross_val_predict(model, X, y, cv=5, method='predict_proba', n_jobs=-1)
 
-        model.fit(X, y)
+        model.fit(X[:, 10000], y[:, 10000])
         test_preds = model.predict_proba(Xte[:, 1])
 
-        return oof_preds, test_preds
+        print(oof_preds.shape)
+        return oof_preds[:, 1], test_preds
     
     def fit_pca(self, X, **pca_params):
         scaler = StandardScaler()
