@@ -2082,6 +2082,7 @@ if __name__ == '__main__':
                                    colsample_bytree=PARAMS['sub_feature'],
                                    reg_lambda=PARAMS['reg_lambda'],
                                    random_state=SEED,
+                                   verbose=-1,
                                    n_jobs=8
                                    )
         

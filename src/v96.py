@@ -2180,6 +2180,7 @@ if __name__ == '__main__':
                                    reg_alpha=PARAMS['lambda_l1'],
                                    min_split_gain=PARAMS['min_split_gain'],
                                    random_state=SEED,
+                                   verbose=-1,
                                    n_jobs=8
                                    )
         
