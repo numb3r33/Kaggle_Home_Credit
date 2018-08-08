@@ -328,11 +328,6 @@ class BaseModel:
         
         return yhat, score
 
-
-    def oof_preds(self, X, y, model, **params):
-        skf = StratifiedKFold(n_splits=3)
-        return cross_val_predict(model, X, y, cv=skf, method='predict_proba')
-
     def add_pca_components(self, data, PCA_PARAMS):
         # preprocess for pca
         SKIP_COLS = ['SK_ID_CURR', 'TARGET']
@@ -355,6 +350,14 @@ class BaseModel:
         data = pd.DataFrame(data, columns=[f'pca_{i}' for i in range(PCA_PARAMS['n_components'])])
         
         return data
+
+    def oof_preds(self, X, y, Xte, model):
+        oof_preds = cross_val_predict(model, X, y, cv=5, n_jobs=-1)
+
+        model.fit(X, y)
+        test_preds = model.predict_proba(Xte)
+
+        return oof_preds, test_preds
     
     def fit_pca(self, X, **pca_params):
         scaler = StandardScaler()
