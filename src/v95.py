@@ -2021,7 +2021,7 @@ if __name__ == '__main__':
         joblib.dump(cv_score, os.path.join(basepath, output_path + f'{data_folder}{MODEL_FILENAME}_{SEED}_cv.pkl'))
     
     elif args.oof:
-        print('Cross validation on training and store parameters and cv score on disk ...')
+        print('Generate oof predictions for train and test set ...')
 
         input_path      = args.input_path
         output_path     = args.output_path
@@ -2074,7 +2074,7 @@ if __name__ == '__main__':
         model = lgb.LGBMClassifier(num_leaves=PARAMS['num_leaves'],
                                    max_depth=PARAMS['max_depth'],
                                    learning_rate=PARAMS['learning_rate'],
-                                   n_estimators=PARAMS['num_boosting_round'],
+                                   n_estimators=PARAMS['num_boost_round'],
                                    objective=PARAMS['objective'],
                                    min_child_weight=PARAMS['min_child_weight'],
                                    min_child_samples=PARAMS['min_data_in_leaf'],
