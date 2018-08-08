@@ -1879,7 +1879,7 @@ class Modelv96(BaseModel):
                                                     categorical_feature=categorical_feature
                                                     )
 
-    def oof_preds(self, train, test, feature_list, model):
+    def oof_preds(self, train, test, feature_list, model, TARGET_NAME='TARGET'):
         X = train.loc[:, feature_list]
         y = train.loc[:, TARGET_NAME]
         
