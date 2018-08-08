@@ -355,7 +355,7 @@ class BaseModel:
         oof_preds = cross_val_predict(model, X, y, cv=5, n_jobs=-1)
 
         model.fit(X, y)
-        test_preds = model.predict_proba(Xte)
+        test_preds = model.predict_proba(Xte[:, 1])
 
         return oof_preds, test_preds
     
