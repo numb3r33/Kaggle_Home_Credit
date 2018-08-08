@@ -2187,7 +2187,7 @@ if __name__ == '__main__':
 
         np.save(os.path.join(basepath, output_path + f'{data_folder}{MODEL_FILENAME}_{SEED}_oof_preds.npy'), oof_preds)
         np.save(os.path.join(basepath, output_path + f'{data_folder}target.npy'), train.TARGET.values)
-        np.save(os.path.join(basepath, output_path + f'{data_folder}{MODEL_FILENAME}_{SEED}_oof_preds.npy'), oof_preds)
+        np.save(os.path.join(basepath, output_path + f'{data_folder}{MODEL_FILENAME}_{SEED}_test.npy'), test_preds)
 
         
     elif args.t:
