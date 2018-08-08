@@ -1885,7 +1885,7 @@ class Modelv96(BaseModel):
         
         Xte = test.loc[:, feature_list]
 
-        return super(Modelv96, self).oof_preds(X, y, Xte, yte, model)
+        return super(Modelv96, self).oof_preds(X, y, Xte, model)
 
 
 if __name__ == '__main__':
