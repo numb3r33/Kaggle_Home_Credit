@@ -131,8 +131,6 @@ class BaseModel:
             valid_sets  = [ltrain, lval]
             valid_names = ['train', 'val']
 
-            early_stopping_rounds = 200
-
             m = lgb.train(params, 
                         ltrain, 
                         num_boost_round, 
@@ -280,7 +278,6 @@ class BaseModel:
             
             watchlist   = [(dtrain, 'train'), (dval, 'val')]
 
-            early_stopping_rounds = 100
             m = xgb.train(params, 
                           dtrain, 
                           num_boost_round, 
