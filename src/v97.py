@@ -1988,15 +1988,15 @@ if __name__ == '__main__':
         cv_history = m.cross_validate(train, feature_list, PARAMS.copy(), cv_adversarial_filepath)
         print('CV History columns: {}'.format(cv_history.columns))
 
-        # cv_score   = str(cv_history.iloc[-1]['auc-mean']) + '_' + str(cv_history.iloc[-1]['auc-stdv'])
+        cv_score   = str(cv_history.iloc[-1]['test-auc-mean']) + '_' + str(cv_history.iloc[-1]['test-auc-std'])
         
-        # PARAMS['num_boost_round']      = len(cv_history)
+        PARAMS['num_boost_round'] = np.argmax(cv_history['test-auc-mean'].values) + 1
 
-        # print('*' * 100)
-        # print('Best AUC: {}'.format(cv_score))
+        print('*' * 100)
+        print('Best AUC: {}'.format(cv_score))
         
-        # joblib.dump(PARAMS, os.path.join(basepath, output_path + f'{data_folder}{MODEL_FILENAME}_{SEED}_params.pkl'))
-        # joblib.dump(cv_score, os.path.join(basepath, output_path + f'{data_folder}{MODEL_FILENAME}_{SEED}_cv.pkl'))
+        joblib.dump(PARAMS, os.path.join(basepath, output_path + f'{data_folder}{MODEL_FILENAME}_{SEED}_params.pkl'))
+        joblib.dump(cv_score, os.path.join(basepath, output_path + f'{data_folder}{MODEL_FILENAME}_{SEED}_cv.pkl'))
     
     elif args.t:
         print('Full Training')
@@ -2051,12 +2051,10 @@ if __name__ == '__main__':
         HOLDOUT_SCORE = joblib.load(os.path.join(basepath, output_path + f'{data_folder}{MODEL_FILENAME}_{CV_SEED}_cv.pkl'))
 
         PARAMS['num_boost_round'] = int(1.1 * PARAMS['num_boost_round'])
-        PARAMS['learning_rate']  /= 1.1
+        PARAMS['eta']  /= 1.1
 
         PARAMS['seed'] = SEED
-        PARAMS['feature_fraction_seed'] = SEED
-        PARAMS['bagging_seed'] = SEED
-
+        
         print('*' * 100)
         print('PARAMS are: {}'.format(PARAMS))
 
