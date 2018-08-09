@@ -1901,9 +1901,7 @@ if __name__ == '__main__':
                                    min_child_samples=PARAMS['min_data_in_leaf'],
                                    subsample=PARAMS['bagging_fraction'],
                                    colsample_bytree=PARAMS['sub_feature'],
-                                   reg_lambda=PARAMS['lambda_l2'],
-                                   reg_alpha=PARAMS['lambda_l1'],
-                                   min_split_gain=PARAMS['min_split_gain'],
+                                   reg_lambda=PARAMS['reg_lambda'],
                                    random_state=SEED,
                                    verbose=-1,
                                    n_jobs=8
