@@ -280,7 +280,7 @@ class BaseModel:
             
             watchlist   = [(dtrain, 'train'), (dval, 'val')]
 
-            early_stopping_rounds = 40
+            early_stopping_rounds = 100
             m = xgb.train(params, 
                           dtrain, 
                           num_boost_round, 
