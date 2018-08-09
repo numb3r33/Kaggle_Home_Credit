@@ -215,7 +215,7 @@ PARAMS = {
     'colsample_bylevel': .5,
     'min_child_weight': 5,
     'gamma': 5,
-    'nthread': 4,
+    'nthread': 8,
     'silent': 1,
     'verbose': -1,
     'seed': SEED
