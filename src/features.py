@@ -1396,6 +1396,41 @@ def pos_cash_features(pos_cash, data):
 def credit_card_features(credit_bal, data):
     COLS = data.columns.tolist()
     
+    # ratio of balance to total credit limit actual
+
+    total_credit_limit = credit_bal.groupby('SK_ID_CURR')['AMT_CREDIT_LIMIT_ACTUAL'].sum()
+    total_balance      = credit_bal.groupby('SK_ID_CURR')['AMT_BALANCE'].sum() 
+    tmp                = total_balance / total_credit_limit
+    data.loc[:, 'ratio_credit_bal_limit'] = data.SK_ID_CURR.map(tmp)
+
+    del tmp
+    gc.collect()
+
+    # difference between credit limit and balance
+    tmp = total_credit_limit - total_balance
+    data.loc[:, 'diff_credit_bal_limit'] = data.SK_ID_CURR.map(tmp)
+
+    del tmp
+    gc.collect()
+
+    # total balance
+    data.loc[:, 'credit_total_balance'] = data.SK_ID_CURR.map(total_balance)
+
+    # total credit limit
+    data.loc[:, 'credit_total_limit']   = data.SK_ID_CURR.map(total_credit_limit)
+
+    # total defaults
+    total_defaults = credit_bal.groupby('SK_ID_CURR')['SK_DPD'].sum()
+    data.loc[:, 'credit_total_dpds'] = data.SK_ID_CURR.map(total_defaults)
+
+    # total regular installments
+    instalment_regular = credit_bal.groupby('SK_ID_CURR')['AMT_INST_MIN_REGULARITY'].sum()
+    data.loc[:, 'credit_total_instalment_regular'] = data.SK_ID_CURR.map(instalment_regular)
+
+    # total payment current
+    payment_current = credit_bal.groupby('SK_ID_CURR')['AMT_PAYMENT_CURRENT'].sum()
+    data.loc[:, 'credit_total_payment_current'] = data.SK_ID_CURR.map(instalment_regular)
+
     # mean of amount balance during previous payments
     mean_amt_balance                = credit_bal.groupby('SK_ID_CURR')['AMT_BALANCE'].mean()
     data.loc[:, 'mean_amt_balance'] = data.SK_ID_CURR.map(mean_amt_balance)
