@@ -1935,11 +1935,11 @@ if __name__ == '__main__':
         print('*' * 100)
         model_identifier = f'{data_folder}{MODEL_FILENAME}_{fold_indicator}_{SEED}'
 
-        if os.path.exists(os.path.join(basepath, output_path + f'{model_identifier}_best_params.pkl')):
+        if os.path.exists(os.path.join(basepath, output_path + f'{model_identifier}_bo_params.pkl')):
             print('Loading best hyper-parameters from disk ...')
 
-            best_score  = joblib.load(os.path.join(basepath, output_path + f'{model_identifier}_best_score.pkl'))
-            best_params = joblib.load(os.path.join(basepath, output_path + f'{model_identifier}_best_params.pkl'))
+            best_score  = joblib.load(os.path.join(basepath, output_path + f'{model_identifier}_bo_score.pkl'))
+            best_params = joblib.load(os.path.join(basepath, output_path + f'{model_identifier}_bo_params.pkl'))
 
             print('Best score: {}\n Best params: {}'.format(best_score, best_params))
             
@@ -1948,8 +1948,8 @@ if __name__ == '__main__':
             best_score, best_params = m.optimize_lgb(train, test, feature_list)
             
             if not is_sample:
-                joblib.dump(best_score, os.path.join(basepath, output_path + f'{model_identifier}_best_score.pkl'))
-                joblib.load(best_params, os.path.join(basepath, output_path + f'{model_identifier}_best_params.pkl'))
+                joblib.dump(best_score, os.path.join(basepath, output_path + f'{model_identifier}_bo_score.pkl'))
+                joblib.dump(best_params, os.path.join(basepath, output_path + f'{model_identifier}_bo_params.pkl'))
 
     elif args.v is not None and len(args.v):
         print('Train and generate predictions on a fold')
