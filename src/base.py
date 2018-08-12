@@ -12,7 +12,6 @@ from sklearn.externals import joblib
 from sklearn.decomposition import PCA
 from sklearn.preprocessing import StandardScaler
 
-import BayesianOptimization
 from bayes_opt import BayesianOptimization
 
 import time
