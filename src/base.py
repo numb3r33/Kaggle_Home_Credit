@@ -211,7 +211,7 @@ class BaseModel:
         
         return pd.DataFrame(cv)
 
-    def optimize_lgb(self, Xtr, ytr, param_grid):
+    def optimize_lgb(self, Xtr, ytr, Xte, yte, param_grid):
         
         params = {
             'objective': 'binary',
@@ -226,8 +226,6 @@ class BaseModel:
             'early_stopping_rounds': None
         }
 
-        print(Xtr.shape, ' ', ytr.shape)
-
         def fun(**kw):
 
             for k in kw:
@@ -238,15 +236,13 @@ class BaseModel:
 
             print('Trying {} .....'.format(params))
 
-            # cv_history = self.cross_validate(Xtr, ytr, params)
-            
-            # best_score = cv_history.iloc[-1]['auc-mean']
-            # print('Score: {}'.format(best_score))
+            model, _ = self.train_lgb(Xtr, ytr, Xte, yte, **params)
 
-            return 1
+            print('Score: {} at iteration: {}'.format(model.best_score, model.best_iteration))
+            return model.best_score['val']['auc']
 
         opt = BayesianOptimization(fun, param_grid, random_state=4457)
-        opt.maximize(n_iter=2)
+        opt.maximize(n_iter=15)
 
         print('Optimization object: {}'.format(opt.res['max']))
         

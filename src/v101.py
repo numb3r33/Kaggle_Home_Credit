@@ -1864,8 +1864,12 @@ if __name__ == '__main__':
         input_path      = args.input_path
         output_path     = args.output_path
         data_folder     = args.data_folder
+        fold_indicator  = args.v
         is_sample       = args.s
         SEED            = int(args.seed)
+
+        print('*' * 100)
+        print('SEED FOUND: {}'.format(SEED))
 
         params = {
             'input_path': input_path,
@@ -1891,11 +1895,17 @@ if __name__ == '__main__':
             del train, test
             gc.collect()
 
-        train  = data.iloc[:m.n_train]
+        # ite    = pd.read_csv(os.path.join(basepath, input_path + 'cv_adversarial_idx_v1.csv'), usecols=[fold_indicator])[fold_indicator].values
+        ite  = pd.read_csv(os.path.join(basepath, input_path + 'cv_idx.csv'), usecols=[fold_indicator])[fold_indicator].values
+        print('Shape of fold indices ', len(ite))
+
+        itr    = np.array(list(set(data.iloc[:m.n_train].index) - set(ite)))
+        
+        train    = data.loc[data.index.isin(itr)]
+        test     = data.loc[data.index.isin(ite)]
 
         del data
         gc.collect()
-        
 
         if is_sample:
             print('*' * 100)
@@ -1919,7 +1929,7 @@ if __name__ == '__main__':
         print('Number of features: {}'.format(len(feature_list)))
 
         print('*' * 100)
-        model_identifier = f'{data_folder}{MODEL_FILENAME}_{SEED}'
+        model_identifier = f'{data_folder}{MODEL_FILENAME}_{fold_indicator}_{SEED}'
 
         if os.path.exists(os.path.join(basepath, output_path + f'{model_identifier}_best_params.pkl')):
             print('Loading best hyper-parameters from disk ...')
@@ -1931,7 +1941,7 @@ if __name__ == '__main__':
             
         else:
             print('Lets find hyper-parameters ...')
-            best_score, best_params = m.optimize_lgb(train, feature_list)
+            best_score, best_params = m.optimize_lgb(train, test, feature_list)
             
             if not is_sample:
                 joblib.dump(best_score, os.path.join(basepath, output_path + f'{model_identifier}_best_score.pkl'))
