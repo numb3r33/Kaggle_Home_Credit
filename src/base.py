@@ -226,7 +226,7 @@ class BaseModel:
         }
 
         def fun(**kw):
-            
+
             for k in kw:
                 if type(param_grid[k][0]) is int:
                     params[k] = int(kw[k])
@@ -240,7 +240,7 @@ class BaseModel:
             print('Score: {} at iteration: {}'%(model.best_score, model.best_iteration))
             return model.best_score
 
-        opt = BayesianOptimization(fun, param_grid)
+        opt = BayesianOptimization(fun, param_grid, random_state=4457)
         opt.maximize(n_iter=2)
 
         best_score  = opt.res['max']['max_val']
