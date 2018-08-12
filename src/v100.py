@@ -1613,12 +1613,12 @@ class Modelv100(BaseModel):
         yte = test.loc[:, TARGET_NAME]
 
         param_grid = {
-            'colsample_bytree': (.01, .03, .05, .1, .3),
-            'max_depth': (3, 4, 6, 8),
-            'min_data_in_leaf': (20, 60, 100),
-            'min_child_weight': (1, 30, 50, 100),
-            'reg_lambda': (1, 25, 50, 100),
-            'num_leaves': (5, 15, 20, 30, 60, 100)
+            'sub_feature': (.01, .3),
+            'max_depth': (3, 10),
+            'min_data_in_leaf': (20, 100),
+            'min_child_weight': (1, 100),
+            'reg_lambda': (1, 100),
+            'num_leaves': (5, 100)
         }
 
         return super(Modelv100, self).optimize_lgb(Xtr, ytr, Xte, yte, param_grid)

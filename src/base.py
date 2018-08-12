@@ -216,6 +216,7 @@ class BaseModel:
         params = {
             'objective': 'binary',
             'metric': 'auc',
+            'learning_rate': 0.01,
             'feature_fraction_seed': 4457,
             'bagging_seed': 4457,
             'nthread': 8,
