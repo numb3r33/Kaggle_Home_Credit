@@ -1605,12 +1605,9 @@ class Modelv100(BaseModel):
                                                     categorical_feature=categorical_feature
                                                     )
     
-    def optimize_lgb(self, train, test, feature_list, TARGET_NAME='TARGET'):
+    def optimize_lgb(self, train, feature_list, TARGET_NAME='TARGET'):
         Xtr = train.loc[:, feature_list]
         ytr = train.loc[:, TARGET_NAME]
-
-        Xte = test.loc[:, feature_list]
-        yte = test.loc[:, TARGET_NAME]
 
         param_grid = {
             'sub_feature': (.01, .3),
@@ -1621,7 +1618,7 @@ class Modelv100(BaseModel):
             'num_leaves': (5, 100)
         }
 
-        return super(Modelv100, self).optimize_lgb(Xtr, ytr, Xte, yte, param_grid)
+        return super(Modelv100, self).optimize_lgb(Xtr, ytr, param_grid)
 
 
     def oof_preds(self, train, test, feature_list, model, TARGET_NAME='TARGET'):

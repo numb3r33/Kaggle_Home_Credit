@@ -211,7 +211,7 @@ class BaseModel:
         
         return pd.DataFrame(cv)
 
-    def optimize_lgb(self, Xtr, ytr, Xte, yte, param_grid):
+    def optimize_lgb(self, Xtr, ytr, param_grid):
         
         params = {
             'objective': 'binary',
@@ -236,7 +236,7 @@ class BaseModel:
 
             print('Trying {} .....'.format(params))
 
-            cv_history = self.cross_validate(Xtr, ytr, Xte, yte, params)
+            cv_history = self.cross_validate(Xtr, ytr, params)
             
             best_score = cv_history.iloc[-1]['auc-mean']
             print('Score: {}'.format(best_score))
