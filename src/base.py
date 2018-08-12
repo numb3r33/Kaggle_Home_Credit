@@ -216,13 +216,13 @@ class BaseModel:
         params = {
             'objective': 'binary',
             'metric': 'auc',
-            'learning_rate': 0.01,
+            'learning_rate': 0.1,
             'feature_fraction_seed': 4457,
             'bagging_seed': 4457,
             'nthread': 8,
             'verbose': -1,
             'seed': 4457,
-            'num_boost_round': 5000,
+            'num_boost_round': 1000,
             'early_stopping_rounds': None
         }
 
