@@ -239,11 +239,13 @@ class BaseModel:
             model, _ = self.train_lgb(Xtr, ytr, Xte, yte, **params)
 
             print('Score: {} at iteration: {}'.format(model.best_score, model.best_iteration))
-            return model.best_score
+            return model.best_score['val']['auc']
 
         opt = BayesianOptimization(fun, param_grid, random_state=4457)
         opt.maximize(n_iter=2)
 
+        print('Optimization object: {}'.format(opt.res['max']))
+        
         best_score  = opt.res['max']['max_val']
         best_params = opt.res['max']['max_params']
 
