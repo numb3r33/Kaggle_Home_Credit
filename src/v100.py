@@ -1765,7 +1765,7 @@ if __name__ == '__main__':
             
         else:
             print('Lets find hyper-parameters ...')
-            best_score, best_params = m.optimize_lgb(train, tests, feature_list)
+            best_score, best_params = m.optimize_lgb(train, test, feature_list)
             
             if not is_sample:
                 joblib.dump(best_score, os.path.join(basepath, output_path + f'{model_identifier}_best_score.pkl'))
