@@ -56,7 +56,7 @@ PCA_PARAMS = {
 
 
 MODEL_FILENAME           = 'v100'
-SAMPLE_SIZE              = .1
+SAMPLE_SIZE              = .3
 
 # NOTE: column in frequency encoded columns
 # cannot be in ohe cols.
@@ -1717,7 +1717,7 @@ if __name__ == '__main__':
         del data
         gc.collect()
         
-        
+
         if is_sample:
             print('*' * 100)
             print('Take a random sample of the training data ...')
@@ -1740,7 +1740,7 @@ if __name__ == '__main__':
         print('Number of features: {}'.format(len(feature_list)))
 
         print('*' * 100)
-        model_identifier = f'{data_folder}{MODEL_FILENAME}_{fold_indicator}_{SEED}'
+        model_identifier = f'{data_folder}{MODEL_FILENAME}_{SEED}'
 
         if os.path.exists(os.path.join(basepath, output_path + f'{model_identifier}_best_params.pkl')):
             print('Loading best hyper-parameters from disk ...')
