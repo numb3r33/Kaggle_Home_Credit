@@ -1685,12 +1685,8 @@ if __name__ == '__main__':
         input_path      = args.input_path
         output_path     = args.output_path
         data_folder     = args.data_folder
-        fold_indicator  = args.v
         is_sample       = args.s
         SEED            = int(args.seed)
-
-        print('*' * 100)
-        print('SEED FOUND: {}'.format(SEED))
 
         params = {
             'input_path': input_path,
@@ -1716,12 +1712,12 @@ if __name__ == '__main__':
             del train, test
             gc.collect()
 
-        
         train  = data.iloc[:m.n_train]
 
         del data
         gc.collect()
-
+        
+        
         if is_sample:
             print('*' * 100)
             print('Take a random sample of the training data ...')
