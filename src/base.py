@@ -238,7 +238,7 @@ class BaseModel:
 
             model, _ = self.train_lgb(Xtr, ytr, Xte, yte, **params)
 
-            print('Score: {} at iteration: {}'%(model.best_score, model.best_iteration))
+            print('Score: {} at iteration: {}'.format(model.best_score, model.best_iteration))
             return model.best_score
 
         opt = BayesianOptimization(fun, param_grid, random_state=4457)
