@@ -214,6 +214,8 @@ class BaseModel:
     def optimize_lgb(self, Xtr, ytr, Xte, yte, param_grid):
         
         params = {
+            'objective': 'binary',
+            'metric': 'auc',
             'feature_fraction_seed': 4457,
             'bagging_seed': 4457,
             'nthread': 8,
@@ -224,8 +226,7 @@ class BaseModel:
         }
 
         def fun(**kw):
-            params = {}
-
+            
             for k in kw:
                 if type(param_grid[k][0]) is int:
                     params[k] = int(kw[k])
