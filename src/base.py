@@ -226,6 +226,8 @@ class BaseModel:
             'early_stopping_rounds': None
         }
 
+        print(Xtr.shape, ' ', ytr.shape)
+
         def fun(**kw):
 
             for k in kw:
@@ -236,15 +238,15 @@ class BaseModel:
 
             print('Trying {} .....'.format(params))
 
-            cv_history = self.cross_validate(Xtr, ytr, params)
+            # cv_history = self.cross_validate(Xtr, ytr, params)
             
-            best_score = cv_history.iloc[-1]['auc-mean']
-            print('Score: {}'.format(best_score))
+            # best_score = cv_history.iloc[-1]['auc-mean']
+            # print('Score: {}'.format(best_score))
 
-            return best_score
+            return 1
 
         opt = BayesianOptimization(fun, param_grid, random_state=4457)
-        opt.maximize(init_points=2, n_iter=2)
+        opt.maximize(n_iter=2)
 
         print('Optimization object: {}'.format(opt.res['max']))
         
