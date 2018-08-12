@@ -222,8 +222,8 @@ class BaseModel:
             'nthread': 8,
             'verbose': -1,
             'seed': 4457,
-            'num_boost_round': 1000,
-            'early_stopping_rounds': None
+            'num_boost_round': 20000,
+            'early_stopping_rounds': 100
         }
 
         def fun(**kw):
