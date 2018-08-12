@@ -12,6 +12,9 @@ from sklearn.externals import joblib
 from sklearn.decomposition import PCA
 from sklearn.preprocessing import StandardScaler
 
+import BayesianOptimization
+from bayes_opt import BayesianOptimization
+
 import time
 
 #TODO: Think what all methods can be moved to base class which would be beneficial for
@@ -208,6 +211,45 @@ class BaseModel:
         print('\nTook: {} seconds'.format(time.time() - t0))
         
         return pd.DataFrame(cv)
+
+    def optimize_lgb(self, Xtr, ytr, Xte, yte, param_grid):
+        
+        params = {
+            'feature_fraction_seed': 4457,
+            'bagging_seed': 4457,
+            'nthread': 8,
+            'verbose': -1,
+            'seed': 4457,
+            'num_boost_round': 20000,
+            'early_stopping_rounds': 100
+        }
+
+        def fun(**kw):
+            params = {}
+
+            for k in kw:
+                if type(param_grid[k][0]) is int:
+                    params[k] = int(kw[k])
+                else:
+                    params[k] = kw[k]
+
+            print('Trying {} .....'.format(params))
+
+            model, _ = self.train_lgb(Xtr, ytr, Xte, yte, **params)
+
+            print('Score: {} at iteration: {}'%(model.best_score, model.best_iteration))
+            return model.best_score
+
+        opt = BayesianOptimization(fun, param_grid)
+        opt.maximize(n_iter=2)
+
+        best_score  = opt.res['max']['max_val']
+        best_params = opt.res['max']['max_params']
+
+        print('Best AUC score: {}, params: {}'.format(best_score, best_params))
+
+        return best_score, best_params
+
 
     def cross_validate_xgb(self, Xtr, ytr, params, cv_adversarial_filepath=None):
         num_boost_round       = params['num_boost_round']

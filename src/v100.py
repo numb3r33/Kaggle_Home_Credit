@@ -1604,6 +1604,25 @@ class Modelv100(BaseModel):
                                                     cv_adversarial_filepath=cv_adversarial_filepath,
                                                     categorical_feature=categorical_feature
                                                     )
+    
+    def optimize_lgb(self, train, test, feature_list, TARGET_NAME='TARGET'):
+        Xtr = train.loc[:, feature_list]
+        ytr = train.loc[:, TARGET_NAME]
+
+        Xte = test.loc[:, feature_list]
+        yte = test.loc[:, TARGET_NAME]
+
+        param_grid = {
+            'colsample_bytree': [.01, .03, .05, .1, .3],
+            'max_depth': [3, 4, 6, 8],
+            'min_data_in_leaf': [20, 60, 100],
+            'min_child_weight': [1, 30, 50, 100],
+            'reg_lambda': [1, 25, 50, 100],
+            'num_leaves': [5, 15, 20, 30, 60, 100]
+        }
+
+        return super(Modelv100, self).optimize_lgb(Xtr, ytr, Xte, yte, param_grid)
+
 
     def oof_preds(self, train, test, feature_list, model, TARGET_NAME='TARGET'):
         X = train.loc[:, feature_list]
@@ -1630,6 +1649,7 @@ if __name__ == '__main__':
     parser.add_argument('-cv_seed', type=int, help='CV SEED')
     parser.add_argument('-oof', type=bool, help='OOF preds for training and test set.')
     parser.add_argument('-t', type=bool, help='Full Training Loop.')
+    parser.add_argument('-bo', type=bool, help='Hyper-Parameter Tuning using Bayesian Optimization')
     parser.add_argument('-ensemble', type=bool , help='Average out predictions.')
 
     args    = parser.parse_args()
@@ -1771,6 +1791,96 @@ if __name__ == '__main__':
                 np.save(os.path.join(basepath, output_path + f'{model_identifier}_preds_holdout.npy'), hold_preds)
                 feat_df.to_csv(os.path.join(basepath, output_path + f'{model_identifier}_feat_imp.csv'), index=False)
     
+    elif args.bo:
+        print('Bayesian Optimization to find right hyper-parameters ...')
+
+        input_path      = args.input_path
+        output_path     = args.output_path
+        data_folder     = args.data_folder
+        fold_indicator  = args.v
+        is_sample       = args.s
+        cv_seed         = args.cv_seed
+        SEED            = int(args.seed)
+
+        print('*' * 100)
+        print('SEED FOUND: {}'.format(SEED))
+
+        params = {
+            'input_path': input_path,
+            'output_path': output_path,
+            'data_folder': data_folder
+        }
+
+        m   = Modelv100(**params)
+            
+        if os.path.exists(os.path.join(basepath, output_path + f'{data_folder}data.h5')):
+            print('Loading dataset from disk ...')
+            data = pd.read_hdf(os.path.join(basepath, output_path + f'{data_folder}data.h5'), format='table', key='data')
+        else:
+            print('Merge feature groups and save them to disk ...')
+            train, test  = m.merge_datasets()
+            train, test  = m.fe(train, test)
+            
+            data         = pd.concat((train, test))
+            data         = m.reduce_mem_usage(data)
+
+            data.to_hdf(os.path.join(basepath, output_path + f'{data_folder}data.h5'), format='table', key='data')
+
+            del train, test
+            gc.collect()
+
+        # ite    = pd.read_csv(os.path.join(basepath, input_path + 'cv_adversarial_idx_v1.csv'), usecols=[fold_indicator])[fold_indicator].values
+        ite  = pd.read_csv(os.path.join(basepath, input_path + 'cv_idx.csv'), usecols=[fold_indicator])[fold_indicator].values
+        print('Shape of fold indices ', len(ite))
+
+        itr    = np.array(list(set(data.iloc[:m.n_train].index) - set(ite)))
+        
+        train    = data.loc[data.index.isin(itr)]
+        test     = data.loc[data.index.isin(ite)]
+
+        del data
+        gc.collect()
+
+        if is_sample:
+            print('*' * 100)
+            print('Take a random sample of the training data ...')
+            train = train.sample(frac=SAMPLE_SIZE)
+        
+        # check to see if feature list exists on disk or not for a particular model
+        if os.path.exists(os.path.join(basepath, output_path + f'{data_folder}{MODEL_FILENAME}_features.npy')):
+            feature_list = np.load(os.path.join(basepath, output_path + f'{data_folder}{MODEL_FILENAME}_features.npy'))
+        else: 
+            feature_list = train.columns.tolist()
+            feature_list = list(set(feature_list) - set(COLS_TO_REMOVE))
+            np.save(os.path.join(basepath, output_path + f'{data_folder}{MODEL_FILENAME}_features.npy'), feature_list)
+        
+        # print features with null percentage
+        print('Top-5 features with highest percentage of null values ...\n')
+        print((train.loc[:, feature_list].isnull().sum() / len(train)).sort_values(ascending=False).iloc[:5])
+        
+        # print number of features explored in the experiment
+        print('*' * 100)
+        print('Number of features: {}'.format(len(feature_list)))
+
+        print('*' * 100)
+        model_identifier = f'{data_folder}{MODEL_FILENAME}_{fold_indicator}_{SEED}'
+
+        if os.path.exists(os.path.join(basepath, output_path + f'{model_identifier}_best_params.pkl')):
+            print('Loading best hyper-parameters from disk ...')
+
+            best_score  = joblib.load(os.path.join(basepath, output_path + f'{model_identifier}_best_score.pkl'))
+            best_params = joblib.load(os.path.join(basepath, output_path + f'{model_identifier}_best_params.pkl'))
+
+            print('Best score: {}\n Best params: {}'.format(best_score, best_params))
+            
+        else:
+            print('Lets find hyper-parameters ...')
+            best_score, best_params = m.optimize_lgb(train, tests, feature_list)
+            
+            if not is_sample:
+                joblib.dump(best_score, os.path.join(basepath, output_path + f'{model_identifier}_best_score.pkl'))
+                joblib.load(best_params, os.path.join(basepath, output_path + f'{model_identifier}_best_params.pkl'))
+
     elif args.cv:
         print('Cross validation on training and store parameters and cv score on disk ...')
 
