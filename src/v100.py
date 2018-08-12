@@ -1716,14 +1716,8 @@ if __name__ == '__main__':
             del train, test
             gc.collect()
 
-        # ite    = pd.read_csv(os.path.join(basepath, input_path + 'cv_adversarial_idx_v1.csv'), usecols=[fold_indicator])[fold_indicator].values
-        ite  = pd.read_csv(os.path.join(basepath, input_path + 'cv_idx.csv'), usecols=[fold_indicator])[fold_indicator].values
-        print('Shape of fold indices ', len(ite))
-
-        itr    = np.array(list(set(data.iloc[:m.n_train].index) - set(ite)))
         
-        train    = data.loc[data.index.isin(itr)]
-        test     = data.loc[data.index.isin(ite)]
+        train  = data.iloc[:m.n_train]
 
         del data
         gc.collect()
