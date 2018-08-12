@@ -222,8 +222,8 @@ class BaseModel:
             'nthread': 8,
             'verbose': -1,
             'seed': 4457,
-            'num_boost_round': 20000,
-            'early_stopping_rounds': 100
+            'num_boost_round': 5000,
+            'early_stopping_rounds': None
         }
 
         def fun(**kw):
@@ -236,13 +236,15 @@ class BaseModel:
 
             print('Trying {} .....'.format(params))
 
-            model, _ = self.train_lgb(Xtr, ytr, Xte, yte, **params)
+            cv_history = self.cross_validate(Xtr, ytr, Xte, yte, params)
+            
+            best_score = cv_history.iloc[-1]['auc-mean']
+            print('Score: {}'.format(best_score))
 
-            print('Score: {} at iteration: {}'.format(model.best_score, model.best_iteration))
-            return model.best_score['val']['auc']
+            return best_score
 
         opt = BayesianOptimization(fun, param_grid, random_state=4457)
-        opt.maximize(n_iter=2)
+        opt.maximize(init_points=2, n_iter=2)
 
         print('Optimization object: {}'.format(opt.res['max']))
         
