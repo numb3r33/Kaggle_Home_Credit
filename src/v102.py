@@ -1757,13 +1757,14 @@ class Modelv102(BaseModel):
         
         return super(Modelv102, self).evaluate_sklearn(Xte, yte, model)
 
-    def cross_validate(self, train, feature_list, model, TARGET_NAME='TARGET'):
+    def cross_validate(self, train, feature_list, model, seed, TARGET_NAME='TARGET'):
         Xtr = train.loc[:, feature_list]
         ytr = train.loc[:, TARGET_NAME]
 
         return super(Modelv102, self).cross_validate_sklearn(Xtr, 
                                                     ytr,
-                                                    model
+                                                    model,
+                                                    seed
                                                     )
     
     def fill_missing_values(self, data, feature_list):
@@ -1991,7 +1992,7 @@ if __name__ == '__main__':
         # scale values
         data.loc[:, feature_list] = m.scale_dataset(data, feature_list)
 
-        print('Number of null features: {}'.format(data.loc[:, feature_list].isnull().sum()))
+        print('Number of null features: {}'.format(data.loc[:, feature_list].isnull().sum().sum()))
 
         train  = data.iloc[:m.n_train]
 
@@ -2005,7 +2006,7 @@ if __name__ == '__main__':
         
         model      = KNeighborsClassifier(**PARAMS)
 
-        cv_history = m.cross_validate(train, feature_list, model)
+        cv_history = m.cross_validate(train, feature_list, model, SEED)
         cv_mean    = np.mean(cv_history)
         cv_std     = np.std(cv_history)
 
