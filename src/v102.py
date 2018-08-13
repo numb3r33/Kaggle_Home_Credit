@@ -1976,6 +1976,22 @@ if __name__ == '__main__':
 
             del train, test
             gc.collect()
+        
+        # check to see if feature list exists on disk or not for a particular model
+        if os.path.exists(os.path.join(basepath, output_path + f'{data_folder}{MODEL_FILENAME}_features.npy')):
+            feature_list = np.load(os.path.join(basepath, output_path + f'{data_folder}{MODEL_FILENAME}_features.npy'))
+        else: 
+            feature_list = train.columns.tolist()
+            feature_list = list(set(feature_list) - set(COLS_TO_REMOVE))
+            np.save(os.path.join(basepath, output_path + f'{data_folder}{MODEL_FILENAME}_features.npy'), feature_list)
+
+        # fill missing values
+        data = m.fill_missing_values(data, feature_list)
+
+        # scale values
+        data.loc[:, feature_list] = m.scale_dataset(data, feature_list)
+
+        print('Number of null features: {}'.format(data.loc[:, feature_list].isnull().sum()))
 
         train  = data.iloc[:m.n_train]
 
@@ -1987,27 +2003,14 @@ if __name__ == '__main__':
             print('Take a random sample of the training data ...')
             train = train.sample(frac=SAMPLE_SIZE)
         
-        # check to see if feature list exists on disk or not for a particular model
-        if os.path.exists(os.path.join(basepath, output_path + f'{data_folder}{MODEL_FILENAME}_features.npy')):
-            feature_list = np.load(os.path.join(basepath, output_path + f'{data_folder}{MODEL_FILENAME}_features.npy'))
-        else: 
-            feature_list = train.columns.tolist()
-            feature_list = list(set(feature_list) - set(COLS_TO_REMOVE))
-            np.save(os.path.join(basepath, output_path + f'{data_folder}{MODEL_FILENAME}_features.npy'), feature_list)
+        model      = KNeighborsClassifier(**PARAMS)
 
-        
-        PARAMS['seed']                  = SEED
-        PARAMS['feature_fraction_seed'] = SEED
-        PARAMS['bagging_seed']          = SEED
-        
-        # cv_adversarial_filepath = os.path.join(basepath, 'data/raw/cv_adversarial_idx_v1.csv')
-        cv_adversarial_filepath = None
+        cv_history = m.cross_validate(train, feature_list, model)
+        cv_mean    = np.mean(cv_history)
+        cv_std     = np.std(cv_history)
 
-        cv_history = m.cross_validate(train, feature_list, PARAMS.copy(), cv_adversarial_filepath)
-        cv_score   = str(cv_history.iloc[-1]['auc-mean']) + '_' + str(cv_history.iloc[-1]['auc-stdv'])
+        cv_score   = str(cv_mean) + '_' + str(cv_std)
         
-        PARAMS['num_boost_round']      = len(cv_history)
-
         print('*' * 100)
         print('Best AUC: {}'.format(cv_score))
         
