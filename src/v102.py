@@ -1771,7 +1771,7 @@ class Modelv102(BaseModel):
             data[col] = data[col].replace([-np.inf, np.inf], np.nan)
 
             if data[col].isnull().sum():
-                data[col] = dat[col].fillna(data[col].median())
+                data[col] = data[col].fillna(data[col].median())
         
         return data
     
