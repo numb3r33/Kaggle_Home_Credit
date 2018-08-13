@@ -1883,7 +1883,7 @@ if __name__ == '__main__':
         if os.path.exists(os.path.join(basepath, output_path + f'{data_folder}{MODEL_FILENAME}_features.npy')):
             feature_list = np.load(os.path.join(basepath, output_path + f'{data_folder}{MODEL_FILENAME}_features.npy'))
         else: 
-            feature_list = train.columns.tolist()
+            feature_list = data.columns.tolist()
             feature_list = list(set(feature_list) - set(COLS_TO_REMOVE))
             np.save(os.path.join(basepath, output_path + f'{data_folder}{MODEL_FILENAME}_features.npy'), feature_list)
 
@@ -1981,7 +1981,7 @@ if __name__ == '__main__':
         if os.path.exists(os.path.join(basepath, output_path + f'{data_folder}{MODEL_FILENAME}_features.npy')):
             feature_list = np.load(os.path.join(basepath, output_path + f'{data_folder}{MODEL_FILENAME}_features.npy'))
         else: 
-            feature_list = train.columns.tolist()
+            feature_list = data.columns.tolist()
             feature_list = list(set(feature_list) - set(COLS_TO_REMOVE))
             np.save(os.path.join(basepath, output_path + f'{data_folder}{MODEL_FILENAME}_features.npy'), feature_list)
 
