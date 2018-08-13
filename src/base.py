@@ -6,6 +6,7 @@ import xgboost as xgb
 
 from sklearn.model_selection import train_test_split
 from sklearn.model_selection import cross_val_predict
+from sklearn.model_selection import cross_val_score
 from sklearn.model_selection import StratifiedKFold
 from sklearn.metrics import roc_auc_score
 from sklearn.externals import joblib
@@ -392,6 +393,48 @@ class BaseModel:
         data = pd.DataFrame(data, columns=[f'pca_{i}' for i in range(PCA_PARAMS['n_components'])])
         
         return data
+
+    def cross_validate_sklearn(self, X, y, model, seed):
+        print('Cross validating {}'.format(model))
+
+        skf       = StratifiedKFold(n_splits=3, shuffle=True, random_state=seed)
+        cv_scores = cross_val_score(model, X, y, cv=skf, scoring='roc_auc')
+
+        return cv_scores
+
+
+    def train_sklearn(self, X, y, Xte, yte, model):
+        print('Training a {} Classifier ...'.format(model))
+
+        t0 = time.time()
+        
+        if len(yte):
+            model.fit(X, y)
+            print('Took: {} seconds'.format((time.time() - t0)))
+            
+            hold_preds = model.predict_proba(Xte)[:, 1]
+            print('Holdout Score: {}'.format(roc_auc_score(yte, hold_preds)))
+            
+            return model, hold_preds 
+        else:
+            print('Full Training ...')
+            model.fit(X, y)
+            return model, model.predict_proba(Xte)[:, 1]
+
+    def evaluate_sklearn(self, Xte, yte, model):
+        yhat  = None
+        score = None
+
+        if len(yte):
+            yhat  = model.predict_proba(Xte)[:, 1]
+            
+            score = roc_auc_score(yte, yhat)
+            print('AUC: {}'.format(score))
+        else:
+            yhat = model.predict_proba(Xte)[:, 1]
+        
+        return yhat, score
+
 
     def oof_preds(self, X, y, Xte, model):
         oof_preds = cross_val_predict(model, X.values, y.values, cv=5, method='predict_proba')
