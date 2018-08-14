@@ -209,6 +209,7 @@ PARAMS = {
     'n_estimators': 500,
     'max_depth': 12,
     'min_samples_leaf': 3,
+    'max_features': 'sqrt',
     'n_jobs': 8,
     'random_state': SEED
 }
@@ -1917,11 +1918,11 @@ if __name__ == '__main__':
 
         # are there any features with null values
         print('Features with null values ...\n')
-        print((train.loc[:, feature_list].isnull().sum()))
+        print((train.loc[:, feature_list].isnull().sum().sum()))
         
         # print number of features explored in the experiment
         print('*' * 100)
-        print('Number of features: {}'.format(len(feature_list)))
+        print('Number of features with null values : {}'.format(len(feature_list)))
 
         print('*' * 100)
 

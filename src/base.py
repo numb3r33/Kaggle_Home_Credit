@@ -397,8 +397,12 @@ class BaseModel:
     def cross_validate_sklearn(self, X, y, model, seed):
         print('Cross validating {}'.format(model))
 
+        t0 = time.time()
+
         skf       = StratifiedKFold(n_splits=3, shuffle=True, random_state=seed)
         cv_scores = cross_val_score(model, X, y, cv=skf, scoring='roc_auc')
+
+        print('Took: {} seconds'.format(time.time() - t0))
 
         return cv_scores
 
