@@ -1789,6 +1789,7 @@ if __name__ == '__main__':
     parser.add_argument('-s', type=bool, help='Whether to work on a sample or not.')
     parser.add_argument('-seed', type=int, help='Random SEED')
     parser.add_argument('-cv_seed', type=int, help='CV SEED')
+    parser.add_argument('-oof', type=bool, help='OOF preds for training and test set.')    
     parser.add_argument('-t', type=bool, help='Full Training Loop.')
     parser.add_argument('-ensemble', type=bool , help='Average out predictions.')
 
