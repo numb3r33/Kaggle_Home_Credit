@@ -2005,6 +2005,7 @@ if __name__ == '__main__':
             gc.collect()
 
         train  = data.iloc[:m.n_train]
+        test   = data.iloc[m.n_train:]
 
         del data
         gc.collect()
