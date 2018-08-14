@@ -1774,13 +1774,13 @@ class Modelv97(BaseModel):
 
         return super(Modelv97, self).cross_validate_xgb(Xtr, ytr, params, cv_adversarial_filepath=cv_adversarial_filepath)
 
-    def oof_preds(self, train, test, feature_list, model, TARGET_NAME='TARGET'):
+    def get_oof_preds(self, train, test, feature_list, model, TARGET_NAME='TARGET'):
         X = train.loc[:, feature_list]
         y = train.loc[:, TARGET_NAME]
         
         Xte = test.loc[:, feature_list]
 
-        return super(Modelv97, self).oof_preds(X, y, Xte, model)
+        return super(Modelv97, self).get_oof_preds(X, y, Xte, model)
 
 
 if __name__ == '__main__':
@@ -2073,7 +2073,7 @@ if __name__ == '__main__':
                                    n_jobs=8
                                    )
         
-        oof_preds, test_preds = m.oof_preds(train, test, feature_list, model)
+        oof_preds, test_preds = m.get_oof_preds(train, test, feature_list, model)
 
         np.save(os.path.join(basepath, output_path + f'{data_folder}{MODEL_FILENAME}_{SEED}_oof_preds.npy'), oof_preds)
         np.save(os.path.join(basepath, output_path + f'{data_folder}{MODEL_FILENAME}_{SEED}_test.npy'), test_preds)

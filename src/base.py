@@ -440,7 +440,7 @@ class BaseModel:
         return yhat, score
 
 
-    def oof_preds(self, X, y, Xte, model):
+    def get_oof_preds(self, X, y, Xte, model):
         oof_preds = cross_val_predict(model, X.values, y.values, cv=5, method='predict_proba')
 
         model.fit(X.values, y.values)
