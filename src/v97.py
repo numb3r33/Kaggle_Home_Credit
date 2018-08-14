@@ -2052,7 +2052,7 @@ if __name__ == '__main__':
 
         # model construction
         model = xgb.XGBClassifier(max_depth=PARAMS['max_depth'],
-                                   learning_rate=PARAMS['learning_rate'],
+                                   learning_rate=PARAMS['eta'],
                                    n_estimators=PARAMS['num_boost_round'],
                                    objective=PARAMS['objective'],
                                    min_child_weight=PARAMS['min_child_weight'],
