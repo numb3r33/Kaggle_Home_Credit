@@ -206,21 +206,24 @@ COLS_TO_REMOVE = ['SK_ID_CURR',
 
 PARAMS = {
     'num_boost_round': 20000,
-    'early_stopping_rounds': 100,
-    'objective': 'binary',
+    'early_stopping_rounds': 200,
     'boosting_type': 'gbdt',
-    'learning_rate': .01,
+    'objective': 'binary',
+    'learning_rate': .02,
     'metric': 'auc',
-    'max_depth': 3,
-    'num_leaves': 30,
-    'sub_feature': 0.03,
+    'max_depth': 4,
+    'num_leaves': 58,
+    'sub_feature': 0.10,
     'feature_fraction_seed': SEED,
-    'bagging_fraction': 0.9,
+    'bagging_fraction': 0.89,
     'bagging_seed': SEED,
-    'reg_lambda': 75,
-    'min_data_in_leaf': 60,
-    'min_child_weight': 10,
-    'nthread': 8,
+    'min_data_in_leaf': 57,
+    'max_bin': 300,
+    'lambda_l1': 0.05,
+    'lambda_l2': 51,
+    'min_split_gain': 0.05,
+    'min_child_weight': 77,
+    'nthread': 4,
     'verbose': -1,
     'seed': SEED
 }
@@ -2032,17 +2035,24 @@ if __name__ == '__main__':
         cv_adversarial_filepath = os.path.join(basepath, 'data/raw/cv_adversarial_idx_v1.csv')
         # cv_adversarial_filepath = None
 
-        hold_auc, test_preds = m.cv_predict(train, test, feature_list, PARAMS.copy(), cv_adversarial_filepath)
+        hold_auc, test_preds, fold_trees = m.cv_predict(train, test, feature_list, PARAMS.copy(), cv_adversarial_filepath)
         
-        print(hold_auc.shape, ' ', test_preds.shape)
+        print('AUC across folds: {}'.format(hold_auc))
+        print('Number of estimators across folds: {}'.format(fold_trees))
         print('Mean holdout auc: {}'.format(np.mean(hold_auc)))
         print('Std holdout auc: {}'.format(np.std(hold_auc)))
 
         # After we have done cross-validation
 
-        # cv_score   = str(cv_history.iloc[-1]['auc-mean']) + '_' + str(cv_history.iloc[-1]['auc-stdv'])
+        cv_score   = str(np.mean(hold_auc)) + '_' + str(np.std(hold_auc))
         
-        # PARAMS['num_boost_round']      = len(cv_history)
+        sub_identifier = "%s-%s-%s-%s-%s" % (datetime.now().strftime('%Y%m%d-%H%M'), MODEL_FILENAME, np.mean(hold_auc), SEED, data_folder[:-1])
+
+        sub            = pd.read_csv(os.path.join(basepath, 'data/raw/sample_submission.csv.zip'))
+        sub['TARGET']  = test_preds
+        sub.to_csv(os.path.join(basepath, 'submissions/%s.csv'%(sub_identifier)), index=False)
+
+        # PARAMS['num_boost_round'] = len(cv_history)
 
         # print('*' * 100)
         # print('Best AUC: {}'.format(cv_score))

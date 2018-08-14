@@ -221,6 +221,7 @@ class BaseModel:
         # start time counter
         test_preds = np.zeros(shape=(len(test))) 
         hold_auc   = []
+        fold_trees = []
 
         for fold in ['F0', 'F1', 'F2', 'F3', 'F4', 'F5']:
             print('Fold: {}'.format(fold))
@@ -256,13 +257,14 @@ class BaseModel:
             hold_preds = model.predict(Xte, num_iteration=model.best_iteration)
             test_preds += (model.predict(test.loc[:, feature_list], num_iteration=model.best_iteration) * (1 / 5))
             fold_auc = roc_auc_score(yte, hold_preds)
-            
+            fold_trees.append(model.best_iteration)
+
             print('Best iteration: {}'.format(model.best_iteration))
             print('AUC on holdout set: {}'.format(fold_auc))
 
             hold_auc.append(fold_auc)
 
-        return np.array(hold_auc), test_preds
+        return np.array(hold_auc), test_preds, fold_trees
 
 
     def optimize_lgb(self, Xtr, ytr, Xte, yte, param_grid):
