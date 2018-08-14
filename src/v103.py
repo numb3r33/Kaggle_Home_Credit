@@ -206,8 +206,9 @@ COLS_TO_REMOVE = ['SK_ID_CURR',
                  ]  
 
 PARAMS = {
-    'n_estimators': 50,
-    'max_depth': 3,
+    'n_estimators': 500,
+    'max_depth': 12,
+    'min_samples_leaf': 3,
     'n_jobs': 8,
     'random_state': SEED
 }
