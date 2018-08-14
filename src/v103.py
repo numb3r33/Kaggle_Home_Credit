@@ -2054,6 +2054,24 @@ if __name__ == '__main__':
             del train, test
             gc.collect()
 
+        # check to see if feature list exists on disk or not for a particular model
+        if os.path.exists(os.path.join(basepath, output_path + f'{data_folder}{MODEL_FILENAME}_features.npy')):
+            feature_list = np.load(os.path.join(basepath, output_path + f'{data_folder}{MODEL_FILENAME}_features.npy'))
+        else: 
+            feature_list = data.columns.tolist()
+            feature_list = list(set(feature_list) - set(COLS_TO_REMOVE))
+            np.save(os.path.join(basepath, output_path + f'{data_folder}{MODEL_FILENAME}_features.npy'), feature_list)
+
+
+        # fill missing values
+        data = m.fill_missing_values(data, feature_list)
+
+        # scale values
+        data.loc[:, feature_list] = m.scale_dataset(data, feature_list)
+
+        print('Number of null features: {}'.format(data.loc[:, feature_list].isnull().sum().sum()))
+
+
         train  = data.iloc[:m.n_train]
         test   = data.iloc[m.n_train:]
         
@@ -2062,31 +2080,10 @@ if __name__ == '__main__':
         gc.collect()
         
 
-        # check to see if feature list exists on disk or not for a particular model
-        if os.path.exists(os.path.join(basepath, output_path + f'{data_folder}{MODEL_FILENAME}_features.npy')):
-            feature_list = np.load(os.path.join(basepath, output_path + f'{data_folder}{MODEL_FILENAME}_features.npy'))
-        else: 
-            feature_list = train.columns.tolist()
-            feature_list = list(set(feature_list) - set(COLS_TO_REMOVE))
-            np.save(os.path.join(basepath, output_path + f'{data_folder}{MODEL_FILENAME}_features.npy'), feature_list)
-
         PARAMS = joblib.load(os.path.join(basepath, output_path + f'{data_folder}{MODEL_FILENAME}_{SEED}_params.pkl'))    
 
         # model construction
-        model = lgb.LGBMClassifier(num_leaves=PARAMS['num_leaves'],
-                                   max_depth=PARAMS['max_depth'],
-                                   learning_rate=PARAMS['learning_rate'],
-                                   n_estimators=PARAMS['num_boost_round'],
-                                   objective=PARAMS['objective'],
-                                   min_child_weight=PARAMS['min_child_weight'],
-                                   min_child_samples=PARAMS['min_data_in_leaf'],
-                                   subsample=PARAMS['bagging_fraction'],
-                                   colsample_bytree=PARAMS['sub_feature'],
-                                   reg_lambda=PARAMS['reg_lambda'],
-                                   random_state=SEED,
-                                   verbose=-1,
-                                   n_jobs=8
-                                   )
+        model = RandomForestClassifier(**PARAMS)
         
         oof_preds, test_preds = m.oof_preds(train, test, feature_list, model)
 
