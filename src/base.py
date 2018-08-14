@@ -241,8 +241,8 @@ class BaseModel:
             ltrain = lgb.Dataset(Xtr, ytr, feature_name=Xtr.columns.tolist(), categorical_feature=categorical_feature)
             leval  = lgb.Dataset(Xte, yte, feature_name=Xte.columns.tolist(), categorical_feature=categorical_feature)
 
-            valid_sets  = [(ltrain, leval)]
-            valid_names = [('train', 'eval')]
+            valid_sets  = [ltrain, leval]
+            valid_names = ['train', 'eval']
 
             model  = lgb.train(params, 
                                ltrain, 
