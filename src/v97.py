@@ -2014,7 +2014,7 @@ if __name__ == '__main__':
             'data_folder': data_folder
         }
 
-        m   = Modelv96(**params)
+        m   = Modelv97(**params)
             
         if os.path.exists(os.path.join(basepath, output_path + f'{data_folder}data.h5')):
             print('Loading dataset from disk ...')
