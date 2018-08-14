@@ -1998,6 +1998,76 @@ if __name__ == '__main__':
         
         joblib.dump(PARAMS, os.path.join(basepath, output_path + f'{data_folder}{MODEL_FILENAME}_{SEED}_params.pkl'))
         joblib.dump(cv_score, os.path.join(basepath, output_path + f'{data_folder}{MODEL_FILENAME}_{SEED}_cv.pkl'))
+
+    elif args.oof:
+        print('Generate oof predictions for train and test set ...')
+        
+        input_path      = args.input_path
+        output_path     = args.output_path
+        data_folder     = args.data_folder
+        SEED            = args.seed
+
+        params = {
+            'input_path': input_path,
+            'output_path': output_path,
+            'data_folder': data_folder
+        }
+
+        m   = Modelv96(**params)
+            
+        if os.path.exists(os.path.join(basepath, output_path + f'{data_folder}data.h5')):
+            print('Loading dataset from disk ...')
+            data = pd.read_hdf(os.path.join(basepath, output_path + f'{data_folder}data.h5'), format='table', key='data')
+        else:
+            print('Merge feature groups and save them to disk ...')
+            train, test  = m.merge_datasets()
+            train, test  = m.fe(train, test)
+            
+            data         = pd.concat((train, test))
+            data         = m.reduce_mem_usage(data)
+
+            data.to_hdf(os.path.join(basepath, output_path + f'{data_folder}data.h5'), format='table', key='data')
+
+            del train, test
+            gc.collect()
+
+        train  = data.iloc[:m.n_train]
+        test   = data.iloc[m.n_train:]
+        
+
+        del data
+        gc.collect()
+        
+
+        # check to see if feature list exists on disk or not for a particular model
+        if os.path.exists(os.path.join(basepath, output_path + f'{data_folder}{MODEL_FILENAME}_features.npy')):
+            feature_list = np.load(os.path.join(basepath, output_path + f'{data_folder}{MODEL_FILENAME}_features.npy'))
+        else: 
+            feature_list = train.columns.tolist()
+            feature_list = list(set(feature_list) - set(COLS_TO_REMOVE))
+            np.save(os.path.join(basepath, output_path + f'{data_folder}{MODEL_FILENAME}_features.npy'), feature_list)
+
+        PARAMS = joblib.load(os.path.join(basepath, output_path + f'{data_folder}{MODEL_FILENAME}_{SEED}_params.pkl'))
+
+        # model construction
+        model = xgb.XGBClassifier(max_depth=PARAMS['max_depth'],
+                                   learning_rate=PARAMS['learning_rate'],
+                                   n_estimators=PARAMS['num_boost_round'],
+                                   objective=PARAMS['objective'],
+                                   min_child_weight=PARAMS['min_child_weight'],
+                                   colsample_bylevel=PARAMS['colsample_bylevel'],
+                                   colsample_bytree=PARAMS['colsample_bytree'],
+                                   reg_lambda=PARAMS['lambda'],
+                                   gamma=PARAMS['gamma'],
+                                   seed=SEED,
+                                   verbose=-1,
+                                   n_jobs=8
+                                   )
+        
+        oof_preds, test_preds = m.oof_preds(train, test, feature_list, model)
+
+        np.save(os.path.join(basepath, output_path + f'{data_folder}{MODEL_FILENAME}_{SEED}_oof_preds.npy'), oof_preds)
+        np.save(os.path.join(basepath, output_path + f'{data_folder}{MODEL_FILENAME}_{SEED}_test.npy'), test_preds)
     
     elif args.t:
         print('Full Training')
