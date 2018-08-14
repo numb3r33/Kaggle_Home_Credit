@@ -223,7 +223,7 @@ PARAMS = {
     'lambda_l2': 51,
     'min_split_gain': 0.05,
     'min_child_weight': 77,
-    'nthread': 4,
+    'nthread': 8,
     'verbose': -1,
     'seed': SEED
 }
