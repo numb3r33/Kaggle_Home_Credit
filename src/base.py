@@ -211,6 +211,59 @@ class BaseModel:
         print('\nTook: {} seconds'.format(time.time() - t0))
         
         return pd.DataFrame(cv)
+    
+    def cv_predict(self, train, test, feature_list, params, cv_adversarial_filepath, categorical_feature='auto'):
+        num_boost_round       = params['num_boost_round']
+        early_stopping_rounds = params['early_stopping_rounds']
+
+        del params['num_boost_round'], params['early_stopping_rounds']
+
+        # start time counter
+        test_preds = np.zeros(shape=(len(test))) 
+        hold_auc   = []
+
+        for fold in ['F0', 'F1', 'F2', 'F3', 'F4', 'F5']:
+            print('Fold: {}'.format(fold))
+
+            # load test fold indicators
+            ite  = pd.read_csv(cv_adversarial_filepath, usecols=[fold])[fold].values
+            itr  = np.array(list(set(Xtr.index) - set(ite)))
+
+            tr  = train.loc[train.index.isin(itr)]
+            te  = test.loc[test.index.isin(ite)]
+
+            Xtr = tr.loc[:, feature_list]
+            ytr = tr.loc[:, 'TARGET']
+
+            Xte = te.loc[:, feature_list]
+            yte = te.loc[:, 'TARGET']
+
+            ltrain = lgb.Dataset(Xtr, ytr, feature_name=Xtr.columns.tolist(), categorical_feature=categorical_feature)
+            leval  = lgb.Dataset(Xte, yte, feature_name=Xte.columns.tolist(), categorical_feature=categorical_feature)
+
+            valid_sets  = [(ltrain, leval)]
+            valid_names = [('train', 'eval')]
+
+            model  = lgb.train(params, 
+                               ltrain, 
+                               num_boost_round, 
+                               valid_sets=valid_sets, 
+                               valid_names=valid_names, 
+                               early_stopping_rounds=early_stopping_rounds, 
+                               verbose_eval=20
+                               )
+
+            hold_preds = model.predict(Xte, num_iteration=model.best_iteration)
+            test_preds += (model.predict(test.loc[:, feature_list], num_iteration=model.best_iteration) * (1 / 5))
+            fold_auc = roc_auc_score(yte, hold_preds)
+            
+            print('Best iteration: {}'.format(model.best_iteration))
+            print('AUC on holdout set: {}'.format(fold_auc))
+
+            hold_auc.append(fold_auc)
+
+        return np.array(hold_auc), test_preds
+
 
     def optimize_lgb(self, Xtr, ytr, Xte, yte, param_grid):
         
