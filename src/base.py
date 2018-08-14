@@ -223,7 +223,7 @@ class BaseModel:
         hold_auc   = []
         fold_trees = []
 
-        for fold in ['F0', 'F1', 'F2', 'F3', 'F4', 'F5']:
+        for fold in ['F0', 'F1', 'F2', 'F3', 'F4']:
             print('Fold: {}'.format(fold))
 
             # load test fold indicators
