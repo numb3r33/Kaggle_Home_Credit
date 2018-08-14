@@ -1774,6 +1774,14 @@ class Modelv97(BaseModel):
 
         return super(Modelv97, self).cross_validate_xgb(Xtr, ytr, params, cv_adversarial_filepath=cv_adversarial_filepath)
 
+    def oof_preds(self, train, test, feature_list, model, TARGET_NAME='TARGET'):
+        X = train.loc[:, feature_list]
+        y = train.loc[:, TARGET_NAME]
+        
+        Xte = test.loc[:, feature_list]
+
+        return super(Modelv95, self).oof_preds(X, y, Xte, model)
+
 
 if __name__ == '__main__':
     
