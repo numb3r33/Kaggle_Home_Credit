@@ -441,10 +441,14 @@ class BaseModel:
 
 
     def get_oof_preds(self, X, y, Xte, model):
+        t0 = time.time()
+
         oof_preds = cross_val_predict(model, X.values, y.values, cv=5, method='predict_proba')
 
+        print('Took: {} seconds to generate oof preds'.format(time.time() - t0))
+
         model.fit(X.values, y.values)
-        test_preds = model.predict_proba(Xte)[:, 1]
+        test_preds = model.predict_proba(Xte.values)[:, 1]
 
         return oof_preds[:, 1], test_preds
     
