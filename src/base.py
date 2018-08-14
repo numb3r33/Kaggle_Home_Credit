@@ -227,10 +227,10 @@ class BaseModel:
 
             # load test fold indicators
             ite  = pd.read_csv(cv_adversarial_filepath, usecols=[fold])[fold].values
-            itr  = np.array(list(set(Xtr.index) - set(ite)))
+            itr  = np.array(list(set(train.index) - set(ite)))
 
             tr  = train.loc[train.index.isin(itr)]
-            te  = test.loc[test.index.isin(ite)]
+            te  = train.loc[train.index.isin(ite)]
 
             Xtr = tr.loc[:, feature_list]
             ytr = tr.loc[:, 'TARGET']
