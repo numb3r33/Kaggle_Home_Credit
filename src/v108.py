@@ -211,12 +211,13 @@ PARAMS = {
     'boosting_type': 'gbdt',
     'learning_rate': .01,
     'metric': 'auc',
+    'max_depth': 4,
     'num_leaves': 30,
-    'sub_feature': 0.3,
+    'sub_feature': 0.03,
     'feature_fraction_seed': SEED,
     'bagging_fraction': 0.9,
     'bagging_seed': SEED,
-    'reg_lambda': 15,
+    'reg_lambda': 75,
     'min_data_in_leaf': 100,
     'min_child_weight': 10,
     'nthread': 8,
@@ -2028,7 +2029,7 @@ if __name__ == '__main__':
         PARAMS['feature_fraction_seed'] = SEED
         PARAMS['bagging_seed']          = SEED
         
-        cv_adversarial_filepath = os.path.join(basepath, 'data/raw/cv_idx_test_stratified.csv')
+        cv_adversarial_filepath = os.path.join(basepath, 'data/raw/cv_adversarial_idx_v1.csv')
         hold_auc, test_preds, fold_trees = m.cv_predict(train, test, feature_list, PARAMS.copy(), cv_adversarial_filepath)
         
         print('AUC across folds: {}'.format(hold_auc))
