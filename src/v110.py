@@ -1716,7 +1716,7 @@ class Modelv110(BaseModel):
             tsne_components = pd.read_pickle(os.path.join(basepath, self.params['output_path'] + f'{self.params["data_folder"]}tsne.pkl'))
         else:
             tsne_components = super(Modelv110, self).add_tsne_components(data.copy())
-            tsnse_components.to_pickle(os.path.join(basepath, self.params['output_path'] + f'{self.params["data_folder"]}tsne.pkl'))
+            tsne_components.to_pickle(os.path.join(basepath, self.params['output_path'] + f'{self.params["data_folder"]}tsne.pkl'))
         
 
         pca_components.index = data.index
