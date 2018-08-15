@@ -14,6 +14,7 @@ from sklearn.decomposition import PCA
 from sklearn.preprocessing import StandardScaler
 
 from bayes_opt import BayesianOptimization
+from MulticoreTSNE import MulticoreTSNE as TSNE
 
 import time
 
@@ -454,6 +455,32 @@ class BaseModel:
         
         return data
 
+    def add_tsne_components(self, data):
+        t0 = time.time()
+
+        # preprocess for tsne
+        SKIP_COLS = ['SK_ID_CURR', 'TARGET']
+        data = data.loc[:, data.columns.drop(SKIP_COLS)]
+
+        for col in data.columns:
+            # replace inf with np.nan
+            data[col] = data[col].replace([np.inf, -np.inf], np.nan)
+            
+            # fill missing values with median
+            if data[col].isnull().sum():
+                if pd.isnull(data[col].median()):
+                    data[col] = data[col].fillna(-1)
+                else:
+                    data[col] = data[col].fillna(data[col].median())
+
+        data  = self.fit_transform_tsne(data)
+        data = pd.DataFrame(data, columns=[f'tsne_{i}' for i in range(2)])
+        
+        print('Took: {} seconds to generate T-SNE embeddings'.format(time.time() - t0))
+
+        return data
+
+
     def cross_validate_sklearn(self, X, y, model, seed):
         print('Cross validating {}'.format(model))
 
@@ -523,6 +550,10 @@ class BaseModel:
         self.pca    = pca
 
         return pca
+    
+    def fit_transform_tsne(self, X):
+        tsne = TSNE(n_jobs=8)
+        return tsne.fit_transform(X)
 
     def transform_pca(self, X):
         X = self.scaler.transform(X)

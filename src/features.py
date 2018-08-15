@@ -60,9 +60,6 @@ def current_application_features(data):
     # feature names
     FEATURE_NAMES = []
 
-    # Alter EXT_SOURCE_1 based on Income Type ( Pensioners )
-    data.loc[data.NAME_INCOME_TYPE == 3, 'EXT_SOURCE_1'] = np.nan
-
     # deviation in three external scores
     data.loc[:, 'EXT_SOURCE_DEV']  = data.loc[:, ['EXT_SOURCE_1', 'EXT_SOURCE_2', 'EXT_SOURCE_3']].apply(np.std, axis=1).astype(np.float32)
     FEATURE_NAMES += ['EXT_SOURCE_DEV']
