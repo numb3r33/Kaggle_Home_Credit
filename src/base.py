@@ -225,6 +225,11 @@ class BaseModel:
 
         for fold in ['F0', 'F1', 'F2', 'F3', 'F4']:
             print('Fold: {}'.format(fold))
+            
+            # train with a different seed
+            params['seed'] += 100
+
+            print('Seed : {}'.format(params['seed']))
 
             # load test fold indicators
             ite  = pd.read_csv(cv_adversarial_filepath, usecols=[fold])[fold].values
