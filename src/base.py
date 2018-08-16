@@ -566,7 +566,8 @@ class BaseModel:
             'max_depth': 12,
             'max_features': 'sqrt',
             'min_samples_leaf': 3,
-            'random_state': SEED
+            'random_state': SEED,
+            'n_jobs': -1
         }
 
         model = RandomForestClassifier(**rf_params)

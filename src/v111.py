@@ -2087,4 +2087,4 @@ if __name__ == '__main__':
         
 
         feat_df = m.rf_fi(train, feature_list, SEED)
-        feat_df.to_csv(os.path.join(basepath, output_path + f'{data_folder}{MODEL_FILENAME}_rf_fi.pkl'), index=False)
+        feat_df.to_csv(os.path.join(basepath, output_path + f'{data_folder}{MODEL_FILENAME}_rf_fi.csv'), index=False)
