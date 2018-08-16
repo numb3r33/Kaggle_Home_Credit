@@ -12,6 +12,7 @@ from sklearn.metrics import roc_auc_score
 from sklearn.externals import joblib
 from sklearn.decomposition import PCA
 from sklearn.preprocessing import StandardScaler
+from sklearn.ensemble import RandomForestClassifier
 
 from bayes_opt import BayesianOptimization
 from MulticoreTSNE import MulticoreTSNE as TSNE
@@ -558,3 +559,35 @@ class BaseModel:
     def transform_pca(self, X):
         X = self.scaler.transform(X)
         return self.pca.transform(X)    
+    
+    def rf_fi(self, X, y):
+        rf_params = {
+            'n_estimators': 500,
+            'max_depth': 12,
+            'max_features': 'sqrt',
+            'min_samples_leaf': 3
+        }
+
+        model = RandomForestClassifier(**rf_params)
+
+        # preprocess for RF
+        for col in X.columns:
+            # replace inf with np.nan
+            X[col] = X[col].replace([np.inf, -np.inf], np.nan)
+            
+            # fill missing values with median
+            if X[col].isnull().sum():
+                if pd.isnull(X[col].median()):
+                    X[col] = X[col].fillna(-1)
+                else:
+                    Xta[col] = X[col].fillna(X[col].median())
+
+
+        model.fit(X, y)
+        
+        fi_df = pd.DataFrame({
+            'feat': X.columns.tolist(),
+            'imp': model.feature_importances_
+        })
+
+        return fi_df
