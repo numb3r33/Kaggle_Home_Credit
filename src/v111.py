@@ -2071,11 +2071,11 @@ if __name__ == '__main__':
         del data
         gc.collect()
         
-        # Generating a sample if required
-        if is_sample:
-            print('*' * 100)
-            print('Take a random sample of the training data ...')
-            train = train.sample(frac=SAMPLE_SIZE)
+        # # Generating a sample if required
+        # if is_sample:
+        #     print('*' * 100)
+        #     print('Take a random sample of the training data ...')
+        #     train = train.sample(frac=SAMPLE_SIZE)
         
         # check to see if feature list exists on disk or not for a particular model
         if os.path.exists(os.path.join(basepath, output_path + f'{data_folder}{MODEL_FILENAME}_features.npy')):
