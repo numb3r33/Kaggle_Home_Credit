@@ -581,7 +581,7 @@ class BaseModel:
                 if pd.isnull(X[col].median()):
                     X[col] = X[col].fillna(-1)
                 else:
-                    Xta[col] = X[col].fillna(X[col].median())
+                    X[col] = X[col].fillna(X[col].median())
 
 
         model.fit(X, y)
