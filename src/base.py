@@ -560,12 +560,13 @@ class BaseModel:
         X = self.scaler.transform(X)
         return self.pca.transform(X)    
     
-    def rf_fi(self, X, y):
+    def rf_fi(self, X, y, SEED):
         rf_params = {
             'n_estimators': 500,
             'max_depth': 12,
             'max_features': 'sqrt',
-            'min_samples_leaf': 3
+            'min_samples_leaf': 3,
+            'random_state': SEED
         }
 
         model = RandomForestClassifier(**rf_params)

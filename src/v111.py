@@ -1606,11 +1606,11 @@ class Modelv111(BaseModel):
                                                     categorical_feature=categorical_feature
                                                     )
 
-    def rf_fi(self, train, feature_list, target='TARGET'):
+    def rf_fi(self, train, feature_list, SEED, target='TARGET'):
         X = train.loc[:, feature_list]
         y = train.loc[:, target]
 
-        return super(Modelv111, self).rf_fi(X, y)
+        return super(Modelv111, self).rf_fi(X, y, SEED)
     
     def optimize_lgb(self, train, test, feature_list, TARGET_NAME='TARGET'):
         Xtr = train.loc[:, feature_list]
@@ -2038,7 +2038,6 @@ if __name__ == '__main__':
         input_path      = args.input_path
         output_path     = args.output_path
         data_folder     = args.data_folder
-        is_sample       = args.s
         SEED            = args.seed
 
         params = {
@@ -2086,5 +2085,5 @@ if __name__ == '__main__':
             np.save(os.path.join(basepath, output_path + f'{data_folder}{MODEL_FILENAME}_features.npy'), feature_list)
         
 
-        feat_df = m.rf_fi(train, feature_list)
+        feat_df = m.rf_fi(train, feature_list, SEED)
         feat_df.to_csv(os.path.join(basepath, output_path + f'{data_folder}{MODEL_FILENAME}_rf_fi.pkl'), index=False)
