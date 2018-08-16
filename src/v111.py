@@ -1653,6 +1653,7 @@ if __name__ == '__main__':
     parser.add_argument('-cv', type=bool, help='Cross Validation')
     parser.add_argument('-v', type=str, help='Validation')
     parser.add_argument('-features', type=bool, help='Generate Features')
+    parser.add_argument('rf_fi', type=bool, help='Random Forest Classifier Feature Importance')
     parser.add_argument('-s', type=bool, help='Whether to work on a sample or not.')
     parser.add_argument('-seed', type=int, help='Random SEED')
     parser.add_argument('-cv_seed', type=int, help='CV SEED')
