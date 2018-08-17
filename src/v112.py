@@ -1812,7 +1812,7 @@ class Modelv112(BaseModel):
         Xtr = train.loc[:, feature_list]
         ytr = train.loc[:, TARGET_NAME]
 
-        return super(Modelv86, self).cross_validate(Xtr, ytr, params, cv_adversarial_filepath=cv_adversarial_filepath)
+        return super(Modelv112, self).cross_validate(Xtr, ytr, params, cv_adversarial_filepath=cv_adversarial_filepath)
 
 
     def rf_fi(self, train, feature_list, SEED, target='TARGET'):
