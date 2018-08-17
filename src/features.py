@@ -220,6 +220,17 @@ def current_application_features(data):
     data.loc[:, 'ratio_reg_age']       = (data.DAYS_REGISTRATION / data.DAYS_BIRTH).astype(np.float32)
     data.loc[:, 'diff_reg_age']        = (data.DAYS_REGISTRATION - data.DAYS_BIRTH).astype(np.float32)
 
+    # difference between age and days id publish with external scores
+    data.loc[:, 'diff_id_change_age_ext_source_1'] = data.diff_id_change_age * data.EXT_SOURCE_1
+    data.loc[:, 'diff_id_change_age_ext_source_2'] = data.diff_id_change_age * data.EXT_SOURCE_1
+    data.loc[:, 'diff_id_change_age_ext_source_3'] = data.diff_id_change_age * data.EXT_SOURCE_1
+
+    data.loc[:, 'diff_id_change_age_ext_source_1_2']   = data.diff_id_change_age * ((data.EXT_SOURCE_1 + data.EXT_SOURCE_2) / 2)
+    data.loc[:, 'diff_id_change_age_ext_source_2_3']   = data.diff_id_change_age * ((data.EXT_SOURCE_2 + data.EXT_SOURCE_3) / 2)
+    data.loc[:, 'diff_id_change_age_ext_source_1_3']   = data.diff_id_change_age * ((data.EXT_SOURCE_1 + data.EXT_SOURCE_3) / 2)
+    data.loc[:, 'diff_id_change_age_ext_source_1_2_3'] = data.diff_id_change_age * ((data.EXT_SOURCE_1 + data.EXT_SOURCE_2 + data.EXT_SOURCE_3) / 3)
+    
+
     FEATURE_NAMES += ['ratio_annuity_credit', 
                       'diff_annuity_credit', 
                       'ratio_credit_age', 

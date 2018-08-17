@@ -149,83 +149,83 @@ COLS_TO_REMOVE = ['SK_ID_CURR',
                   'NAME_EDUCATION_TYPE__2',
                   'ORGANIZATION_TYPE__10',
                   'ORGANIZATION_TYPE__24',
-                'ORGANIZATION_TYPE__45',
-                'NAME_GOODS_CATEGORY_23',
-                'OCCUPATION_TYPE__7',
-                'AMT_REQ_CREDIT_BUREAU_HOUR',
-                'ORGANIZATION_TYPE__44',
-                'ORGANIZATION_TYPE__22',
-                'ORGANIZATION_TYPE__35',
-                'NAME_GOODS_CATEGORY_0',
-                'OCCUPATION_TYPE__15',
-                'NAME_GOODS_CATEGORY_21',
-                'ORGANIZATION_TYPE__32',
-                'HOUR_APPR_PROCESS_START_22',
-                'HOUR_APPR_PROCESS_START_1',
-                'ORGANIZATION_TYPE__0',
-                'FLAG_CONT_MOBILE',
-                'ORGANIZATION_TYPE__26',
-                'ORGANIZATION_TYPE__2',
-                'OCCUPATION_TYPE__0',
-                'ORGANIZATION_TYPE__41',
-                'HOUR_APPR_PROCESS_START_0',
-                'ORGANIZATION_TYPE__6',
-                'contract_status_str',
-                'NAME_HOUSING_TYPE__3',
-                'ORGANIZATION_TYPE__34',
-                'ORGANIZATION_TYPE__56',
-                'ORGANIZATION_TYPE__31',
-                'FLAG_DOCUMENT_14',
-                'OCCUPATION_TYPE__5',
-                'ORGANIZATION_TYPE__29',
-                'NAME_INCOME_TYPE__6',
-                'FLAG_DOCUMENT_7',
-                'ORGANIZATION_TYPE__57',
-                'ORGANIZATION_TYPE__27',
-                'ORGANIZATION_TYPE__46',
-                'ORGANIZATION_TYPE__8',
-                'FLAG_DOCUMENT_16',
-                'NAME_GOODS_CATEGORY_26',
-                'NAME_GOODS_CATEGORY_1',
-                'FLAG_DOCUMENT_19',
-                'FLAG_DOCUMENT_20',
-                'FLAG_DOCUMENT_11',
-                'ORGANIZATION_TYPE__19',
-                'NAME_GOODS_CATEGORY_14',
-                'ORGANIZATION_TYPE__52',
-                'NAME_GOODS_CATEGORY_9',
-                'ORGANIZATION_TYPE__9',
-                'FLAG_DOCUMENT_13',
-                'ORGANIZATION_TYPE__50',
-                'NAME_GOODS_CATEGORY_10',
-                'ORGANIZATION_TYPE__17',
-                'ORGANIZATION_TYPE__48',
-                'ORGANIZATION_TYPE__37',
-                'FLAG_DOCUMENT_15',
-                'ORGANIZATION_TYPE__23',
-                'FLAG_DOCUMENT_21',
-                'ORGANIZATION_TYPE__15',
-                'FLAG_DOCUMENT_2',
-                'mean_CODE_GENDER_ORGANIZATION_TYPE_DAYS_REGISTRATION',
-                'NAME_INCOME_TYPE__5',
-                'FLAG_DOCUMENT_12',
-                'diff_code_gender_organization_type_days_reg_mean',
-                'ORGANIZATION_TYPE__25',
-                'NAME_INCOME_TYPE__2',
-                'FLAG_DOCUMENT_17',
-                'FLAG_MOBIL',
-                'NAME_EDUCATION_TYPE__nan',
-                'ORGANIZATION_TYPE__18',
-                'ORGANIZATION_TYPE__nan',
-                'FLAG_DOCUMENT_10',
-                'ORGANIZATION_TYPE__49',
-                'NAME_INCOME_TYPE__0',
-                'NAME_EDUCATION_TYPE__0',
-                'FLAG_DOCUMENT_4',
-                'diff_max_min_credit_term',
-                'NAME_HOUSING_TYPE__nan',
-                'OCCUPATION_TYPE__nan',
-                'NAME_INCOME_TYPE__nan'
+                  'ORGANIZATION_TYPE__45',
+                  'NAME_GOODS_CATEGORY_23',
+                  'OCCUPATION_TYPE__7',
+                  'AMT_REQ_CREDIT_BUREAU_HOUR',
+                  'ORGANIZATION_TYPE__44',
+                  'ORGANIZATION_TYPE__22',
+                  'ORGANIZATION_TYPE__35',
+                  'NAME_GOODS_CATEGORY_0',
+                  'OCCUPATION_TYPE__15',
+                  'NAME_GOODS_CATEGORY_21',
+                  'ORGANIZATION_TYPE__32',
+                  'HOUR_APPR_PROCESS_START_22',
+                  'HOUR_APPR_PROCESS_START_1',
+                  'ORGANIZATION_TYPE__0',
+                  'FLAG_CONT_MOBILE',
+                  'ORGANIZATION_TYPE__26',
+                  'ORGANIZATION_TYPE__2',
+                  'OCCUPATION_TYPE__0',
+                  'ORGANIZATION_TYPE__41',
+                  'HOUR_APPR_PROCESS_START_0',
+                  'ORGANIZATION_TYPE__6',
+                  'contract_status_str',
+                  'NAME_HOUSING_TYPE__3',
+                  'ORGANIZATION_TYPE__34',
+                  'ORGANIZATION_TYPE__56',
+                  'ORGANIZATION_TYPE__31',
+                  'FLAG_DOCUMENT_14',
+                  'OCCUPATION_TYPE__5',
+                  'ORGANIZATION_TYPE__29',
+                  'NAME_INCOME_TYPE__6',
+                  'FLAG_DOCUMENT_7',
+                  'ORGANIZATION_TYPE__57',
+                  'ORGANIZATION_TYPE__27',
+                  'ORGANIZATION_TYPE__46',
+                  'ORGANIZATION_TYPE__8',
+                  'FLAG_DOCUMENT_16',
+                  'NAME_GOODS_CATEGORY_26',
+                  'NAME_GOODS_CATEGORY_1',
+                  'FLAG_DOCUMENT_19',
+                  'FLAG_DOCUMENT_20',
+                  'FLAG_DOCUMENT_11',
+                  'ORGANIZATION_TYPE__19',
+                  'NAME_GOODS_CATEGORY_14',
+                  'ORGANIZATION_TYPE__52',
+                  'NAME_GOODS_CATEGORY_9',
+                  'ORGANIZATION_TYPE__9',
+                  'FLAG_DOCUMENT_13',
+                  'ORGANIZATION_TYPE__50',
+                  'NAME_GOODS_CATEGORY_10',
+                  'ORGANIZATION_TYPE__17',
+                  'ORGANIZATION_TYPE__48',
+                  'ORGANIZATION_TYPE__37',
+                  'FLAG_DOCUMENT_15',
+                  'ORGANIZATION_TYPE__23',
+                  'FLAG_DOCUMENT_21',
+                  'ORGANIZATION_TYPE__15',
+                  'FLAG_DOCUMENT_2',
+                  'mean_CODE_GENDER_ORGANIZATION_TYPE_DAYS_REGISTRATION',
+                  'NAME_INCOME_TYPE__5',
+                  'FLAG_DOCUMENT_12',
+                  'diff_code_gender_organization_type_days_reg_mean',
+                  'ORGANIZATION_TYPE__25',
+                  'NAME_INCOME_TYPE__2',
+                  'FLAG_DOCUMENT_17',
+                  'FLAG_MOBIL',
+                  'NAME_EDUCATION_TYPE__nan',
+                  'ORGANIZATION_TYPE__18',
+                  'ORGANIZATION_TYPE__nan',
+                  'FLAG_DOCUMENT_10',
+                  'ORGANIZATION_TYPE__49',
+                  'NAME_INCOME_TYPE__0',
+                  'NAME_EDUCATION_TYPE__0',
+                  'FLAG_DOCUMENT_4',
+                  'diff_max_min_credit_term',
+                  'NAME_HOUSING_TYPE__nan',
+                  'OCCUPATION_TYPE__nan',
+                  'NAME_INCOME_TYPE__nan'
                   ]  
 
 PARAMS = {
@@ -255,7 +255,7 @@ PCA_PARAMS = {
 }
 
 
-MODEL_FILENAME           = 'v111'
+MODEL_FILENAME           = 'v112'
 SAMPLE_SIZE              = .3
 
 # NOTE: column in frequency encoded columns
@@ -274,7 +274,7 @@ OHE_COLS           = [
                      ]
 
 
-class Modelv111(BaseModel):
+class Modelv112(BaseModel):
     def __init__(self, **params):
         self.params  = params
         self.n_train = 307511 # TODO: find a way to remove this constant
@@ -287,12 +287,12 @@ class Modelv111(BaseModel):
         
         df       = pd.concat(dfs)
         df.index = np.arange(len(df))
-        df       = super(Modelv111, self).reduce_mem_usage(df)
+        df       = super(Modelv112, self).reduce_mem_usage(df)
 
         return df
     
     def reduce_mem_usage(self, df):
-        return super(Modelv111, self).reduce_mem_usage(df)
+        return super(Modelv112, self).reduce_mem_usage(df)
     
     def preprocess(self):
         
@@ -313,7 +313,7 @@ class Modelv111(BaseModel):
             data.index = np.arange(len(data))
 
             # fill infrequent values
-            data = super(Modelv111, self).fill_infrequent_values(data)
+            data = super(Modelv112, self).fill_infrequent_values(data)
 
             data.iloc[:ntrain].loc[:, FEATURE_NAMES].to_pickle(os.path.join(basepath, self.params['output_path'] + 'feature_groups/' + f'current_application_train.pkl'))
             data.iloc[ntrain:].loc[:, FEATURE_NAMES].to_pickle(os.path.join(basepath, self.params['output_path'] + 'feature_groups/' + f'current_application_test.pkl'))
@@ -335,7 +335,7 @@ class Modelv111(BaseModel):
             data.index          = np.arange(len(data))
 
             # fill infrequent values
-            data = super(Modelv111, self).fill_infrequent_values(data)
+            data = super(Modelv112, self).fill_infrequent_values(data)
 
             data.iloc[:ntrain].loc[:, FEATURE_NAMES].to_pickle(os.path.join(basepath, self.params['output_path'] + 'feature_groups/' + f'bureau_train.pkl'))
             data.iloc[ntrain:].loc[:, FEATURE_NAMES].to_pickle(os.path.join(basepath, self.params['output_path'] + 'feature_groups/' + f'bureau_test.pkl'))
@@ -364,7 +364,7 @@ class Modelv111(BaseModel):
             data.index          = np.arange(len(data))
 
             # fill infrequent values
-            data = super(Modelv111, self).fill_infrequent_values(data)
+            data = super(Modelv112, self).fill_infrequent_values(data)
 
             data.iloc[:ntrain].loc[:, FEATURE_NAMES].to_pickle(os.path.join(basepath, self.params['output_path'] + 'feature_groups/' + f'bureau_bal_train.pkl'))
             data.iloc[ntrain:].loc[:, FEATURE_NAMES].to_pickle(os.path.join(basepath, self.params['output_path'] + 'feature_groups/' + f'bureau_bal_test.pkl'))
@@ -387,7 +387,7 @@ class Modelv111(BaseModel):
             data.index          = np.arange(len(data))
 
             # fill infrequent values
-            data = super(Modelv111, self).fill_infrequent_values(data)
+            data = super(Modelv112, self).fill_infrequent_values(data)
 
             del prev_app
             gc.collect()
@@ -412,7 +412,7 @@ class Modelv111(BaseModel):
             data.index          = np.arange(len(data))
 
             # fill infrequent values
-            data = super(Modelv111, self).fill_infrequent_values(data)
+            data = super(Modelv112, self).fill_infrequent_values(data)
 
             del pos_cash
             gc.collect()
@@ -438,7 +438,7 @@ class Modelv111(BaseModel):
             data.index          = np.arange(len(data))
 
             # fill infrequent values
-            data = super(Modelv111, self).fill_infrequent_values(data)
+            data = super(Modelv112, self).fill_infrequent_values(data)
 
             del credit_bal
             gc.collect()
@@ -463,7 +463,7 @@ class Modelv111(BaseModel):
             data.index          = np.arange(len(data))
 
             # fill infrequent values
-            data = super(Modelv111, self).fill_infrequent_values(data)
+            data = super(Modelv112, self).fill_infrequent_values(data)
 
             del installments
             gc.collect()
@@ -493,7 +493,7 @@ class Modelv111(BaseModel):
             data.index          = np.arange(len(data))
 
             # fill infrequent values
-            data = super(Modelv111, self).fill_infrequent_values(data)
+            data = super(Modelv112, self).fill_infrequent_values(data)
 
             del bureau, prev_app
             gc.collect()
@@ -524,7 +524,7 @@ class Modelv111(BaseModel):
             data.index          = np.arange(len(data))
 
             # fill infrequent values
-            data = super(Modelv111, self).fill_infrequent_values(data)
+            data = super(Modelv112, self).fill_infrequent_values(data)
 
             del credit_bal, prev_app
             gc.collect()
@@ -555,7 +555,7 @@ class Modelv111(BaseModel):
             data.index          = np.arange(len(data))
 
             # fill infrequent values
-            data = super(Modelv111, self).fill_infrequent_values(data)
+            data = super(Modelv112, self).fill_infrequent_values(data)
 
             del installments, prev_app
             gc.collect()
@@ -589,7 +589,7 @@ class Modelv111(BaseModel):
             data.index          = np.arange(len(data))
 
             # fill infrequent values
-            data = super(Modelv111, self).fill_infrequent_values(data)
+            data = super(Modelv112, self).fill_infrequent_values(data)
 
             data.iloc[:ntrain].loc[:, FEATURE_NAMES].to_pickle(os.path.join(basepath, self.params['output_path'] + 'feature_groups/' + f'loan_stacking_train.pkl'))
             data.iloc[ntrain:].loc[:, FEATURE_NAMES].to_pickle(os.path.join(basepath, self.params['output_path'] + 'feature_groups/' + f'loan_stacking_test.pkl'))
@@ -608,7 +608,7 @@ class Modelv111(BaseModel):
             data.index          = np.arange(len(data))
 
             # fill infrequent values
-            data = super(Modelv111, self).fill_infrequent_values(data)
+            data = super(Modelv112, self).fill_infrequent_values(data)
 
             data.iloc[:ntrain].loc[:, FEATURE_NAMES].to_pickle(os.path.join(basepath, self.params['output_path'] + 'feature_groups/' + f'feature_groups_train.pkl'))
             data.iloc[ntrain:].loc[:, FEATURE_NAMES].to_pickle(os.path.join(basepath, self.params['output_path'] + 'feature_groups/' + f'feature_groups_test.pkl'))
@@ -634,7 +634,7 @@ class Modelv111(BaseModel):
             data.index          = np.arange(len(data))
 
             # fill infrequent values
-            data = super(Modelv111, self).fill_infrequent_values(data)
+            data = super(Modelv112, self).fill_infrequent_values(data)
 
             data.iloc[:ntrain].loc[:, FEATURE_NAMES].to_pickle(os.path.join(basepath, self.params['output_path'] + 'feature_groups/' + f'prev_app_pos_cash_train.pkl'))
             data.iloc[ntrain:].loc[:, FEATURE_NAMES].to_pickle(os.path.join(basepath, self.params['output_path'] + 'feature_groups/' + f'prev_app_pos_cash_test.pkl'))
@@ -666,7 +666,7 @@ class Modelv111(BaseModel):
             data.index          = np.arange(len(data))
 
             # fill infrequent values
-            data = super(Modelv111, self).fill_infrequent_values(data)
+            data = super(Modelv112, self).fill_infrequent_values(data)
 
             data.iloc[:ntrain].loc[:, FEATURE_NAMES].to_pickle(os.path.join(basepath, self.params['output_path'] + 'feature_groups/' + f'prev_app_pos_cash_credit_bal_train.pkl'))
             data.iloc[ntrain:].loc[:, FEATURE_NAMES].to_pickle(os.path.join(basepath, self.params['output_path'] + 'feature_groups/' + f'prev_app_pos_cash_credit_bal_test.pkl'))
@@ -689,7 +689,7 @@ class Modelv111(BaseModel):
             data.index          = np.arange(len(data))
 
             # fill infrequent values
-            data = super(Modelv111, self).fill_infrequent_values(data)
+            data = super(Modelv112, self).fill_infrequent_values(data)
 
             data.iloc[:ntrain].loc[:, FEATURE_NAMES].to_pickle(os.path.join(basepath, self.params['output_path'] + 'feature_groups/' + f'prev_app_ohe_train.pkl'))
             data.iloc[ntrain:].loc[:, FEATURE_NAMES].to_pickle(os.path.join(basepath, self.params['output_path'] + 'feature_groups/' + f'prev_app_ohe_test.pkl'))
@@ -717,7 +717,7 @@ class Modelv111(BaseModel):
             data.index = np.arange(len(data))
 
             # fill infrequent values
-            data = super(Modelv111, self).fill_infrequent_values(data)
+            data = super(Modelv112, self).fill_infrequent_values(data)
 
             data.iloc[:ntrain].loc[:, FEATURE_NAMES].to_pickle(os.path.join(basepath, self.params['output_path'] + 'feature_groups/' + f'current_application_train.pkl'))
             data.iloc[ntrain:].loc[:, FEATURE_NAMES].to_pickle(os.path.join(basepath, self.params['output_path'] + 'feature_groups/' + f'current_application_test.pkl'))
@@ -739,7 +739,7 @@ class Modelv111(BaseModel):
             data.index          = np.arange(len(data))
 
             # fill infrequent values
-            data = super(Modelv111, self).fill_infrequent_values(data)
+            data = super(Modelv112, self).fill_infrequent_values(data)
 
             data.iloc[:ntrain].loc[:, FEATURE_NAMES].to_pickle(os.path.join(basepath, self.params['output_path'] + 'feature_groups/' + f'bureau_train.pkl'))
             data.iloc[ntrain:].loc[:, FEATURE_NAMES].to_pickle(os.path.join(basepath, self.params['output_path'] + 'feature_groups/' + f'bureau_test.pkl'))
@@ -768,7 +768,7 @@ class Modelv111(BaseModel):
             data.index          = np.arange(len(data))
 
             # fill infrequent values
-            data = super(Modelv111, self).fill_infrequent_values(data)
+            data = super(Modelv112, self).fill_infrequent_values(data)
 
             data.iloc[:ntrain].loc[:, FEATURE_NAMES].to_pickle(os.path.join(basepath, self.params['output_path'] + 'feature_groups/' + f'bureau_bal_train.pkl'))
             data.iloc[ntrain:].loc[:, FEATURE_NAMES].to_pickle(os.path.join(basepath, self.params['output_path'] + 'feature_groups/' + f'bureau_bal_test.pkl'))
@@ -791,7 +791,7 @@ class Modelv111(BaseModel):
             data.index          = np.arange(len(data))
 
             # fill infrequent values
-            data = super(Modelv111, self).fill_infrequent_values(data)
+            data = super(Modelv112, self).fill_infrequent_values(data)
 
             del prev_app
             gc.collect()
@@ -816,7 +816,7 @@ class Modelv111(BaseModel):
             data.index          = np.arange(len(data))
 
             # fill infrequent values
-            data = super(Modelv111, self).fill_infrequent_values(data)
+            data = super(Modelv112, self).fill_infrequent_values(data)
 
             del pos_cash
             gc.collect()
@@ -842,7 +842,7 @@ class Modelv111(BaseModel):
             data.index          = np.arange(len(data))
 
             # fill infrequent values
-            data = super(Modelv111, self).fill_infrequent_values(data)
+            data = super(Modelv112, self).fill_infrequent_values(data)
 
             del credit_bal
             gc.collect()
@@ -867,7 +867,7 @@ class Modelv111(BaseModel):
             data.index          = np.arange(len(data))
 
             # fill infrequent values
-            data = super(Modelv111, self).fill_infrequent_values(data)
+            data = super(Modelv112, self).fill_infrequent_values(data)
 
             del installments
             gc.collect()
@@ -897,7 +897,7 @@ class Modelv111(BaseModel):
             data.index          = np.arange(len(data))
 
             # fill infrequent values
-            data = super(Modelv111, self).fill_infrequent_values(data)
+            data = super(Modelv112, self).fill_infrequent_values(data)
 
             del bureau, prev_app
             gc.collect()
@@ -928,7 +928,7 @@ class Modelv111(BaseModel):
             data.index          = np.arange(len(data))
 
             # fill infrequent values
-            data = super(Modelv111, self).fill_infrequent_values(data)
+            data = super(Modelv112, self).fill_infrequent_values(data)
 
             del credit_bal, prev_app
             gc.collect()
@@ -959,7 +959,7 @@ class Modelv111(BaseModel):
             data.index          = np.arange(len(data))
 
             # fill infrequent values
-            data = super(Modelv111, self).fill_infrequent_values(data)
+            data = super(Modelv112, self).fill_infrequent_values(data)
 
             del installments, prev_app
             gc.collect()
@@ -993,7 +993,7 @@ class Modelv111(BaseModel):
             data.index          = np.arange(len(data))
 
             # fill infrequent values
-            data = super(Modelv111, self).fill_infrequent_values(data)
+            data = super(Modelv112, self).fill_infrequent_values(data)
 
             data.iloc[:ntrain].loc[:, FEATURE_NAMES].to_pickle(os.path.join(basepath, self.params['output_path'] + 'feature_groups/' + f'loan_stacking_train.pkl'))
             data.iloc[ntrain:].loc[:, FEATURE_NAMES].to_pickle(os.path.join(basepath, self.params['output_path'] + 'feature_groups/' + f'loan_stacking_test.pkl'))
@@ -1012,7 +1012,7 @@ class Modelv111(BaseModel):
             data.index          = np.arange(len(data))
 
             # fill infrequent values
-            data = super(Modelv111, self).fill_infrequent_values(data)
+            data = super(Modelv112, self).fill_infrequent_values(data)
 
             data.iloc[:ntrain].loc[:, FEATURE_NAMES].to_pickle(os.path.join(basepath, self.params['output_path'] + 'feature_groups/' + f'feature_groups_train.pkl'))
             data.iloc[ntrain:].loc[:, FEATURE_NAMES].to_pickle(os.path.join(basepath, self.params['output_path'] + 'feature_groups/' + f'feature_groups_test.pkl'))
@@ -1038,7 +1038,7 @@ class Modelv111(BaseModel):
             data.index          = np.arange(len(data))
 
             # fill infrequent values
-            data = super(Modelv111, self).fill_infrequent_values(data)
+            data = super(Modelv112, self).fill_infrequent_values(data)
 
             data.iloc[:ntrain].loc[:, FEATURE_NAMES].to_pickle(os.path.join(basepath, self.params['output_path'] + 'feature_groups/' + f'prev_app_pos_cash_train.pkl'))
             data.iloc[ntrain:].loc[:, FEATURE_NAMES].to_pickle(os.path.join(basepath, self.params['output_path'] + 'feature_groups/' + f'prev_app_pos_cash_test.pkl'))
@@ -1070,7 +1070,7 @@ class Modelv111(BaseModel):
             data.index          = np.arange(len(data))
 
             # fill infrequent values
-            data = super(Modelv111, self).fill_infrequent_values(data)
+            data = super(Modelv112, self).fill_infrequent_values(data)
 
             data.iloc[:ntrain].loc[:, FEATURE_NAMES].to_pickle(os.path.join(basepath, self.params['output_path'] + 'feature_groups/' + f'prev_app_pos_cash_credit_bal_train.pkl'))
             data.iloc[ntrain:].loc[:, FEATURE_NAMES].to_pickle(os.path.join(basepath, self.params['output_path'] + 'feature_groups/' + f'prev_app_pos_cash_credit_bal_test.pkl'))
@@ -1093,7 +1093,7 @@ class Modelv111(BaseModel):
             data.index          = np.arange(len(data))
 
             # fill infrequent values
-            data = super(Modelv111, self).fill_infrequent_values(data)
+            data = super(Modelv112, self).fill_infrequent_values(data)
 
             data.iloc[:ntrain].loc[:, FEATURE_NAMES].to_pickle(os.path.join(basepath, self.params['output_path'] + 'feature_groups/' + f'prev_app_ohe_train.pkl'))
             data.iloc[ntrain:].loc[:, FEATURE_NAMES].to_pickle(os.path.join(basepath, self.params['output_path'] + 'feature_groups/' + f'prev_app_ohe_test.pkl'))
@@ -1732,14 +1732,14 @@ class Modelv111(BaseModel):
         if os.path.exists(os.path.join(basepath, self.params['output_path'] + f'{self.params["data_folder"]}pca.pkl')):
             pca_components = pd.read_pickle(os.path.join(basepath, self.params['output_path'] + f'{self.params["data_folder"]}pca.pkl'))
         else:
-            pca_components = super(Modelv111, self).add_pca_components(data.copy(), PCA_PARAMS)
+            pca_components = super(Modelv112, self).add_pca_components(data.copy(), PCA_PARAMS)
             pca_components.to_pickle(os.path.join(basepath, self.params['output_path'] + f'{self.params["data_folder"]}pca.pkl'))
         
         # add tsne components
         if os.path.exists(os.path.join(basepath, self.params['output_path'] + f'{self.params["data_folder"]}tsne.pkl')):
             tsne_components = pd.read_pickle(os.path.join(basepath, self.params['output_path'] + f'{self.params["data_folder"]}tsne.pkl'))
         else:
-            tsne_components = super(Modelv111, self).add_tsne_components(data.copy())
+            tsne_components = super(Modelv112, self).add_tsne_components(data.copy())
             tsne_components.to_pickle(os.path.join(basepath, self.params['output_path'] + f'{self.params["data_folder"]}tsne.pkl'))
         
 
@@ -1753,7 +1753,7 @@ class Modelv111(BaseModel):
         # one hot encoding of some of the categorical variables controlled by a flag
         # if flag is True then one hot encoding else do frequency encoding.
         if compute_ohe:
-            data = super(Modelv111, self).prepare_ohe(data, OHE_COLS, drop_col=True)
+            data = super(Modelv112, self).prepare_ohe(data, OHE_COLS, drop_col=True)
         else:
             data = frequency_encoding(data, OHE_COLS)
         
@@ -1786,7 +1786,7 @@ class Modelv111(BaseModel):
         if is_eval:
             yte = test.loc[:, TARGET_NAME]
         
-        return super(Modelv111, self).train_lgb(X, y, Xte, yte, **params)
+        return super(Modelv112, self).train_lgb(X, y, Xte, yte, **params)
 
     # This method just takes in a model and test dataset and returns predictions 
     # prints out AUC on the test dataset as well in the process.
@@ -1797,10 +1797,10 @@ class Modelv111(BaseModel):
         if is_eval:
             yte = test.loc[:, TARGET_NAME]
 
-        return super(Modelv111, self).evaluate_lgb(Xte, yte, model)
+        return super(Modelv112, self).evaluate_lgb(Xte, yte, model)
 
     def cv_predict(self, train, test, feature_list, params, cv_adversarial_filepath=None, categorical_feature='auto'):
-        return super(Modelv111, self).cv_predict(train, 
+        return super(Modelv112, self).cv_predict(train, 
                                                     test,
                                                     feature_list, 
                                                     params, 
@@ -1812,7 +1812,7 @@ class Modelv111(BaseModel):
         X = train.loc[:, feature_list]
         y = train.loc[:, target]
 
-        return super(Modelv111, self).rf_fi(X, y, SEED)
+        return super(Modelv112, self).rf_fi(X, y, SEED)
     
     def optimize_lgb(self, train, test, feature_list, TARGET_NAME='TARGET'):
         Xtr = train.loc[:, feature_list]
@@ -1832,7 +1832,7 @@ class Modelv111(BaseModel):
             'num_leaves': (5, 100)
         }
 
-        return super(Modelv111, self).optimize_lgb(Xtr, ytr, Xte, yte, param_grid)
+        return super(Modelv112, self).optimize_lgb(Xtr, ytr, Xte, yte, param_grid)
 
 
     def get_oof_preds(self, train, test, feature_list, model, TARGET_NAME='TARGET'):
@@ -1841,7 +1841,7 @@ class Modelv111(BaseModel):
         
         Xte = test.loc[:, feature_list]
 
-        return super(Modelv111, self).oof_preds(X, y, Xte, model)
+        return super(Modelv112, self).oof_preds(X, y, Xte, model)
 
 
 if __name__ == '__main__':
@@ -1853,6 +1853,7 @@ if __name__ == '__main__':
     parser.add_argument('-data_folder', help='Folder name of the dataset') # dataset folder name
     parser.add_argument('-p', type=bool, help='Preprocess')
     parser.add_argument('-cv', type=bool, help='Cross Validation')
+    parser.add_argument('-cv_predict',type=bool, help='Cross Validation and Predictions for test set.')
     parser.add_argument('-v', type=str, help='Validation')
     parser.add_argument('-features', type=bool, help='Generate Features')
     parser.add_argument('-rf_fi', type=bool, help='Random Forest Classifier Feature Importance')
@@ -1876,7 +1877,7 @@ if __name__ == '__main__':
             'output_path': output_path
         }
 
-        m  = Modelv111(**params)
+        m  = Modelv112(**params)
         m.preprocess()
 
     elif args.features:
@@ -1891,7 +1892,7 @@ if __name__ == '__main__':
             'output_path': output_path,
         }
 
-        m = Modelv111(**params)
+        m = Modelv112(**params)
         m.prepare_features()
 
     elif args.v is not None and len(args.v):
@@ -1925,7 +1926,7 @@ if __name__ == '__main__':
         print('*' * 100)
         print('PARAMS: {}'.format(PARAMS))
 
-        m   = Modelv111(**params)
+        m   = Modelv112(**params)
             
         if os.path.exists(os.path.join(basepath, output_path + f'{data_folder}data.h5')):
             print('Loading dataset from disk ...')
@@ -2018,7 +2019,76 @@ if __name__ == '__main__':
             'data_folder': data_folder
         }
 
-        m   = Modelv111(**params)
+        m   = Modelv112(**params)
+            
+        if os.path.exists(os.path.join(basepath, output_path + f'{data_folder}data.h5')):
+            print('Loading dataset from disk ...')
+            data = pd.read_hdf(os.path.join(basepath, output_path + f'{data_folder}data.h5'), format='table', key='data')
+        else:
+            print('Merge feature groups and save them to disk ...')
+            train, test  = m.merge_datasets()
+            train, test  = m.fe(train, test)
+            
+            data         = pd.concat((train, test))
+            data         = m.reduce_mem_usage(data)
+
+            data.to_hdf(os.path.join(basepath, output_path + f'{data_folder}data.h5'), format='table', key='data')
+
+            del train, test
+            gc.collect()
+
+        train  = data.iloc[:m.n_train]
+
+        del data
+        gc.collect()
+        
+        if is_sample:
+            print('*' * 100)
+            print('Take a random sample of the training data ...')
+            train = train.sample(frac=SAMPLE_SIZE)
+        
+        # check to see if feature list exists on disk or not for a particular model
+        if os.path.exists(os.path.join(basepath, output_path + f'{data_folder}{MODEL_FILENAME}_features.npy')):
+            feature_list = np.load(os.path.join(basepath, output_path + f'{data_folder}{MODEL_FILENAME}_features.npy'))
+        else: 
+            feature_list = train.columns.tolist()
+            feature_list = list(set(feature_list) - set(COLS_TO_REMOVE))
+            np.save(os.path.join(basepath, output_path + f'{data_folder}{MODEL_FILENAME}_features.npy'), feature_list)
+
+        
+        PARAMS['seed']                  = SEED
+        PARAMS['feature_fraction_seed'] = SEED
+        PARAMS['bagging_seed']          = SEED
+        
+        cv_adversarial_filepath = os.path.join(basepath, 'data/raw/cv_adversarial_idx_v1.csv')
+
+        cv_history = m.cross_validate(train, feature_list, PARAMS.copy(), cv_adversarial_filepath)
+        cv_score   = str(cv_history.iloc[-1]['auc-mean']) + '_' + str(cv_history.iloc[-1]['auc-stdv'])
+        
+        PARAMS['num_boost_round']      = len(cv_history)
+
+        print('*' * 100)
+        print('Best AUC: {}'.format(cv_score))
+        
+        joblib.dump(PARAMS, os.path.join(basepath, output_path + f'{data_folder}{MODEL_FILENAME}_{SEED}_params.pkl'))
+        joblib.dump(cv_score, os.path.join(basepath, output_path + f'{data_folder}{MODEL_FILENAME}_{SEED}_cv.pkl'))
+    
+    elif args.cv_predict:
+        print('Cross validation with different seeds and produce submission for test set ..')
+
+        input_path      = args.input_path
+        output_path     = args.output_path
+        data_folder     = args.data_folder
+        is_sample       = args.s
+        SEED            = args.seed
+
+        params = {
+            'input_path': input_path,
+            'output_path': output_path,
+            'data_folder': data_folder
+        }
+
+        m   = Modelv112(**params)
         
 
         # Loading data
@@ -2102,7 +2172,7 @@ if __name__ == '__main__':
             'data_folder': data_folder
         }
 
-        m   = Modelv111(**params)
+        m   = Modelv112(**params)
             
         if os.path.exists(os.path.join(basepath, output_path + f'{data_folder}data.h5')):
             print('Loading dataset from disk ...')
@@ -2175,7 +2245,7 @@ if __name__ == '__main__':
             'data_folder': data_folder
         }
 
-        m   = Modelv111(**params)
+        m   = Modelv112(**params)
         
         # Load or save data from/ on disk
         if os.path.exists(os.path.join(basepath, output_path + f'{data_folder}data.h5')):
@@ -2249,7 +2319,7 @@ if __name__ == '__main__':
             'data_folder': data_folder
         }
 
-        m   = Modelv111(**params)
+        m   = Modelv112(**params)
         
         # Loading data
         if os.path.exists(os.path.join(basepath, output_path + f'{data_folder}data.h5')):
@@ -2272,12 +2342,6 @@ if __name__ == '__main__':
         
         del data
         gc.collect()
-        
-        # # Generating a sample if required
-        # if is_sample:
-        #     print('*' * 100)
-        #     print('Take a random sample of the training data ...')
-        #     train = train.sample(frac=SAMPLE_SIZE)
         
         # check to see if feature list exists on disk or not for a particular model
         if os.path.exists(os.path.join(basepath, output_path + f'{data_folder}{MODEL_FILENAME}_features.npy')):
