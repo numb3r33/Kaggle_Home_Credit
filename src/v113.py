@@ -235,10 +235,11 @@ PARAMS = {
     'boosting_type': 'gbdt',
     'learning_rate': .05,
     'metric': 'auc',
+    'max_depth': 3,
     'num_leaves': 8,
     'sub_feature': 0.5,
     'bagging_fraction': 0.9,
-    'reg_lambda': 75,
+    'reg_lambda': 50,
     'min_data_in_leaf': 100,
     'min_child_weight': 20,
     'nthread': 8,
@@ -2066,7 +2067,7 @@ if __name__ == '__main__':
         PARAMS['feature_fraction_seed'] = SEED
         PARAMS['bagging_seed']          = SEED
         
-        cv_adversarial_filepath = os.path.join(basepath, 'data/raw/cv_adversarial_idx_v1.csv')
+        cv_adversarial_filepath = os.path.join(basepath, 'data/raw/cv_idx_test_kfold.csv')
 
         cv_history = m.cross_validate(train, feature_list, PARAMS.copy(), cv_adversarial_filepath)
         cv_score   = str(cv_history.iloc[-1]['auc-mean']) + '_' + str(cv_history.iloc[-1]['auc-stdv'])
