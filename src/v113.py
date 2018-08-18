@@ -239,7 +239,7 @@ PARAMS = {
     'num_leaves': 30,
     'sub_feature': 0.3,
     'bagging_fraction': 0.9,
-    'reg_lambda': 100,
+    'reg_lambda': 25,
     'min_data_in_leaf': 100,
     'min_child_weight': 20,
     'nthread': 8,
