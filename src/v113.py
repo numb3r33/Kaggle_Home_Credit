@@ -236,7 +236,7 @@ PARAMS = {
     'learning_rate': .05,
     'metric': 'auc',
     'num_leaves': 30,
-    'sub_feature': 0.3,
+    'sub_feature': 0.52,
     'bagging_fraction': 0.9,
     'reg_lambda': 50,
     'reg_alpha': 5,
