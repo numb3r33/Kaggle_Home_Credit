@@ -1191,7 +1191,7 @@ class Modelv113(BaseModel):
 
         return data
     
-    def get_features(self, train, test, compute_ohe):
+    def get_features(self, train, test, compute_categorical):
         data       = pd.concat((train, test))
         data.index = np.arange(len(data))
 
@@ -1752,17 +1752,17 @@ class Modelv113(BaseModel):
 
         # one hot encoding of some of the categorical variables controlled by a flag
         # if flag is True then one hot encoding else do frequency encoding.
-        if compute_ohe:
+        if compute_categorical == 'ohe':
             data = super(Modelv113, self).prepare_ohe(data, OHE_COLS, drop_col=True)
-        else:
+        elif compute_categorical == 'freq':
             data = frequency_encoding(data, OHE_COLS)
         
         return data
 
     # This method would perform feature engineering on merged datasets.
-    def fe(self, train, test, compute_ohe=True):
+    def fe(self, train, test, compute_categorical=None):
         original_train = train.copy()
-        data           = self.get_features(original_train, test, compute_ohe)
+        data           = self.get_features(original_train, test, compute_categorical)
 
         train = data.iloc[:len(train)]
         test  = data.iloc[len(train):]
@@ -1941,6 +1941,29 @@ if __name__ == '__main__':
         else:
             print('Merge feature groups and save them to disk ...')
             train, test  = m.merge_datasets()
+
+            print('Shape of train and test before target encoding: {}, {}'.format(train.shape, test.shape))
+            print('*' * 100)
+
+            # target encoding
+            cme          = CategoricalMeanEncoded(cat_features=OHE_COLS)
+            
+            train_cat    = cross_val_predict(cme, train.loc[:, OHE_COLS + ['TARGET']], None, n_jobs=-1)
+            train_cat    = pd.DataFrame(train_cat, columns=OHE_COLS, index=train.index)
+
+            cme.fit(train.loc[:, OHE_COLS + ['TARGET']])            
+            test_cat     = cme.predict(test.loc[:, OHE_COLS])
+            test_cat     = pd.DataFrame(test_cat, columns=OHE_COLS, index=test.index)
+
+            train.drop(OHE_COLS, axis=1, inplace=True)
+            test.drop(OHE_COLS, axis=1, inplace=True)
+            
+            train = pd.concat((train, train_cat), axis=1)
+            test  = pd.concat((test, test_cat), axis=1)
+
+            print('Shape of train and test after target encoding: {}, {}'.format(train.shape, test.shape))
+            print('*' * 100)
+            
             train, test  = m.fe(train, test)
             
             data         = pd.concat((train, test))
@@ -2034,6 +2057,29 @@ if __name__ == '__main__':
         else:
             print('Merge feature groups and save them to disk ...')
             train, test  = m.merge_datasets()
+
+            print('Shape of train and test before target encoding: {}, {}'.format(train.shape, test.shape))
+            print('*' * 100)
+
+            # target encoding
+            cme          = CategoricalMeanEncoded(cat_features=OHE_COLS)
+            
+            train_cat    = cross_val_predict(cme, train.loc[:, OHE_COLS + ['TARGET']], None, n_jobs=-1)
+            train_cat    = pd.DataFrame(train_cat, columns=OHE_COLS, index=train.index)
+
+            cme.fit(train.loc[:, OHE_COLS + ['TARGET']])            
+            test_cat     = cme.predict(test.loc[:, OHE_COLS])
+            test_cat     = pd.DataFrame(test_cat, columns=OHE_COLS, index=test.index)
+
+            train.drop(OHE_COLS, axis=1, inplace=True)
+            test.drop(OHE_COLS, axis=1, inplace=True)
+            
+            train = pd.concat((train, train_cat), axis=1)
+            test  = pd.concat((test, test_cat), axis=1)
+
+            print('Shape of train and test after target encoding: {}, {}'.format(train.shape, test.shape))
+            print('*' * 100)
+            
             train, test  = m.fe(train, test)
             
             data         = pd.concat((train, test))
@@ -2105,6 +2151,30 @@ if __name__ == '__main__':
         else:
             print('Merge feature groups and save them to disk ...')
             train, test  = m.merge_datasets()
+
+            print('Shape of train and test before target encoding: {}, {}'.format(train.shape, test.shape))
+            print('*' * 100)
+
+            # target encoding
+            cme          = CategoricalMeanEncoded(cat_features=OHE_COLS)
+            
+            train_cat    = cross_val_predict(cme, train.loc[:, OHE_COLS + ['TARGET']], None, n_jobs=-1)
+            train_cat    = pd.DataFrame(train_cat, columns=OHE_COLS, index=train.index)
+
+            cme.fit(train.loc[:, OHE_COLS + ['TARGET']])            
+            test_cat     = cme.predict(test.loc[:, OHE_COLS])
+            test_cat     = pd.DataFrame(test_cat, columns=OHE_COLS, index=test.index)
+
+            train.drop(OHE_COLS, axis=1, inplace=True)
+            test.drop(OHE_COLS, axis=1, inplace=True)
+            
+            train = pd.concat((train, train_cat), axis=1)
+            test  = pd.concat((test, test_cat), axis=1)
+
+            print('Shape of train and test after target encoding: {}, {}'.format(train.shape, test.shape))
+            print('*' * 100)
+            
+            
             train, test  = m.fe(train, test)
             
             data         = pd.concat((train, test))
@@ -2140,7 +2210,7 @@ if __name__ == '__main__':
         PARAMS['feature_fraction_seed'] = SEED
         PARAMS['bagging_seed']          = SEED
         
-        cv_adversarial_filepath = os.path.join(basepath, 'data/raw/cv_adversarial_idx_v1.csv')
+        cv_adversarial_filepath = os.path.join(basepath, 'data/raw/cv_idx_test_kfold.csv')
         hold_auc, test_preds, fold_trees = m.cv_predict(train, test, feature_list, PARAMS.copy(), cv_adversarial_filepath)
         
         print('AUC across folds: {}'.format(hold_auc))

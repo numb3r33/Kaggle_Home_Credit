@@ -13,6 +13,7 @@ from sklearn.externals import joblib
 from sklearn.decomposition import PCA
 from sklearn.preprocessing import StandardScaler
 from sklearn.ensemble import RandomForestClassifier
+from sklearn.base import BaseEstimator, ClassifierMixin
 
 from bayes_opt import BayesianOptimization
 from MulticoreTSNE import MulticoreTSNE as TSNE
@@ -593,3 +594,53 @@ class BaseModel:
         })
 
         return fi_df
+
+    
+class CategoricalMeanEncoded(BaseEstimator, ClassifierMixin):
+
+    def __init__(self, categorical_features, C=100):
+        self.C = C
+        self.categorical_features = categorical_features
+
+    def fit(self, df, y=None):
+        train_cat    = df.loc[:, self.categorical_features]
+        train_target = df['TARGET']
+        train_res    = np.zeros((train_cat.shape[0], len(self.categorical_features)), dtype=np.float32)
+
+        self.global_target_mean = train_target.mean()
+        self.global_target_std  = train_target.std()
+
+        self.target_sums = {}
+        self.target_cnts = {}
+
+        for col in range(len(self.categorical_features)):
+            train_res[:, col] = self.fit_transform_column(col, train_target, pd.Series(train_cat.iloc[:, col]))
+        
+        return train_res
+
+    def predict(self, df):
+        test_cat = df.loc[:, self.categorical_features]
+        test_res = np.zeros((test_cat.shape[0], len(self.categorical_features)), dtype=np.float32)
+
+        for col in range(len(self.categorical_features)):
+            test_res[:, col] = self.transform_column(col, pd.Series(test_cat.iloc[:, col]))
+        
+        return test_res
+
+    def fit_transform_column(self, col, train_target, train_series):
+        self.target_sums[col] = train_target.groupby(train_series).sum()
+        self.target_cnts[col] = train_target.groupby(train_series).count()
+        
+        train_res_neg = self.global_target_mean + self.C
+        
+        train_res_num = train_series.map(self.target_sums[col]) + train_res_neg
+        train_res_den = train_series.map(self.target_cnts[col]) + self.C
+
+        return train_res_num / train_res_den
+    
+    def transform_column(self, col, test_series):
+        test_res_num = test_series.map(self.target_sums[col]).fillna(0.0) + self.global_target_mean * self.C
+        test_res_den = test_series.map(self.target_cnts[col]).fillna(0.0) + self.C
+
+        return test_res_num / test_res_den
+
