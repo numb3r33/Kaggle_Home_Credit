@@ -236,7 +236,7 @@ PARAMS = {
     'learning_rate': .05,
     'metric': 'auc',
     'max_depth': 3,
-    'num_leaves': 8,
+    'num_leaves': 15,
     'sub_feature': 0.5,
     'bagging_fraction': 0.9,
     'reg_lambda': 50,
@@ -1753,8 +1753,14 @@ class Modelv113(BaseModel):
         # one hot encoding of some of the categorical variables controlled by a flag
         # if flag is True then one hot encoding else do frequency encoding.
         if compute_categorical == 'ohe':
+            print('Computing One Hot Encoding of categorical features ...')
+            print('*' * 100)
+
             data = super(Modelv113, self).prepare_ohe(data, OHE_COLS, drop_col=True)
         elif compute_categorical == 'freq':
+            print('Computing Frequency Encoding of Categorical features ....')
+            print('*' * 100)
+
             data = frequency_encoding(data, OHE_COLS)
         
         return data
