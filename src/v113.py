@@ -237,7 +237,7 @@ PARAMS = {
     'metric': 'auc',
     'max_depth': 3,
     'num_leaves': 15,
-    'sub_feature': 0.3,
+    'sub_feature': 0.2,
     'bagging_fraction': 0.9,
     'reg_lambda': 50,
     'min_data_in_leaf': 100,
