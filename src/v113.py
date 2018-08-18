@@ -1946,8 +1946,8 @@ if __name__ == '__main__':
             print('*' * 100)
 
             # target encoding
-            cme          = CategoricalMeanEncoded(cat_features=OHE_COLS)
-            
+            cme          = CategoricalMeanEncoded(categorical_features=OHE_COLS)
+
             train_cat    = cross_val_predict(cme, train.loc[:, OHE_COLS + ['TARGET']], None, n_jobs=-1)
             train_cat    = pd.DataFrame(train_cat, columns=OHE_COLS, index=train.index)
 
@@ -2062,8 +2062,8 @@ if __name__ == '__main__':
             print('*' * 100)
 
             # target encoding
-            cme          = CategoricalMeanEncoded(cat_features=OHE_COLS)
-            
+            cme          = CategoricalMeanEncoded(categorical_features=OHE_COLS)
+
             train_cat    = cross_val_predict(cme, train.loc[:, OHE_COLS + ['TARGET']], None, n_jobs=-1)
             train_cat    = pd.DataFrame(train_cat, columns=OHE_COLS, index=train.index)
 
@@ -2156,7 +2156,7 @@ if __name__ == '__main__':
             print('*' * 100)
 
             # target encoding
-            cme          = CategoricalMeanEncoded(cat_features=OHE_COLS)
+            cme          = CategoricalMeanEncoded(categorical_features=OHE_COLS)
             
             train_cat    = cross_val_predict(cme, train.loc[:, OHE_COLS + ['TARGET']], None, n_jobs=-1)
             train_cat    = pd.DataFrame(train_cat, columns=OHE_COLS, index=train.index)
