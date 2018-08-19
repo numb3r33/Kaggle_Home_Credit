@@ -1337,18 +1337,6 @@ def prev_app_features(prev_app, data):
     del last_6_months, last_12_months
     gc.collect()
 
-    # most recent and oldest dpd month in pos cash history
-    dpd_instances = pos_cash.loc[pos_cash.SK_DPD > 0, :]
-    
-    oldest_dpd    = dpd_instances.groupby('SK_ID_CURR')['MONTHS_BALANCE'].min()
-    latest_dpd    = dpd_instances.groupby('SK_ID_CURR')['MONTHS_BALANCE'].max()
-
-    data.loc[:, 'oldest_dpd_month_pos_cash'] = data.SK_ID_CURR.map(oldest_dpd)
-    data.loc[:, 'latest_dpd_month_pos_cash'] = data.SK_ID_CURR.map(latest_dpd)
-    
-    del dpd_instances, oldest_dpd, latest_dpd
-    gc.collect()
-
     # canceled or refused loans from home credit in terms of years
     mask = (prev_app.NAME_CONTRACT_STATUS == 1) | (prev_app.NAME_CONTRACT_STATUS == 2)
     tmp  = data.loc[:, ['SK_ID_CURR']]\
