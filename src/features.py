@@ -1338,7 +1338,7 @@ def prev_app_features(prev_app, data):
     gc.collect()
 
     # canceled or refused loans from home credit in terms of years
-    mask = (prev_app.NAME_CONTRACT_STATUS == 1) | (prev_app.NAME_CONTRACT_STATUS == 2)
+    mask = (prev_app.NAME_CONTRACT_STATUS == 0)
     tmp  = data.loc[:, ['SK_ID_CURR']]\
                .merge(prev_app.loc[mask, ['SK_ID_CURR', 'DAYS_DECISION']],
                       on='SK_ID_CURR',
