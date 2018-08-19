@@ -1349,6 +1349,21 @@ def prev_app_features(prev_app, data):
     del dpd_instances, oldest_dpd, latest_dpd
     gc.collect()
 
+    # canceled or refused loans from home credit in terms of years
+    mask = (prev_app.NAME_CONTRACT_STATUS == 1) | (prev_app.NAME_CONTRACT_STATUS == 2)
+    tmp  = data.loc[:, ['SK_ID_CURR']]\
+               .merge(prev_app.loc[mask, ['SK_ID_CURR', 'DAYS_DECISION']],
+                      on='SK_ID_CURR',
+                      how='left'
+                     )
+    tmp.loc[:, 'credit_years'] = -tmp.DAYS_DECISION / 365
+    tmp.loc[:, 'home_credit_years_cat'] = pd.factorize(pd.cut(tmp.credit_years, bins=[0, 0.25, .5, .75, 1, 2, 3, 4, 5, 6, 7, 8, 9]))[0]
+    
+    data.loc[:, 'home_credit_years_cat'] = tmp.home_credit_years_cat
+
+    del tmp
+    gc.collect()
+
     return data, list(set(data.columns) - set(COLS))
 
 
