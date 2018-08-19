@@ -784,6 +784,18 @@ def bureau_features(bureau, data):
     data.loc[:, 'debt_to_credit_ext_source_2_mult']     = (total_debt / total_credit) * data.EXT_SOURCE_2
     data.loc[:, 'max_debt_to_credit_ext_source_2_mult'] = (max_debt / max_credit) * data.EXT_SOURCE_2
 
+    # bureau credit start date groups
+    tmp = data.loc[:, ['SK_ID_CURR']]\
+              .merge(bureau.loc[:, ['SK_ID_CURR', 'DAYS_CREDIT']], on='SK_ID_CURR', how='left')
+
+    tmp.loc[:, 'credit_years']     = -bureau.DAYS_CREDIT / 365
+    tmp.loc[:, 'credit_years_cat'] = pd.cut(tmp.credit_years, bins=[0, 0.25, .5, .75, 1, 2, 3, 4, 5, 6, 7, 8, 9],
+                                            labels=np.arange(0, 13)
+                                            )
+
+    
+    data.loc[:, 'credit_years_cat'] = tmp.credit_years_cat
+
     return data, list(set(data.columns) - set(COLS))
 
 #TODO: Features here should be moved to feature engineering in corresponding model file.

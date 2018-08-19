@@ -240,6 +240,7 @@ PARAMS = {
     'bagging_fraction': 0.9,
     'reg_lambda': 15,
     'reg_alpha': 5,
+    'min_split_gain': .5,
     'min_data_in_leaf': 15,
     'min_child_weight': 5,
     'nthread': 8,
@@ -272,6 +273,10 @@ OHE_COLS           = [
                       'NAME_HOUSING_TYPE',
                       'NAME_INCOME_TYPE'
                      ]
+
+TARGET_ENCODING_COLS = [
+                        'credit_years_cat'
+                        ]
 
 
 class Modelv114(BaseModel):
@@ -1952,17 +1957,17 @@ if __name__ == '__main__':
             print('*' * 100)
 
             # target encoding
-            cme          = CategoricalMeanEncoded(categorical_features=OHE_COLS)
+            cme          = CategoricalMeanEncoded(categorical_features=TARGET_ENCODING_COLS)
 
-            train_cat    = cross_val_predict(cme, train.loc[:, OHE_COLS + ['TARGET']], None, n_jobs=-1)
-            train_cat    = pd.DataFrame(train_cat, columns=OHE_COLS, index=train.index)
+            train_cat    = cross_val_predict(cme, train.loc[:, TARGET_ENCODING_COLS + ['TARGET']], None, n_jobs=-1)
+            train_cat    = pd.DataFrame(train_cat, columns=TARGET_ENCODING_COLS, index=train.index)
 
-            cme.fit(train.loc[:, OHE_COLS + ['TARGET']])            
-            test_cat     = cme.predict(test.loc[:, OHE_COLS])
-            test_cat     = pd.DataFrame(test_cat, columns=OHE_COLS, index=test.index)
+            cme.fit(train.loc[:, TARGET_ENCODING_COLS + ['TARGET']])            
+            test_cat     = cme.predict(test.loc[:, TARGET_ENCODING_COLS])
+            test_cat     = pd.DataFrame(test_cat, columns=TARGET_ENCODING_COLS, index=test.index)
 
-            train.drop(OHE_COLS, axis=1, inplace=True)
-            test.drop(OHE_COLS, axis=1, inplace=True)
+            train.drop(TARGET_ENCODING_COLS, axis=1, inplace=True)
+            test.drop(TARGET_ENCODING_COLS, axis=1, inplace=True)
             
             train = pd.concat((train, train_cat), axis=1)
             test  = pd.concat((test, test_cat), axis=1)
@@ -1970,7 +1975,7 @@ if __name__ == '__main__':
             print('Shape of train and test after target encoding: {}, {}'.format(train.shape, test.shape))
             print('*' * 100)
             
-            train, test  = m.fe(train, test)
+            train, test  = m.fe(train, test, compute_categorical='ohe')
             
             data         = pd.concat((train, test))
             data         = m.reduce_mem_usage(data)
@@ -2068,17 +2073,17 @@ if __name__ == '__main__':
             print('*' * 100)
 
             # target encoding
-            cme          = CategoricalMeanEncoded(categorical_features=OHE_COLS)
+            cme          = CategoricalMeanEncoded(categorical_features=TARGET_ENCODING_COLS)
 
-            train_cat    = cross_val_predict(cme, train.loc[:, OHE_COLS + ['TARGET']], None, n_jobs=-1)
-            train_cat    = pd.DataFrame(train_cat, columns=OHE_COLS, index=train.index)
+            train_cat    = cross_val_predict(cme, train.loc[:, TARGET_ENCODING_COLS + ['TARGET']], None, n_jobs=-1)
+            train_cat    = pd.DataFrame(train_cat, columns=TARGET_ENCODING_COLS, index=train.index)
 
-            cme.fit(train.loc[:, OHE_COLS + ['TARGET']])            
-            test_cat     = cme.predict(test.loc[:, OHE_COLS])
-            test_cat     = pd.DataFrame(test_cat, columns=OHE_COLS, index=test.index)
+            cme.fit(train.loc[:, TARGET_ENCODING_COLS + ['TARGET']])            
+            test_cat     = cme.predict(test.loc[:, TARGET_ENCODING_COLS])
+            test_cat     = pd.DataFrame(test_cat, columns=TARGET_ENCODING_COLS, index=test.index)
 
-            train.drop(OHE_COLS, axis=1, inplace=True)
-            test.drop(OHE_COLS, axis=1, inplace=True)
+            train.drop(TARGET_ENCODING_COLS, axis=1, inplace=True)
+            test.drop(TARGET_ENCODING_COLS, axis=1, inplace=True)
             
             train = pd.concat((train, train_cat), axis=1)
             test  = pd.concat((test, test_cat), axis=1)
@@ -2086,7 +2091,7 @@ if __name__ == '__main__':
             print('Shape of train and test after target encoding: {}, {}'.format(train.shape, test.shape))
             print('*' * 100)
             
-            train, test  = m.fe(train, test)
+            train, test  = m.fe(train, test, compute_categorical='ohe')
             
             data         = pd.concat((train, test))
             data         = m.reduce_mem_usage(data)
@@ -2162,17 +2167,17 @@ if __name__ == '__main__':
             print('*' * 100)
 
             # target encoding
-            cme          = CategoricalMeanEncoded(categorical_features=OHE_COLS)
-            
-            train_cat    = cross_val_predict(cme, train.loc[:, OHE_COLS + ['TARGET']], None, n_jobs=-1)
-            train_cat    = pd.DataFrame(train_cat, columns=OHE_COLS, index=train.index)
+            cme          = CategoricalMeanEncoded(categorical_features=TARGET_ENCODING_COLS)
 
-            cme.fit(train.loc[:, OHE_COLS + ['TARGET']])            
-            test_cat     = cme.predict(test.loc[:, OHE_COLS])
-            test_cat     = pd.DataFrame(test_cat, columns=OHE_COLS, index=test.index)
+            train_cat    = cross_val_predict(cme, train.loc[:, TARGET_ENCODING_COLS + ['TARGET']], None, n_jobs=-1)
+            train_cat    = pd.DataFrame(train_cat, columns=TARGET_ENCODING_COLS, index=train.index)
 
-            train.drop(OHE_COLS, axis=1, inplace=True)
-            test.drop(OHE_COLS, axis=1, inplace=True)
+            cme.fit(train.loc[:, TARGET_ENCODING_COLS + ['TARGET']])            
+            test_cat     = cme.predict(test.loc[:, TARGET_ENCODING_COLS])
+            test_cat     = pd.DataFrame(test_cat, columns=TARGET_ENCODING_COLS, index=test.index)
+
+            train.drop(TARGET_ENCODING_COLS, axis=1, inplace=True)
+            test.drop(TARGET_ENCODING_COLS, axis=1, inplace=True)
             
             train = pd.concat((train, train_cat), axis=1)
             test  = pd.concat((test, test_cat), axis=1)
@@ -2181,7 +2186,7 @@ if __name__ == '__main__':
             print('*' * 100)
             
             
-            train, test  = m.fe(train, test)
+            train, test  = m.fe(train, test, compute_categorical='ohe')
             
             data         = pd.concat((train, test))
             data         = m.reduce_mem_usage(data)
