@@ -789,9 +789,7 @@ def bureau_features(bureau, data):
               .merge(bureau.loc[:, ['SK_ID_CURR', 'DAYS_CREDIT']], on='SK_ID_CURR', how='left')
 
     tmp.loc[:, 'credit_years']     = -bureau.DAYS_CREDIT / 365
-    tmp.loc[:, 'credit_years_cat'] = pd.cut(tmp.credit_years, bins=[0, 0.25, .5, .75, 1, 2, 3, 4, 5, 6, 7, 8, 9],
-                                            labels=np.arange(0, 13)
-                                            )
+    tmp.loc[:, 'credit_years_cat'] = pd.factorize(pd.cut(tmp.credit_years, bins=[0, 0.25, .5, .75, 1, 2, 3, 4, 5, 6, 7, 8, 9]))[0]
 
     
     data.loc[:, 'credit_years_cat'] = tmp.credit_years_cat
