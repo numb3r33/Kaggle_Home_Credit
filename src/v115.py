@@ -225,7 +225,8 @@ COLS_TO_REMOVE = ['SK_ID_CURR',
                   'diff_max_min_credit_term',
                   'NAME_HOUSING_TYPE__nan',
                   'OCCUPATION_TYPE__nan',
-                  'NAME_INCOME_TYPE__nan'
+                  'NAME_INCOME_TYPE__nan',
+                  'home_credit_years_cat'
                   ]  
 
 PARAMS = {
@@ -235,11 +236,11 @@ PARAMS = {
     'boosting_type': 'gbdt',
     'learning_rate': .03,
     'metric': 'auc',
-    'num_leaves': 45,
-    'sub_feature': 0.3,
+    'num_leaves': 30,
+    'sub_feature': 0.5,
     'bagging_fraction': 0.9,
-    'reg_lambda': 15,
-    'reg_alpha': 1,
+    'reg_lambda': 11,
+    'reg_alpha': 5,
     'min_split_gain': .5,
     'min_data_in_leaf': 15,
     'min_sum_hessian_in_leaf': 1,
