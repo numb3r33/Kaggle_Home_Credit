@@ -1467,7 +1467,7 @@ def pos_cash_features(pos_cash, data):
                         how='left'
                     )
         tmp.columns = ['SK_ID_CURR', f'DPD_{n}']
-        return tmp
+        return tmp if n == 1 else tmp.loc[:, tmp.columns.drop('SK_ID_CURR')]
     
     _i_tmps = []
 
@@ -1475,7 +1475,7 @@ def pos_cash_features(pos_cash, data):
         _i_tmps.append(get_nth_dpd(n=i))
     
     _i_tmps_df = pd.concat(_i_tmps, axis=1)
-    data       = pd.concat((data, _i_tmps_df), axis=1)
+    data       = data.
 
     del _i_tmps
     gc.collect()
