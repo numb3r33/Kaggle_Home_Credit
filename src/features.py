@@ -1475,7 +1475,7 @@ def pos_cash_features(pos_cash, data):
         _i_tmps.append(get_nth_dpd(n=i))
     
     _i_tmps_df = pd.concat(_i_tmps, axis=1)
-    data       = data.
+    data       = pd.concat((data, _i_tmps_df), axis=1)
 
     del _i_tmps
     gc.collect()
