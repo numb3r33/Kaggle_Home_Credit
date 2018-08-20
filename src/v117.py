@@ -1955,29 +1955,6 @@ if __name__ == '__main__':
         else:
             print('Merge feature groups and save them to disk ...')
             train, test  = m.merge_datasets()
-
-            print('Shape of train and test before target encoding: {}, {}'.format(train.shape, test.shape))
-            print('*' * 100)
-
-            # target encoding
-            cme          = CategoricalMeanEncoded(categorical_features=TARGET_ENCODING_COLS)
-
-            train_cat    = cross_val_predict(cme, train.loc[:, TARGET_ENCODING_COLS + ['TARGET']], None, n_jobs=-1)
-            train_cat    = pd.DataFrame(train_cat, columns=TARGET_ENCODING_COLS, index=train.index)
-
-            cme.fit(train.loc[:, TARGET_ENCODING_COLS + ['TARGET']])            
-            test_cat     = cme.predict(test.loc[:, TARGET_ENCODING_COLS])
-            test_cat     = pd.DataFrame(test_cat, columns=TARGET_ENCODING_COLS, index=test.index)
-
-            train.drop(TARGET_ENCODING_COLS, axis=1, inplace=True)
-            test.drop(TARGET_ENCODING_COLS, axis=1, inplace=True)
-            
-            train = pd.concat((train, train_cat), axis=1)
-            test  = pd.concat((test, test_cat), axis=1)
-
-            print('Shape of train and test after target encoding: {}, {}'.format(train.shape, test.shape))
-            print('*' * 100)
-            
             train, test  = m.fe(train, test, compute_categorical='ohe')
             
             data         = pd.concat((train, test))
@@ -2071,29 +2048,6 @@ if __name__ == '__main__':
         else:
             print('Merge feature groups and save them to disk ...')
             train, test  = m.merge_datasets()
-
-            print('Shape of train and test before target encoding: {}, {}'.format(train.shape, test.shape))
-            print('*' * 100)
-
-            # target encoding
-            cme          = CategoricalMeanEncoded(categorical_features=TARGET_ENCODING_COLS)
-
-            train_cat    = cross_val_predict(cme, train.loc[:, TARGET_ENCODING_COLS + ['TARGET']], None, n_jobs=-1)
-            train_cat    = pd.DataFrame(train_cat, columns=TARGET_ENCODING_COLS, index=train.index)
-
-            cme.fit(train.loc[:, TARGET_ENCODING_COLS + ['TARGET']])            
-            test_cat     = cme.predict(test.loc[:, TARGET_ENCODING_COLS])
-            test_cat     = pd.DataFrame(test_cat, columns=TARGET_ENCODING_COLS, index=test.index)
-
-            train.drop(TARGET_ENCODING_COLS, axis=1, inplace=True)
-            test.drop(TARGET_ENCODING_COLS, axis=1, inplace=True)
-            
-            train = pd.concat((train, train_cat), axis=1)
-            test  = pd.concat((test, test_cat), axis=1)
-
-            print('Shape of train and test after target encoding: {}, {}'.format(train.shape, test.shape))
-            print('*' * 100)
-            
             train, test  = m.fe(train, test, compute_categorical='ohe')
             
             data         = pd.concat((train, test))
@@ -2165,30 +2119,6 @@ if __name__ == '__main__':
         else:
             print('Merge feature groups and save them to disk ...')
             train, test  = m.merge_datasets()
-
-            print('Shape of train and test before target encoding: {}, {}'.format(train.shape, test.shape))
-            print('*' * 100)
-
-            # target encoding
-            cme          = CategoricalMeanEncoded(categorical_features=TARGET_ENCODING_COLS)
-
-            train_cat    = cross_val_predict(cme, train.loc[:, TARGET_ENCODING_COLS + ['TARGET']], None, n_jobs=-1)
-            train_cat    = pd.DataFrame(train_cat, columns=TARGET_ENCODING_COLS, index=train.index)
-
-            cme.fit(train.loc[:, TARGET_ENCODING_COLS + ['TARGET']])            
-            test_cat     = cme.predict(test.loc[:, TARGET_ENCODING_COLS])
-            test_cat     = pd.DataFrame(test_cat, columns=TARGET_ENCODING_COLS, index=test.index)
-
-            train.drop(TARGET_ENCODING_COLS, axis=1, inplace=True)
-            test.drop(TARGET_ENCODING_COLS, axis=1, inplace=True)
-            
-            train = pd.concat((train, train_cat), axis=1)
-            test  = pd.concat((test, test_cat), axis=1)
-
-            print('Shape of train and test after target encoding: {}, {}'.format(train.shape, test.shape))
-            print('*' * 100)
-            
-            
             train, test  = m.fe(train, test, compute_categorical='ohe')
             
             data         = pd.concat((train, test))
