@@ -1963,7 +1963,7 @@ if __name__ == '__main__':
             gc.collect()
 
         # ite    = pd.read_csv(os.path.join(basepath, input_path + 'cv_adversarial_idx_v1.csv'), usecols=[fold_indicator])[fold_indicator].values
-        ite  = pd.read_csv(os.path.join(basepath, input_path + 'cv_idx.csv'), usecols=[fold_indicator])[fold_indicator].values
+        ite  = pd.read_csv(os.path.join(basepath, input_path + 'cv_idx_test_stratified.csv'), usecols=[fold_indicator])[fold_indicator].values
         print('Shape of fold indices ', len(ite))
 
         itr    = np.array(list(set(data.iloc[:m.n_train].index) - set(ite)))
