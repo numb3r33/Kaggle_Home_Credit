@@ -790,10 +790,18 @@ def bureau_features(bureau, data):
 
     tmp.loc[:, 'credit_years']     = -bureau.DAYS_CREDIT / 365
     tmp.loc[:, 'credit_years_cat'] = pd.factorize(pd.cut(tmp.credit_years, bins=[0, 0.25, .5, .75, 1, 2, 3, 4, 5, 6, 7, 8, 9]))[0]
-
     
-    data.loc[:, 'credit_years_cat'] = tmp.credit_years_cat
+    res         = tmp.groupby(['SK_ID_CURR', 'credit_years_cat']).size().unstack().fillna(0).reset_index()
+    res.columns = ['SK_ID_CURR'] + [f'bureau_credit_year_{col}' for col in res.columns[1:]]
+    
+    res = data.loc[:, ['SK_ID_CURR']].merge(res, on='SK_ID_CURR', how='left')
+    res = res.loc[:, res.columns.drop('SK_ID_CURR')]
 
+    data = pd.concat((data, res), axis=1)
+
+    del res, tmp
+    gc.collect()
+    
     return data, list(set(data.columns) - set(COLS))
 
 #TODO: Features here should be moved to feature engineering in corresponding model file.
