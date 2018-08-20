@@ -1462,7 +1462,10 @@ def pos_cash_features(pos_cash, data):
 
     # Payment Line
     def get_nth_dpd(n):
-        tmp = data.loc[:, ['SK_ID_CURR']].merge(pos_cash.loc[pos_cash.MONTHS_BALANCE == -n, ['SK_ID_CURR', 'SK_DPD']],
+        tmp = pos_cash.loc[pos_cash.MONTHS_BALANCE == -n, ['SK_ID_CURR', 'SK_DPD']]\
+                  .groupby(['SK_ID_CURR'])['SK_DPD'].sum().reset_index()
+
+        tmp = app_train.loc[:, ['SK_ID_CURR']].merge(tmp,
                         on='SK_ID_CURR',
                         how='left'
                     )
@@ -1475,9 +1478,9 @@ def pos_cash_features(pos_cash, data):
         _i_tmps.append(get_nth_dpd(n=i))
     
     _i_tmps_df = pd.concat(_i_tmps, axis=1)
-    data       = pd.concat((data, _i_tmps_df), axis=1)
-
-    del _i_tmps
+    data = data.merge(_i_tmps_df, on='SK_ID_CURR', how='left')
+    
+    del _i_tmps, _i_tmps_df
     gc.collect()
 
     return data, list(set(data.columns) - set(COLS))
