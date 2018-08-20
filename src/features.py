@@ -939,6 +939,16 @@ def bureau_and_balance(bureau, bureau_bal, data):
     del ss, bureau_bal_recent, data_bureau_bal
     gc.collect()
 
+    # bureau balance payment line
+    tmp = bureau_bal.loc[bureau_bal.MONTHS_BALANCE <= -12, ['SK_ID_BUREAU', 'STATUS']]\
+                    .merge(bureau.loc[:, ['SK_ID_CURR', 'SK_ID_BUREAU']], on='SK_ID_BUREAU', how='inner')
+    res = tmp.groupby(['SK_ID_CURR', 'STATUS'], as_index=False).size().unstack().fillna(0).reset_index()
+    res.columms = ['SK_ID_CURR'] + [f'bureau_bal_pl_{col}' for col in res.columns.drop('SK_ID_CURR')]
+
+    data = data.merge(res, on=['SK_ID_CURR'], how='left')
+
+    print('Shape of data: {}'.format(data.shape))
+
     return data, list(set(data.columns) - set(COLS))
 
 def prev_app_features(prev_app, data):
@@ -1480,8 +1490,6 @@ def pos_cash_features(pos_cash, data):
     _i_tmps_df = pd.concat(_i_tmps, axis=1)
     data = data.merge(_i_tmps_df, on='SK_ID_CURR', how='left')
 
-    print('data shape: {}'.format(data.shape))
-    
     del _i_tmps, _i_tmps_df
     gc.collect()
 
