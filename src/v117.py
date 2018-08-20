@@ -276,10 +276,7 @@ OHE_COLS           = [
                       'NAME_INCOME_TYPE'
                      ]
 
-TARGET_ENCODING_COLS = [
-                        'credit_years_cat',
-                        'home_credit_years_cat'
-                        ]
+TARGET_ENCODING_COLS = []
 
 
 class Modelv117(BaseModel):
@@ -2081,7 +2078,7 @@ if __name__ == '__main__':
         PARAMS['feature_fraction_seed'] = SEED
         PARAMS['bagging_seed']          = SEED
         
-        cv_adversarial_filepath = os.path.join(basepath, 'data/raw/cv_adversarial_idx_v1.csv')
+        cv_adversarial_filepath = os.path.join(basepath, 'data/raw/cv_idx_test_stratified.csv')
 
         cv_history = m.cross_validate(train, feature_list, PARAMS.copy(), cv_adversarial_filepath)
         cv_score   = str(cv_history.iloc[-1]['auc-mean']) + '_' + str(cv_history.iloc[-1]['auc-stdv'])
@@ -2154,7 +2151,7 @@ if __name__ == '__main__':
         PARAMS['feature_fraction_seed'] = SEED
         PARAMS['bagging_seed']          = SEED
         
-        cv_adversarial_filepath = os.path.join(basepath, 'data/raw/cv_adversarial_idx_v1.csv')
+        cv_adversarial_filepath = os.path.join(basepath, 'data/raw/cv_idx_test_stratified.csv')
         hold_auc, test_preds, fold_trees = m.cv_predict(train, test, feature_list, PARAMS.copy(), cv_adversarial_filepath)
         
         print('AUC across folds: {}'.format(hold_auc))

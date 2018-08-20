@@ -799,6 +799,31 @@ def bureau_features(bureau, data):
 
     data = pd.concat((data, res), axis=1)
 
+    # bureau credit different credits ( active, closed etc ..)
+    tmp = data.loc[:, ['SK_ID_CURR']]\
+              .merge(bureau.loc[:, ['SK_ID_CURR', 'CREDIT_ACTIVE']], on='SK_ID_CURR', how='left')
+
+    res         = tmp.groupby(['SK_ID_CURR', 'CREDIT_ACTIVE']).size().unstack().fillna(0).reset_index()
+    res.columns = ['SK_ID_CURR'] + [f'bureau_credit_status_{col}' for col in res.columns[1:]]
+    
+    res = data.loc[:, ['SK_ID_CURR']].merge(res, on='SK_ID_CURR', how='left')
+    res = res.loc[:, res.columns.drop('SK_ID_CURR')]
+
+    data = pd.concat((data, res), axis=1)
+
+    # bureau credit aggregation by credit types ( cash, microloan etc ...)
+    tmp = data.loc[:, ['SK_ID_CURR']]\
+              .merge(bureau.loc[:, ['SK_ID_CURR', 'CREDIT_TYPE']], on='SK_ID_CURR', how='left')
+
+    res         = tmp.groupby(['SK_ID_CURR', 'CREDIT_TYPE']).size().unstack().fillna(0).reset_index()
+    res.columns = ['SK_ID_CURR'] + [f'bureau_credit_type_{col}' for col in res.columns[1:]]
+    
+    res = data.loc[:, ['SK_ID_CURR']].merge(res, on='SK_ID_CURR', how='left')
+    res = res.loc[:, res.columns.drop('SK_ID_CURR')]
+
+    data = pd.concat((data, res), axis=1)
+
+
     del res, tmp
     gc.collect()
     
