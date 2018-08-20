@@ -943,7 +943,7 @@ def bureau_and_balance(bureau, bureau_bal, data):
     tmp = bureau_bal.loc[bureau_bal.MONTHS_BALANCE <= -12, ['SK_ID_BUREAU', 'STATUS']]\
                     .merge(bureau.loc[:, ['SK_ID_CURR', 'SK_ID_BUREAU']], on='SK_ID_BUREAU', how='inner')
     res = tmp.groupby(['SK_ID_CURR', 'STATUS'], as_index=False).size().unstack().fillna(0).reset_index()
-    res.columms = ['SK_ID_CURR'] + [f'bureau_bal_pl_{col}' for col in res.columns.drop('SK_ID_CURR')]
+    res.columns = ['SK_ID_CURR'] + [f'bureau_bal_pl_{col}' for col in res.columns.drop('SK_ID_CURR')]
 
     data = data.merge(res, on=['SK_ID_CURR'], how='left')
 
