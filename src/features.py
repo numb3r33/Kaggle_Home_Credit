@@ -1465,7 +1465,7 @@ def pos_cash_features(pos_cash, data):
         tmp = pos_cash.loc[pos_cash.MONTHS_BALANCE == -n, ['SK_ID_CURR', 'SK_DPD']]\
                   .groupby(['SK_ID_CURR'])['SK_DPD'].sum().reset_index()
 
-        tmp = app_train.loc[:, ['SK_ID_CURR']].merge(tmp,
+        tmp = data.loc[:, ['SK_ID_CURR']].merge(tmp,
                         on='SK_ID_CURR',
                         how='left'
                     )
@@ -1479,6 +1479,8 @@ def pos_cash_features(pos_cash, data):
     
     _i_tmps_df = pd.concat(_i_tmps, axis=1)
     data = data.merge(_i_tmps_df, on='SK_ID_CURR', how='left')
+
+    print('data shape: {}'.format(data.shape))
     
     del _i_tmps, _i_tmps_df
     gc.collect()
