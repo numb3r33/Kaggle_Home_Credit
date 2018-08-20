@@ -1460,6 +1460,26 @@ def pos_cash_features(pos_cash, data):
 
     data.loc[:, 'ratio_completed_to_total_pos_cash'] = data.SK_ID_CURR.map(ratio_completed_to_total)
 
+    # Payment Line
+    def get_nth_dpd(n):
+        tmp = data.loc[:, ['SK_ID_CURR']].merge(pos_cash.loc[pos_cash.MONTHS_BALANCE == -n, ['SK_ID_CURR', 'SK_DPD']],
+                        on='SK_ID_CURR',
+                        how='left'
+                    )
+        tmp.columns = ['SK_ID_CURR', f'DPD_{n}']
+        return tmp
+    
+    _i_tmps = []
+
+    for i in range(1, 25):    
+        _i_tmps.append(get_nth_dpd(n=i))
+    
+    _i_tmps_df = pd.concat(_i_tmps, axis=1)
+    data       = pd.concat((data, _i_tmps), axis=1)
+
+    del _i_tmps
+    gc.collect()
+
     return data, list(set(data.columns) - set(COLS))
 
 def credit_card_features(credit_bal, data):
