@@ -232,7 +232,7 @@ PARAMS = {
     'iterations': 500,
     'learning_rate': 1,
     'depth': 4,
-    'od_type': 'iter',
+    'od_type': 'Iter',
     'od_wait': 100,
     'custom_loss': 'AUC',
     'logging_level': 'Verbose'
