@@ -3,6 +3,7 @@ import numpy as np
 
 import lightgbm as lgb
 import xgboost as xgb
+from catboost import CatBoostClassifier, Pool, cv
 
 from sklearn.model_selection import train_test_split
 from sklearn.model_selection import cross_val_predict
@@ -379,6 +380,19 @@ class BaseModel:
         print('\nTook: {} seconds'.format(time.time() - t0))
         
         return pd.DataFrame(cv)
+    
+    def cross_validate_cb(self, Xtr, ytr, params):
+        print('PARAMS are: {}'.format(Xtr, ytr))
+        model = CatBoostClassifier(**params)
+
+        cv_data = cv(Pool(Xtr, ytr), model.get_params())
+        
+        print('Best validation accuracy score: {:.2f}±{:.2f} on step {}'.format(
+            np.max(cv_data['test-AUC-mean']),
+            cv_data['test-AUC-std'][np.argmax(cv_data['test-AUC-mean'])],
+            np.argmax(cv_data['test-AUC-mean'])
+        ))
+
 
     def evaluate_lgb(self, Xte, yte, model):
         yhat  = None

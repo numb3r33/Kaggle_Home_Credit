@@ -1803,6 +1803,16 @@ def get_installment_features(installments, data):
 
     data = data.merge(tmp, on='SK_ID_CURR', how='left')
 
+    def get_amount_dpd():
+        mask = (installments.AMT_INSTALMENT > installments.AMT_PAYMENT)
+        return installments.loc[mask, ['SK_ID_CURR', 'NUM_INSTALMENT_NUMBER']]
+
+    dpd_instalments = get_amount_dpd()
+    tmp = dpd_instalments.groupby(['SK_ID_CURR', 'NUM_INSTALMENT_NUMBER']).size().unstack().fillna(0).reset_index()
+    tmp.columns = ['SK_ID_CURR'] + [f'instalment_amount_diff_num_{col}' for col in tmp.columns.drop('SK_ID_CURR')]
+
+    data = data.merge(tmp, on='SK_ID_CURR', how='left')
+
     return data, list(set(data.columns) - set(COLS))
 
 def prev_curr_app_features(prev_app, data):
