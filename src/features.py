@@ -946,7 +946,40 @@ def bureau_and_balance(bureau, bureau_bal, data):
 
     data = data.merge(res, on=['SK_ID_CURR'], how='left')
 
-    print('Shape of data: {}'.format(data.shape))
+    del tmp, res
+    gc.collect()
+
+    # Payment Line
+    def count_in_str(x, ch, deg=1):
+        return (sum((1./t ** deg for t, c in enumerate(x, start=1) if c==ch)) / (0.01 + sum((1./t ** deg for t in range(1, 1+len(x))))))
+    
+    tmp = bureau.loc[:, ['SK_ID_CURR', 'SK_ID_BUREAU']]\
+            .merge(bureau_bal.loc[bureau_bal.MONTHS_BALANCE >= -12, ['SK_ID_BUREAU', 'STATUS']], on='SK_ID_BUREAU', how='inner')
+    
+    sk_id_currs   = []
+    entropy_chars = []
+
+    for name, group in tmp.groupby('SK_ID_CURR'):
+        status_line  = ''.join(list(map(np.str, group.STATUS.values)))
+        sk_id_currs.append(group.SK_ID_CURR.values[0])
+        
+        possible_status = [6, 0, 7, 1, 5, 2, 3, 4]
+        entropy_chars.append([count_in_str(status_line, str(char_)) for char_ in possible_status])
+
+    tmp = pd.DataFrame(np.hstack((np.array(sk_id_currs)[:, None], entropy_chars)), 
+                       columns=['SK_ID_CURR'] + ['bbal_6', 
+                                                 'bbal_0', 
+                                                 'bbal_7', 
+                                                 'bbal_1', 
+                                                 'bbal_5', 
+                                                 'bbal_2', 
+                                                 'bbal_3', 
+                                                 'bbal_4'])
+
+    data = data.merge(tmp, on='SK_ID_CURR', how='left')
+
+    del tmp
+    gc.collect()
 
     return data, list(set(data.columns) - set(COLS))
 
