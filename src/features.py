@@ -1797,7 +1797,7 @@ def get_installment_features(installments, data):
         mask = (installments.DAYS_ENTRY_PAYMENT > installments.DAYS_INSTALMENT)
         return installments.loc[mask, ['SK_ID_CURR', 'NUM_INSTALMENT_NUMBER']]
     
-    dpd_instalments = get_dpd_installments()
+    dpd_instalments = get_dpd_instalments()
     tmp = dpd_instalments.groupby(['SK_ID_CURR', 'NUM_INSTALMENT_NUMBER']).size().unstack().fillna(0).reset_index()
     tmp.columns = ['SK_ID_CURR'] + [f'instalment_dpd_num_{col}' for col in tmp.columns.drop('SK_ID_CURR')]
 
