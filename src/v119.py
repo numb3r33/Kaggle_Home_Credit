@@ -1818,8 +1818,8 @@ class Modelv119(BaseModel):
                                                     categorical_feature=categorical_feature
                                                     )
     
-    def predict_train_test(self, train, test, feature_list, params, n_folds=5, categorical_feature='auto'):
-        return super(Modelv119, self).predict_train_test(train, test, feat_df, params)
+    def predict_test(self, train, test, feature_list, params, n_folds=5, categorical_feature='auto'):
+        return super(Modelv119, self).predict_test(train, test, feat_df, params)
 
 
     def cross_validate(self, train, feature_list, params, cv_adversarial_filepath=None, TARGET_NAME='TARGET'):
@@ -2154,7 +2154,7 @@ if __name__ == '__main__':
         PARAMS['feature_fraction_seed'] = SEED
         PARAMS['bagging_seed']          = SEED
         
-        test_preds = m.predict_train_test(train, test, feature_list, PARAMS.copy())
+        test_preds = m.predict_test(train, test, feature_list, PARAMS.copy())
         
         # Load cross-validation results
         PARAMS        = joblib.load(os.path.join(basepath, output_path + f'{data_folder}{MODEL_FILENAME}_{CV_SEED}_params.pkl'))

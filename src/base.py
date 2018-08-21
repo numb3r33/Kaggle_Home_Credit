@@ -274,7 +274,7 @@ class BaseModel:
 
         return np.array(hold_auc), test_preds, fold_trees
 
-    def predict_train_test(self, train, test, feature_list, params, n_folds=5, categorical_feature='auto'):
+    def predict_test(self, train, test, feature_list, params, n_folds=5, categorical_feature='auto'):
         num_boost_round       = params['num_boost_round']
         early_stopping_rounds = params['early_stopping_rounds']
 
