@@ -2102,6 +2102,7 @@ if __name__ == '__main__':
         data_folder     = args.data_folder
         is_sample       = args.s
         SEED            = args.seed
+        CV_SEED         = args.cv_seed
 
         params = {
             'input_path': input_path,
@@ -2153,9 +2154,13 @@ if __name__ == '__main__':
         PARAMS['seed']                  = SEED
         PARAMS['feature_fraction_seed'] = SEED
         PARAMS['bagging_seed']          = SEED
-        
-        test_preds = m.predict_test(train, test, feature_list, PARAMS.copy())
-        
+
+        if os.path.exists(os.path.join(basepath, output_path + f'{data_folder}{MODEL_FILENAME}_{CV_SEED}_test_preds.npy')):
+            test_preds = np.load(os.path.join(basepath, output_path + f'{data_folder}{MODEL_FILENAME}_{CV_SEED}_test_preds.npy'))
+        else:
+            test_preds = m.predict_test(train, test, feature_list, PARAMS.copy())
+            np.save(os.path.join(basepath, output_path + f'{data_folder}{MODEL_FILENAME}_{CV_SEED}_test_preds.npy'), test_preds)
+
         # Load cross-validation results
         PARAMS        = joblib.load(os.path.join(basepath, output_path + f'{data_folder}{MODEL_FILENAME}_{CV_SEED}_params.pkl'))
         HOLDOUT_SCORE = joblib.load(os.path.join(basepath, output_path + f'{data_folder}{MODEL_FILENAME}_{CV_SEED}_cv.pkl'))
