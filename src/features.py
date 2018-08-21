@@ -931,7 +931,6 @@ def bureau_and_balance(bureau, bureau_bal, data):
     data_bureau_bal.loc[:, 'STATUS']  = data_bureau_bal.STATUS.fillna('missing')
 
     ss = data_bureau_bal.groupby(['SK_ID_CURR', 'STATUS']).size().unstack().fillna(0)
-    print(ss.columns)
     ss.loc[:, 'ratio_C_X'] = (ss['6.0'] + ss['7.0']) / ss['nan']
 
     data.loc[:, 'ratio_sum_C_X_to_missing'] = data.SK_ID_CURR.map(ss.ratio_C_X)
@@ -942,7 +941,7 @@ def bureau_and_balance(bureau, bureau_bal, data):
     # bureau balance payment line
     tmp = bureau_bal.loc[bureau_bal.MONTHS_BALANCE <= -12, ['SK_ID_BUREAU', 'STATUS']]\
                     .merge(bureau.loc[:, ['SK_ID_CURR', 'SK_ID_BUREAU']], on='SK_ID_BUREAU', how='inner')
-    res = tmp.groupby(['SK_ID_CURR', 'STATUS'], as_index=False).size().unstack().fillna(0).reset_index()
+    res = tmp.groupby(['SK_ID_CURR', 'STATUS']).size().unstack().fillna(0).reset_index()
     res.columns = ['SK_ID_CURR'] + [f'bureau_bal_pl_{col}' for col in res.columns.drop('SK_ID_CURR')]
 
     data = data.merge(res, on=['SK_ID_CURR'], how='left')
@@ -1793,6 +1792,16 @@ def get_installment_features(installments, data):
 
     del tmp
     gc.collect()
+
+    def get_dpd_instalments():
+        mask = (installments.DAYS_ENTRY_PAYMENT > installments.DAYS_INSTALMENT)
+        return installments.loc[mask, ['SK_ID_CURR', 'NUM_INSTALMENT_NUMBER']]
+    
+    dpd_instalments = get_dpd_installments()
+    tmp = dpd_instalments.groupby(['SK_ID_CURR', 'NUM_INSTALMENT_NUMBER']).size().unstack().fillna(0).reset_index()
+    tmp.columns = ['SK_ID_CURR'] + [f'instalment_dpd_num_{col}' for col in tmp.columns.drop('SK_ID_CURR')]
+
+    data = data.merge(tmp, on='SK_ID_CURR', how='left')
 
     return data, list(set(data.columns) - set(COLS))
 
