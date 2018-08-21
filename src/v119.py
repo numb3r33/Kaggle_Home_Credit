@@ -1819,7 +1819,7 @@ class Modelv119(BaseModel):
                                                     )
     
     def predict_test(self, train, test, feature_list, params, n_folds=5, categorical_feature='auto'):
-        return super(Modelv119, self).predict_test(train, test, feat_df, params)
+        return super(Modelv119, self).predict_test(train, test, feature_list, params)
 
 
     def cross_validate(self, train, feature_list, params, cv_adversarial_filepath=None, TARGET_NAME='TARGET'):
