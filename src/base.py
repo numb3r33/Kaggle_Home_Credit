@@ -274,6 +274,36 @@ class BaseModel:
 
         return np.array(hold_auc), test_preds, fold_trees
 
+    def predict_train_test(self, train, test, feature_list, params, n_folds=5, categorical_feature='auto'):
+        num_boost_round       = params['num_boost_round']
+        early_stopping_rounds = params['early_stopping_rounds']
+
+        del params['num_boost_round'], params['early_stopping_rounds']
+
+        test_preds = np.zeros(shape=(len(test))) 
+        
+        for fold in range(n_folds):
+            # train with a different seed
+            params['seed'] += 200
+
+            print('Seed : {}'.format(params['seed']))
+
+            Xtr = train.loc[:, feature_list]
+            ytr = train.loc[:, 'TARGET']
+
+            Xte = test.loc[:, feature_list]
+            yte = test.loc[:, 'TARGET']
+
+            ltrain = lgb.Dataset(Xtr, ytr, feature_name=Xtr.columns.tolist(), categorical_feature=categorical_feature)
+            model  = lgb.train(params, 
+                               ltrain, 
+                               num_boost_round
+                               )
+
+            test_preds += (model.predict(test.loc[:, feature_list]) * (1 / n_folds))
+            
+        return test_preds
+
 
     def optimize_lgb(self, Xtr, ytr, Xte, yte, param_grid):
         

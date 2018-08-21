@@ -1818,6 +1818,10 @@ class Modelv119(BaseModel):
                                                     categorical_feature=categorical_feature
                                                     )
     
+    def predict_train_test(self, train, test, feature_list, params, n_folds=5, categorical_feature='auto'):
+        return super(Modelv119, self).predict_train_test(train, test, feat_df, params)
+
+
     def cross_validate(self, train, feature_list, params, cv_adversarial_filepath=None, TARGET_NAME='TARGET'):
         Xtr = train.loc[:, feature_list]
         ytr = train.loc[:, TARGET_NAME]
@@ -2150,30 +2154,18 @@ if __name__ == '__main__':
         PARAMS['feature_fraction_seed'] = SEED
         PARAMS['bagging_seed']          = SEED
         
-        cv_adversarial_filepath = os.path.join(basepath, 'data/raw/cv_idx_test_stratified.csv')
-        hold_auc, test_preds, fold_trees = m.cv_predict(train, test, feature_list, PARAMS.copy(), cv_adversarial_filepath)
+        test_preds = m.predict_train_test(train, test, feature_list, PARAMS.copy())
         
-        print('AUC across folds: {}'.format(hold_auc))
-        print('Number of estimators across folds: {}'.format(fold_trees))
-        print('Mean holdout auc: {}'.format(np.mean(hold_auc)))
-        print('Std holdout auc: {}'.format(np.std(hold_auc)))
+        # Load cross-validation results
+        PARAMS        = joblib.load(os.path.join(basepath, output_path + f'{data_folder}{MODEL_FILENAME}_{CV_SEED}_params.pkl'))
+        HOLDOUT_SCORE = joblib.load(os.path.join(basepath, output_path + f'{data_folder}{MODEL_FILENAME}_{CV_SEED}_cv.pkl'))
 
-        # After we have done cross-validation
-
-        cv_score   = str(np.mean(hold_auc)) + '_' + str(np.std(hold_auc))
-        sub_identifier = "%s-%s-%s-%s-%s" % (datetime.now().strftime('%Y%m%d-%H%M'), MODEL_FILENAME, cv_score, SEED, data_folder[:-1])
+        sub_identifier = "%s-%s-%s-%s-%s" % (datetime.now().strftime('%Y%m%d-%H%M'), MODEL_FILENAME, HOLDOUT_SCORE, SEED, data_folder[:-1])
 
         # generate for test set
         sub            = pd.read_csv(os.path.join(basepath, 'data/raw/sample_submission.csv.zip'))
         sub['TARGET']  = test_preds
         sub.to_csv(os.path.join(basepath, 'submissions/%s.csv'%(sub_identifier)), index=False)
-
-        # save cv params
-        PARAMS['num_boost_round']      = int(np.mean(fold_trees))
-
-        joblib.dump(PARAMS, os.path.join(basepath, output_path + f'{data_folder}{MODEL_FILENAME}_{SEED}_params.pkl'))
-        joblib.dump(cv_score, os.path.join(basepath, output_path + f'{data_folder}{MODEL_FILENAME}_{SEED}_cv.pkl'))
-    
 
     elif args.oof:
         print('Generate oof predictions for train and test set ...')
