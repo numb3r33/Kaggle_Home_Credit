@@ -389,8 +389,8 @@ class BaseModel:
         
         print('Best validation auc score: {:.2f}±{:.2f} on step {}'.format(
             np.max(cv_data['test-AUC-mean']),
-            cv_data['test-AUC-std'][np.idxmax(cv_data['test-AUC-mean'])],
-            np.idxmax(cv_data['test-AUC-mean'])
+            cv_data['test-AUC-std'][np.argmax(cv_data['test-AUC-mean'])],
+            np.argmax(cv_data['test-AUC-mean'])
         ))
 
 
