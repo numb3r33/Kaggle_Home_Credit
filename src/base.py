@@ -382,15 +382,15 @@ class BaseModel:
         return pd.DataFrame(cv)
     
     def cross_validate_cb(self, Xtr, ytr, params):
-        print('PARAMS are: {}'.format(Xtr, ytr))
+        print('PARAMS are: {}'.format(params))
         model = CatBoostClassifier(**params)
 
-        cv_data = cv(Pool(Xtr, ytr), model.get_params())
+        cv_data = cv(Pool(Xtr, ytr), model.get_params(), stratified=True, nfold=5)
         
-        print('Best validation accuracy score: {:.2f}±{:.2f} on step {}'.format(
+        print('Best validation auc score: {:.2f}±{:.2f} on step {}'.format(
             np.max(cv_data['test-AUC-mean']),
-            cv_data['test-AUC-std'][np.argmax(cv_data['test-AUC-mean'])],
-            np.argmax(cv_data['test-AUC-mean'])
+            cv_data['test-AUC-std'][np.idxmax(cv_data['test-AUC-mean'])],
+            np.idxmax(cv_data['test-AUC-mean'])
         ))
 
 

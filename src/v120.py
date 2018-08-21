@@ -233,8 +233,9 @@ PARAMS = {
     'learning_rate': 1,
     'depth': 4,
     'od_type': 'Iter',
-    'od_wait': 100,
+    'od_wait': 40,
     'custom_loss': 'AUC',
+    'eval_metric': 'AUC',
     'logging_level': 'Verbose'
 }
 
