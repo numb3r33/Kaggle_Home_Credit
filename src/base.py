@@ -314,8 +314,7 @@ class BaseModel:
                                   num_boost_round, 
                                   valid_sets=[lg_valid], 
                                   early_stopping_rounds=early_stopping_rounds,
-                                  verbose_eval=100,
-                                  evals_result=evals_result
+                                  verbose_eval=100
                                   )
 
                 fig, ax = plt.subplots(figsize=(12, 18))
