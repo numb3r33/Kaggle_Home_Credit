@@ -299,7 +299,7 @@ class BaseModel:
 
         # train
         for bag_idx, kfold_seed in enumerate(kfold_seeds):
-            kf = KFold(n_folds, shuffle=True, random_state=fold_seed)
+            kf = KFold(n_folds, shuffle=True, random_state=kfold_seed)
 
             for fold_idx, (train_idx, valid_idx) in enumerate(kf.split(X)):
                 X_train, X_valid = X.iloc[train_idx], y.iloc[train_idx]
