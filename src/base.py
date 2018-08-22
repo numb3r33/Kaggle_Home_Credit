@@ -309,7 +309,7 @@ class BaseModel:
                 lg_valid = lgb.Dataset(X_valid, y_valid)
 
                 evals_result = {}
-                model = lgb.train(parms, 
+                model = lgb.train(params, 
                                   lg_train, 
                                   num_boost_round, 
                                   valid_sets=[lg_valid], 
