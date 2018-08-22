@@ -332,16 +332,6 @@ class BaseModel:
                 auc = roc_auc_score(y_valid, pred_valid[valid_idx, bag_idx])
 
                 print('{}-fold auc: {}'.format(fold_idx, auc))
-                feature_names = model.feature_name()
-                feature_imp   = model.feature_importance(importance_type='gain')
-
-                feat_df = pd.DataFrame({'features': feature_names,
-                                    'imp': feature_imp
-                                   }).sort_values(by='imp', ascending=False)
-                
-                print(feat_df.iloc[:5])
-                print('*' * 100)
-                
                 pred_test[:, bag_idx] += model.predict(X_test, num_iteration=model.best_iteration) / len(kfold_seeds)
 
             auc = roc_auc_score(y, pred_valid[:, bag_idx])
