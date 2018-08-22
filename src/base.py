@@ -205,7 +205,7 @@ class BaseModel:
                             num_boost_round=num_boost_round, 
                             early_stopping_rounds=early_stopping_rounds,
                             seed=params['seed'],
-                            verbose_eval=20
+                            verbose_eval=100
                         )
         else:
             cv     = lgb.cv(params, 
@@ -213,7 +213,7 @@ class BaseModel:
                         num_boost_round=num_boost_round, 
                         early_stopping_rounds=early_stopping_rounds,
                         seed=params['seed'],
-                        verbose_eval=20
+                        verbose_eval=100
                     )
 
         print('\nTook: {} seconds'.format(time.time() - t0))
