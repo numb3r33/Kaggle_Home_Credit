@@ -320,7 +320,7 @@ class BaseModel:
                                   )
 
                 fig, ax = plt.subplots(figsize=(12, 18))
-                lgb.plot_importance(model, max_num_features=50, height=0.8, ax=ax)
+                lgb.plot_importance(model, max_num_features=50, importance_type='gain', height=0.8, ax=ax)
                 ax.grid(False)
 
                 plt.title('Light GBM - Feature Importance', fontsize=15)
