@@ -371,8 +371,9 @@ COLS_TO_REMOVE = ['TARGET',
                   'diff_family_organization_ext_source_3_mean',
                   'diff_family_occupation_ext_source_1_mean',
                   'diff_family_occupation_ext_source_2_mean',
-                  'diff_family_occupation_ext_source_3_mean'
-                  ]  
+                  'diff_family_occupation_ext_source_3_mean',
+                  'diff_family_organization_ext_source_1_mean'
+                  ]
 
 PARAMS = {
     'num_boost_round': 20000,
