@@ -17,6 +17,7 @@ from sklearn.decomposition import PCA
 from sklearn.preprocessing import StandardScaler
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.base import BaseEstimator, ClassifierMixin
+from sklearn.model_selection import KFold
 
 from bayes_opt import BayesianOptimization
 from MulticoreTSNE import MulticoreTSNE as TSNE
