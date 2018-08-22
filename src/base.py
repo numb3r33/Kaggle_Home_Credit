@@ -343,7 +343,7 @@ class BaseModel:
 
         pred_test = pred_test.mean(axis=1)
 
-        return pred_valid, pred_test            
+        return auc, pred_valid, pred_test            
                 
         
 
