@@ -285,7 +285,7 @@ class BaseModel:
         kfold_seeds = [2017, 2016, 2015, 2014, 2013]
 
         pred_valid = np.zeros((train.shape[0], len(kfold_seeds)))
-        pred_test  = np.zeros((test.shape[0]), len(kfold_seeds))
+        pred_test  = np.zeros((test.shape[0], len(kfold_seeds))
 
         X = train.loc[:, feature_list]
         y = train.loc[:, 'TARGET']
