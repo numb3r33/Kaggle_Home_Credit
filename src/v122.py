@@ -2161,7 +2161,7 @@ if __name__ == '__main__':
             test_preds = np.load(os.path.join(basepath, output_path + f'{data_folder}{MODEL_FILENAME}_{CV_SEED}_test_preds.npy'))
         else:
             save_path = os.path.join(basepath, output_path + f'{data_folder}{MODEL_FILENAME}')
-            oof_train_preds, test_preds = m.predict_test(train, test, feature_list, save_path, PARAMS.copy())
+            oof_train_preds, test_preds = m.predict_test(train, test, feature_list, PARAMS.copy(), save_path)
 
             np.save(os.path.join(basepath, output_path + f'{data_folder}{MODEL_FILENAME}_{CV_SEED}_oof_train_preds.npy'), oof_train_preds)
             np.save(os.path.join(basepath, output_path + f'{data_folder}{MODEL_FILENAME}_{CV_SEED}_test_preds.npy'), test_preds)
