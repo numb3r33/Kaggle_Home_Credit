@@ -298,6 +298,8 @@ class BaseModel:
         del train, test
         gc.collect()
 
+        t0 = time.time()
+
         # train
         for bag_idx, kfold_seed in enumerate(kfold_seeds):
             kf = KFold(n_folds, shuffle=True, random_state=kfold_seed)
@@ -336,6 +338,8 @@ class BaseModel:
 
             auc = roc_auc_score(y, pred_valid[:, bag_idx])
             print('{}-bag auc: {}'.format(bag_idx, auc))
+        
+        print('Took: {} seconds to prepare oof and test predictions'.format(time.time() - t0))
 
         auc = roc_auc_score(y, pred_valid.mean(axis=1))
         print('total auc: {}'.format(auc))
