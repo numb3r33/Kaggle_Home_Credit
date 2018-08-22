@@ -302,8 +302,8 @@ class BaseModel:
             kf = KFold(n_folds, shuffle=True, random_state=kfold_seed)
 
             for fold_idx, (train_idx, valid_idx) in enumerate(kf.split(X)):
-                X_train, X_valid = X.iloc[train_idx], y.iloc[train_idx]
-                y_train, y_valid = X.iloc[valid_idx], y.iloc[valid_idx]
+                X_train, X_valid = X.iloc[train_idx], X.iloc[valid_idx]
+                y_train, y_valid = y.iloc[train_idx], y.iloc[valid_idx]
 
                 lg_train = lgb.Dataset(X_train, y_train)
                 lg_valid = lgb.Dataset(X_valid, y_valid)
@@ -314,7 +314,8 @@ class BaseModel:
                                   num_boost_round, 
                                   valid_sets=[lg_valid], 
                                   early_stopping_rounds=early_stopping_rounds,
-                                  verbose_eval=100
+                                  verbose_eval=100,
+                                  evals_result=evals_result
                                   )
 
                 fig, ax = plt.subplots(figsize=(12, 18))
