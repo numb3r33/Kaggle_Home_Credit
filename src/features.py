@@ -788,7 +788,7 @@ def bureau_features(bureau, data):
     tmp = data.loc[:, ['SK_ID_CURR']]\
               .merge(bureau.loc[:, ['SK_ID_CURR', 'DAYS_CREDIT']], on='SK_ID_CURR', how='left')
 
-    tmp.loc[:, 'credit_years']     = -bureau.DAYS_CREDIT / 365
+    tmp.loc[:, 'credit_years']     = -tmp.DAYS_CREDIT / 365
     tmp.loc[:, 'credit_years_cat'] = pd.factorize(pd.cut(tmp.credit_years, bins=[0, 0.25, .5, .75, 1, 2, 3, 4, 5, 6, 7, 8, 9]))[0]
     
     res         = tmp.groupby(['SK_ID_CURR', 'credit_years_cat']).size().unstack().fillna(0).reset_index()
@@ -1195,7 +1195,6 @@ def prev_app_features(prev_app, data):
     tmp = prev_app.groupby('SK_ID_CURR')['CODE_REJECT_REASON'].nunique()
     data.loc[:, 'num_diff_reasons_rejections'] = data.SK_ID_CURR.map(tmp).fillna(-1).astype(np.int8)
 
-
     # number of running loans
     tmp                          = prev_app.DAYS_TERMINATION.map(lambda x: (x > 0) or pd.isnull(x)).astype(np.uint8)
     tmp                          = tmp.groupby(prev_app.SK_ID_CURR).sum()
@@ -1237,6 +1236,7 @@ def prev_app_features(prev_app, data):
                    (prev_app.NAME_YIELD_GROUP.isin([0, 1]) )
              , ['SK_ID_CURR'
               ]]
+
     res = res.groupby(['SK_ID_CURR']).size()
     data.loc[:, 'num_high_int_no_info_loans'] = data.SK_ID_CURR.map(res).fillna(-1).astype(np.int8)
 
@@ -1426,6 +1426,24 @@ def prev_app_features(prev_app, data):
 
     del tmp
     gc.collect()
+
+    # bureau credit start date groups
+    tmp = data.loc[:, ['SK_ID_CURR']]\
+              .merge(prev_app.loc[prev_app.NAME_CONTRACT_STATUS == 0, ['SK_ID_CURR', 'DAYS_DECISION']], 
+                     on='SK_ID_CURR', 
+                     how='left')
+
+    tmp.loc[:, 'credit_years']     = -tmp.DAYS_DECISION / 365
+    tmp.loc[:, 'credit_years_cat'] = pd.factorize(pd.cut(tmp.credit_years, bins=[0, 0.25, .5, .75, 1, 2, 3, 4, 5, 6, 7, 8, 9]))[0]
+    
+    res         = tmp.groupby(['SK_ID_CURR', 'credit_years_cat']).size().unstack().fillna(0).reset_index()
+    res.columns = ['SK_ID_CURR'] + [f'prev_credit_year_{col}' for col in res.columns[1:]]
+    
+    res = data.loc[:, ['SK_ID_CURR']].merge(res, on='SK_ID_CURR', how='left')
+    res = res.loc[:, res.columns.drop('SK_ID_CURR')]
+
+    data = pd.concat((data, res), axis=1)
+
 
     return data, list(set(data.columns) - set(COLS))
 
