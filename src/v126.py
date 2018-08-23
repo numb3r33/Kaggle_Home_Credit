@@ -145,9 +145,13 @@ if __name__ == '__main__':
             
         train  = m.load_data(train_filenames)
         test   = m.load_data(test_filenames)
-        
+
         train, test  = m.fe(train, test)
-        
+
+        # load target
+        target = pd.read_pickle(os.path.join(basepath, output_path + 'feature_groups/' + f'application_train.pkl'))['TARGET']       
+        train.loc[:, 'TARGET'] = target.values # add target to train
+
         data   = pd.concat((train, test))
         data   = m.reduce_mem_usage(data)
 
