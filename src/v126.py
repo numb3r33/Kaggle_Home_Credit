@@ -102,7 +102,7 @@ class Modelv126(BaseModel):
         Xtr = train.loc[:, feature_list]
         ytr = train.loc[:, TARGET_NAME]
 
-        return super(Modelv126, self).cross_validate_lgb(Xtr, ytr, params, cv_adversarial_filepath=cv_adversarial_filepath)
+        return super(Modelv126, self).cross_validate(Xtr, ytr, params, cv_adversarial_filepath=cv_adversarial_filepath)
 
 if __name__ == '__main__':
     
