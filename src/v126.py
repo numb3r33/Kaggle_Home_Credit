@@ -216,6 +216,7 @@ if __name__ == '__main__':
         output_path     = args.output_path
         data_folder     = args.data_folder
         is_sample       = args.s
+        CV_SEED         = args.cv_seed
         SEED            = args.seed
 
         params = {
