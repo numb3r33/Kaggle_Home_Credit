@@ -56,9 +56,6 @@ class Modelv126(BaseModel):
 
         df         = pd.DataFrame(dfs)
         
-        print('Datafram shape: {}'.format(df.shape[1]))
-        print('Numpy shape: {}'.format(dfs.shape[1]))
-
         df.columns = [f'f_{i}' for i in range(dfs.shape[1])] 
         df.index   = np.arange(len(df))
 
@@ -70,12 +67,17 @@ class Modelv126(BaseModel):
     def get_features(self, train, test):
         data       = pd.concat((train, test))
         data.index = np.arange(len(data))
+        n_features = data.shape[1]
+
+        t0 = time.time()
 
         # feature interaction
-        for i in range(data.shape[1]):
-            for j in range(i+1, data.shape[1]):
+        for i in range(n_features):
+            for j in range(i+1, n_features):
                 data.loc[:, f'f_{i}{j}'] = data.iloc[:, i] - data.iloc[:, j]
         
+        print('Took: {} seconds to generate feature interactions'.format(time.time() - t0))
+
         return data
 
     # This method would perform feature engineering on merged datasets.
