@@ -136,7 +136,7 @@ if __name__ == '__main__':
         m   = Modelv126(**params)
             
         train  = m.load_data(train_filenames)
-        test   = m.load_data(test_filename)
+        test   = m.load_data(test_filenames)
         
         train, test  = m.fe(train, test)
         
