@@ -54,8 +54,9 @@ class Modelv126(BaseModel):
         
         dfs  = np.hstack(dfs) # concat across column axis
 
-        df       = pd.DataFrame(dfs, columns=[f'f_{i}' for i in range(dfs.shape[1])])
-        df.index = np.arange(len(df))
+        df         = pd.DataFrame(dfs)
+        df.columns = [f'f_{i}' for i in range(dfs.shape[1])] 
+        df.index   = np.arange(len(df))
 
         return df
     
