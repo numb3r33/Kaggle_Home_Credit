@@ -1816,7 +1816,7 @@ class Modelv125(BaseModel):
                                                     )
     
     def predict_test(self, train, test, feature_list, params, save_path, n_folds=5):
-        return super(Modelv125, self).predict_test(train, test, feature_list, params, save_path, n_folds=n_folds)
+        return super(Modelv125, self).predict_test_xgb(train, test, feature_list, params, save_path, n_folds=n_folds)
 
 
     def cross_validate(self, train, feature_list, params, cv_adversarial_filepath=None, TARGET_NAME='TARGET'):
