@@ -411,14 +411,14 @@ class BaseModel:
                             folds=self.get_folds(Xtr, cv_df), 
                             num_boost_round=num_boost_round, 
                             early_stopping_rounds=early_stopping_rounds,
-                            verbose_eval=20
+                            verbose_eval=100
                         )
         else:
             cv     = xgb.cv(params, 
                         dtrain,
                         num_boost_round=num_boost_round, 
                         early_stopping_rounds=early_stopping_rounds,
-                        verbose_eval=20
+                        verbose_eval=100
                     )
 
         print('\nTook: {} seconds'.format(time.time() - t0))
@@ -426,7 +426,6 @@ class BaseModel:
         return pd.DataFrame(cv)
     
     def cross_validate_cb(self, Xtr, ytr, params):
-        print('PARAMS are: {}'.format(params))
         model = CatBoostClassifier(**params)
 
         cv_data = cv(Pool(Xtr, ytr), model.get_params(), stratified=True, nfold=5)
