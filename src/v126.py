@@ -158,7 +158,7 @@ if __name__ == '__main__':
         del data, test
         gc.collect()
 
-        feature_list = train.columns.drop('TARGET').tolist()
+        feature_list = train.columns.tolist()
         
         PARAMS['seed']                  = SEED
         PARAMS['feature_fraction_seed'] = SEED
