@@ -93,6 +93,27 @@ class Modelv126(BaseModel):
 
         return train, test
 
+    def train(self, train, test, feature_list, is_eval, TARGET_NAME='TARGET', **params):
+        X = train.loc[:, feature_list]
+        y = train.loc[:, TARGET_NAME]
+        
+        Xte = test.loc[:, feature_list]
+        yte = []
+
+        if is_eval:
+            yte = test.loc[:, TARGET_NAME]
+        
+        return super(Modelv126, self).train_lgb(X, y, Xte, yte, **params)
+
+    def evaluate(self, test, feature_list, is_eval, model, TARGET_NAME='TARGET'):
+        Xte = test.loc[:, feature_list]
+        yte = []
+
+        if is_eval:
+            yte = test.loc[:, TARGET_NAME]
+
+        return super(Modelv126, self).evaluate_lgb(Xte, yte, model)
+
 
     def predict_test(self, train, test, feature_list, params, save_path, n_folds=5):
         return super(Modelv126, self).predict_test_xgb(train, test, feature_list, params, save_path, n_folds=n_folds)
@@ -112,7 +133,7 @@ if __name__ == '__main__':
     parser.add_argument('-output_path', help='Path to output directory')   # path to working data folder 
     parser.add_argument('-data_folder', help='Folder name of the dataset') # dataset folder name
     parser.add_argument('-cv', type=bool, help='Cross Validation')
-    parser.add_argument('-cv_predict',type=bool, help='Cross Validation and Predictions for test set.')
+    parser.add_argument('-t',type=bool, help='Full Training on a given seed.')
     parser.add_argument('-s', type=bool, help='Whether to work on a sample or not.')
     parser.add_argument('-seed', type=int, help='Random SEED')
     parser.add_argument('-cv_seed', type=int, help='CV SEED')
@@ -181,15 +202,21 @@ if __name__ == '__main__':
         joblib.dump(PARAMS, os.path.join(basepath, output_path + f'{data_folder}{MODEL_FILENAME}_{SEED}_params.pkl'))
         joblib.dump(cv_score, os.path.join(basepath, output_path + f'{data_folder}{MODEL_FILENAME}_{SEED}_cv.pkl'))
     
-    elif args.cv_predict:
-        print('Cross validation with different seeds and produce submission for test set ..')
+    elif args.t:
+        print('Full training ..')
+
+        train_filenames = ['v123_4457_oof_train_preds.npy',
+                           'v124_4457_oof_train_preds.npy'
+                          ]
+
+        test_filenames  = ['v123_4457_test_preds.npy',
+                           'v124_4457_test_preds.npy']
 
         input_path      = args.input_path
         output_path     = args.output_path
         data_folder     = args.data_folder
         is_sample       = args.s
         SEED            = args.seed
-        CV_SEED         = args.cv_seed
 
         params = {
             'input_path': input_path,
@@ -198,65 +225,47 @@ if __name__ == '__main__':
         }
 
         m   = Modelv126(**params)
-        
-
-        # Loading data
-        if os.path.exists(os.path.join(basepath, output_path + f'{data_folder}data.h5')):
-            print('Loading dataset from disk ...')
-            data = pd.read_hdf(os.path.join(basepath, output_path + f'{data_folder}data.h5'), format='table', key='data')
-        else:
-            print('Merge feature groups and save them to disk ...')
-            train, test  = m.merge_datasets()
-            train, test  = m.fe(train, test, compute_categorical='ohe')
             
-            data         = pd.concat((train, test))
-            data         = m.reduce_mem_usage(data)
+        train  = m.load_data(train_filenames)
+        test   = m.load_data(test_filenames)
 
-            data.to_hdf(os.path.join(basepath, output_path + f'{data_folder}data.h5'), format='table', key='data')
+        train, test  = m.fe(train, test)
 
-            del train, test
-            gc.collect()
+        # load target
+        target = pd.read_pickle(os.path.join(basepath, output_path + 'feature_groups/' + f'application_train.pkl'))['TARGET']       
+        train.loc[:, 'TARGET'] = target.values # add target to train
 
+        data   = pd.concat((train, test))
+        data   = m.reduce_mem_usage(data)
+
+        print('Shape of data: {}'.format(data.shape))
+    
         train  = data.iloc[:m.n_train]
         test   = data.iloc[m.n_train:]
 
         del data
         gc.collect()
-        
-        # Generating a sample if required
-        if is_sample:
-            print('*' * 100)
-            print('Take a random sample of the training data ...')
-            train = train.sample(frac=SAMPLE_SIZE)
-        
-        # check to see if feature list exists on disk or not for a particular model
-        if os.path.exists(os.path.join(basepath, output_path + f'{data_folder}{MODEL_FILENAME}_features.npy')):
-            feature_list = np.load(os.path.join(basepath, output_path + f'{data_folder}{MODEL_FILENAME}_features.npy'))
-        else: 
-            feature_list = train.columns.tolist()
-            feature_list = list(set(feature_list) - set(COLS_TO_REMOVE))
-            np.save(os.path.join(basepath, output_path + f'{data_folder}{MODEL_FILENAME}_features.npy'), feature_list)
 
+        feature_list = train.columns.drop('TARGET').tolist()
+
+        # Load params and holdout score from disk.
+        PARAMS        = joblib.load(os.path.join(basepath, output_path + f'{data_folder}{MODEL_FILENAME}_{CV_SEED}_params.pkl'))
+        HOLDOUT_SCORE = joblib.load(os.path.join(basepath, output_path + f'{data_folder}{MODEL_FILENAME}_{CV_SEED}_cv.pkl'))
+
+        PARAMS['seed'] = SEED
+
+        print('*' * 100)
+        print('PARAMS are: {}'.format(PARAMS))
+
+        # train model
+        model, feat_df = m.train(train, test, feature_list, is_eval=False, **PARAMS)
         
-        PARAMS['seed']                  = SEED
-        PARAMS['feature_fraction_seed'] = SEED
-        PARAMS['bagging_seed']          = SEED
+        # evaluation part
+        preds, score  = m.evaluate(test, feature_list, is_eval=False, model=model)
 
-        if os.path.exists(os.path.join(basepath, output_path + f'{data_folder}{MODEL_FILENAME}_{CV_SEED}_test_preds.npy')):
-            oof_train_preds = np.load(os.path.join(basepath, output_path + f'{data_folder}{MODEL_FILENAME}_{CV_SEED}_oof_train_preds.npy'))       
-            test_preds      = np.load(os.path.join(basepath, output_path + f'{data_folder}{MODEL_FILENAME}_{CV_SEED}_test_preds.npy'))
-            auc             = joblib.load(os.path.join(basepath, output_path + f'{data_folder}{MODEL_FILENAME}_{CV_SEED}_oof_auc.pkl'))
-        else:
-            save_path = os.path.join(basepath, output_path + f'{data_folder}{MODEL_FILENAME}')
-            auc, oof_train_preds, test_preds = m.predict_test(train, test, feature_list, PARAMS.copy(), save_path)
+        sub_identifier = "%s-%s-%s-%s-%s" % (datetime.now().strftime('%Y%m%d-%H%M'), MODEL_FILENAME, HOLDOUT_SCORE, SEED, data_folder[:-1])
 
-            np.save(os.path.join(basepath, output_path + f'{data_folder}{MODEL_FILENAME}_{CV_SEED}_oof_train_preds.npy'), oof_train_preds)
-            np.save(os.path.join(basepath, output_path + f'{data_folder}{MODEL_FILENAME}_{CV_SEED}_test_preds.npy'), test_preds)
-            joblib.dump(auc, os.path.join(basepath, output_path + f'{data_folder}{MODEL_FILENAME}_{CV_SEED}_oof_auc.pkl'))
-        
-        sub_identifier = "%s-%s-%s-%s-%s" % (datetime.now().strftime('%Y%m%d-%H%M'), MODEL_FILENAME, auc, SEED, data_folder[:-1])
-
-        # generate for test set
         sub            = pd.read_csv(os.path.join(basepath, 'data/raw/sample_submission.csv.zip'))
-        sub['TARGET']  = test_preds
+        sub['TARGET']  = preds
+
         sub.to_csv(os.path.join(basepath, 'submissions/%s.csv'%(sub_identifier)), index=False)
