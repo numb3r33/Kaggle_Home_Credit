@@ -74,7 +74,7 @@ class Modelv126(BaseModel):
         # feature interaction
         for i in range(data.shape[1]):
             for j in range(i+1, data.shape[1]):
-                data.loc[:, f'f_{i}{j}'] = data[i] - data[j]
+                data.loc[:, f'f_{i}{j}'] = data.loc[:, i] - data.loc[:, j]
         
         return data
 
