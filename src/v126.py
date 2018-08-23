@@ -119,7 +119,8 @@ if __name__ == '__main__':
                            'v124_4457_oof_train_preds.npy'
                           ]
 
-        test_filenames  = []
+        test_filenames  = ['v123_4457_test_preds.npy',
+                           'v124_4457_test_preds.npy']
 
         input_path      = args.input_path
         output_path     = args.output_path
