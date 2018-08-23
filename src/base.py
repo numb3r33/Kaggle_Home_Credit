@@ -400,11 +400,11 @@ class BaseModel:
                 plt.close()
 
 
-                pred_valid[valid_idx, bag_idx] = model.predict(xgb_valid, num_iteration=model.best_iteration)
+                pred_valid[valid_idx, bag_idx] = model.predict(xgb_valid, ntree_limit=model.best_iteration)
                 auc = roc_auc_score(y_valid, pred_valid[valid_idx, bag_idx])
 
                 print('{}-fold auc: {}'.format(fold_idx, auc))
-                pred_test[:, bag_idx] += model.predict(xgb_test, num_iteration=model.best_iteration) / len(kfold_seeds)
+                pred_test[:, bag_idx] += model.predict(xgb_test, ntree_limit=model.best_iteration) / len(kfold_seeds)
 
             auc = roc_auc_score(y, pred_valid[:, bag_idx])
             print('{}-bag auc: {}'.format(bag_idx, auc))
