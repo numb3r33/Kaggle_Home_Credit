@@ -344,9 +344,9 @@ class BaseModel:
         auc = roc_auc_score(y, pred_valid.mean(axis=1))
         print('total auc: {}'.format(auc))
 
-        pred_test = pred_test.mean(axis=1)
+        pred_test_final = pred_test.mean(axis=1)
 
-        return auc, pred_valid, pred_test   
+        return auc, pred_valid, pred_test, pred_test_final   
 
     def predict_test_xgb(self, train, test, feature_list, params, save_path, n_folds=5, categorical_feature='auto'):
         num_boost_round       = params['num_boost_round']
@@ -414,8 +414,9 @@ class BaseModel:
         auc = roc_auc_score(y, pred_valid.mean(axis=1))
         print('total auc: {}'.format(auc))
 
-        pred_test = pred_test.mean(axis=1)
-        return auc, pred_valid, pred_test            
+        pred_test_final = pred_test.mean(axis=1)
+
+        return auc, pred_valid, pred_test, pred_test_final           
                 
         
 
