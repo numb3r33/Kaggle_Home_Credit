@@ -2355,7 +2355,7 @@ def prev_app_installments(prev_app, installments, data):
                                                         bins=[0, 0.25, .5, .75, 1, 2, 3, 4, 5, 6, 7, 8, 9]))[0]
     
     due = tmp.groupby(['SK_ID_CURR', 'credit_years_cat'])['AMT_PAYMENT'].sum().unstack().fillna(0).reset_index()\
-             .merge(app_train.loc[:, ['SK_ID_CURR']], on='SK_ID_CURR', how='left')
+             .merge(data.loc[:, ['SK_ID_CURR']], on='SK_ID_CURR', how='left')
     due.columns = ['SK_ID_CURR'] + [f'prev_credit_instal_year_{col}' for col in due.columns[1:]]
     
     
@@ -2376,7 +2376,7 @@ def prev_app_installments(prev_app, installments, data):
                                                         bins=[0, 0.25, .5, .75, 1, 2, 3, 4, 5, 6, 7, 8, 9]))[0]
     
     paid = tmp.groupby(['SK_ID_CURR', 'credit_years_cat'])['AMT_PAYMENT'].sum().unstack().fillna(0).reset_index()\
-              .merge(app_train.loc[:, ['SK_ID_CURR']], on='SK_ID_CURR', how='left')
+              .merge(data.loc[:, ['SK_ID_CURR']], on='SK_ID_CURR', how='left')
     paid.columns = ['SK_ID_CURR'] + [f'prev_credit_paid_year_{col}' for col in paid.columns[1:]]
     
     # due to paid
