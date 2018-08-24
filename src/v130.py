@@ -50,6 +50,8 @@ class Modelv130(BaseModel):
         dfs = []
         
         for filename in filenames:
+            print('Filename: {}'.format(filename))
+            
             dfs.append(np.load(os.path.join(basepath, self.params['output_path'] +  self.params['data_folder'] + f'{filename}')))
         
         dfs  = np.hstack(dfs) # concat across column axis
@@ -208,15 +210,16 @@ if __name__ == '__main__':
     elif args.t:
         print('Full training ..')
 
-        train_filenames = ['v123_4457_oof_train_preds.npy',
-                           'v124_4457_oof_train_preds.npy',
-                           'v127_4457_oof_train_preds.npy'
+        train_filenames = [
+                            'v127_4457_oof_train_preds.npy',
+                            'v128_4457_oof_train_preds.npy'
                           ]
 
-        test_filenames  = ['v123_4457_test_preds.npy',
-                           'v124_4457_test_preds.npy',
-                           'v127_4457_test_preds.npy'
-                           ]
+        test_filenames  = [
+                            'v127_4457_test_preds.npy',
+                            'v128_4457_test_preds.npy'
+                          ]
+
 
         input_path      = args.input_path
         output_path     = args.output_path
