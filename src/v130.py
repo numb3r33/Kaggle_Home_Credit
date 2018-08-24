@@ -143,15 +143,15 @@ if __name__ == '__main__':
     if args.cv:
         print('Cross validation on training and store parameters and cv score on disk ...')
         
-        train_filenames = ['v123_4457_oof_train_preds.npy',
-                           'v124_4457_oof_train_preds.npy',
-                           'v127_4457_oof_train_preds.npy'
+        train_filenames = [
+                            'v127_4457_oof_train_preds.npy',
+                            'v128_4457_oof_train_preds.npy'
                           ]
 
-        test_filenames  = ['v123_4457_test_preds.npy',
-                           'v124_4457_test_preds.npy',
-                           'v127_4457_test_preds.npy'
-                           ]
+        test_filenames  = [
+                            'v127_4457_test_preds.npy',
+                            'v128_4457_test_preds.npy'
+                          ]
 
         input_path      = args.input_path
         output_path     = args.output_path
