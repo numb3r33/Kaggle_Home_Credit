@@ -231,13 +231,15 @@ COLS_TO_REMOVE = ['TARGET',
 PARAMS = {
     'iterations': 20000,
     'learning_rate': .1,
-    'depth': 6,
+    'depth': 4,
     'od_type': 'Iter',
     'od_wait': 100,
     'reg_lambda': 15,
     'custom_loss': 'AUC',
     'eval_metric': 'AUC',
-    'logging_level': 'Verbose'
+    'logging_level': 'Verbose',
+    'verbose': 100,
+    'thread_count': 8
 }
 
 
