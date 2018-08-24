@@ -230,10 +230,10 @@ COLS_TO_REMOVE = ['TARGET',
 
 PARAMS = {
     'iterations': 20000,
-    'learning_rate': .1,
+    'learning_rate': .5,
     'depth': 4,
     'od_type': 'Iter',
-    'od_wait': 100,
+    'od_wait': 40,
     'reg_lambda': 15,
     'custom_loss': 'AUC',
     'eval_metric': 'AUC',
