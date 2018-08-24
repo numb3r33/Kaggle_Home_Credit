@@ -2129,11 +2129,6 @@ if __name__ == '__main__':
             feature_list = list(set(feature_list) - set(COLS_TO_REMOVE))
             np.save(os.path.join(basepath, output_path + f'{data_folder}{MODEL_FILENAME}_features.npy'), feature_list)
 
-        
-        PARAMS['seed']                  = SEED
-        PARAMS['feature_fraction_seed'] = SEED
-        PARAMS['bagging_seed']          = SEED
-
         if os.path.exists(os.path.join(basepath, output_path + f'{data_folder}{MODEL_FILENAME}_{CV_SEED}_test_preds.npy')):
             oof_train_preds  = np.load(os.path.join(basepath, output_path + f'{data_folder}{MODEL_FILENAME}_{CV_SEED}_oof_train_preds.npy'))       
             test_preds       = np.load(os.path.join(basepath, output_path + f'{data_folder}{MODEL_FILENAME}_{CV_SEED}_test_preds.npy'))
