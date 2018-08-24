@@ -564,7 +564,7 @@ class BaseModel:
             
             # fill missing values with median
             if Xtr[col].isnull().sum():
-                if pd.isnull(X[col].median()):
+                if pd.isnull(Xtr[col].median()):
                     Xtr[col] = Xtr[col].fillna(-1)
                 else:
                     Xtr[col] = Xtr[col].fillna(Xtr[col].median())
