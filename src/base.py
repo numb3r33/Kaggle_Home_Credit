@@ -546,7 +546,7 @@ class BaseModel:
         
         return pd.DataFrame(cv)
 
-    def cross_validate_rf(self, Xtr, ytr, params):
+    def cross_validate_rf(self, Xtr, ytr, params, cv_adversarial_filepath):
         # start time counter
         t0     = time.time()
         
@@ -570,7 +570,7 @@ class BaseModel:
                     Xtr[col] = Xtr[col].fillna(Xtr[col].median())
 
         auc = []
-        
+
         for fold in FOLD_NUM:
             test_idx  = list(cv_df[f'F{fold}'].values)
             train_idx = list(set(X.index) - set(test_idx))
