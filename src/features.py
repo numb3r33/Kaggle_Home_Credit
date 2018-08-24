@@ -1427,7 +1427,7 @@ def prev_app_features(prev_app, data):
     del tmp
     gc.collect()
 
-    # bureau credit start date groups
+    # prev app credits start date groups
     tmp = data.loc[:, ['SK_ID_CURR']]\
               .merge(prev_app.loc[prev_app.NAME_CONTRACT_STATUS == 0, ['SK_ID_CURR', 'DAYS_DECISION']], 
                      on='SK_ID_CURR', 
@@ -1443,7 +1443,6 @@ def prev_app_features(prev_app, data):
     res = res.loc[:, res.columns.drop('SK_ID_CURR')]
 
     data = pd.concat((data, res), axis=1)
-
 
     return data, list(set(data.columns) - set(COLS))
 
@@ -2055,7 +2054,6 @@ def prev_app_bureau(prev_app, bureau, data):
     del total_debt, total_bureau_credit, prev_app_credit
     del total_credit
     gc.collect()
-
     
     return data, list(set(data.columns) - set(COLS))
 
@@ -2218,6 +2216,7 @@ def prev_app_installments(prev_app, installments, data):
                 on=['SK_ID_PREV', 'SK_ID_CURR'],
                 how='left'
                 )
+
     tmp = res.groupby(['SK_ID_CURR', 'SK_ID_PREV'], as_index=False)['NUM_INSTALMENT_NUMBER'].max()\
             .groupby('SK_ID_CURR')['NUM_INSTALMENT_NUMBER'].max()
         
@@ -2338,6 +2337,57 @@ def prev_app_installments(prev_app, installments, data):
 
     del tmp, x, inst_x
     gc.collect()
+
+    # total paid installments by credit year
+    x = installments.groupby(['SK_ID_CURR', 'SK_ID_PREV'], as_index=False)['AMT_PAYMENT'].sum()
+    x = prev_app.loc[(prev_app.NAME_CONTRACT_STATUS == 0), 
+                    ['SK_ID_CURR', 'SK_ID_PREV', 'DAYS_DECISION']]\
+                .merge(x, on=['SK_ID_CURR', 'SK_ID_PREV'], how='left')
+
+    tmp  = data.loc[:, ['SK_ID_CURR', 'TARGET']]\
+                    .merge(x,
+                        on='SK_ID_CURR',
+                        how='left'
+                        )
+
+    tmp.loc[:, 'credit_years']     = -tmp.DAYS_DECISION / 365
+    tmp.loc[:, 'credit_years_cat'] = pd.factorize(pd.cut(tmp.credit_years, 
+                                                        bins=[0, 0.25, .5, .75, 1, 2, 3, 4, 5, 6, 7, 8, 9]))[0]
+    
+    due = tmp.groupby(['SK_ID_CURR', 'credit_years_cat'])['AMT_PAYMENT'].sum().unstack().fillna(0).reset_index()\
+             .merge(app_train.loc[:, ['SK_ID_CURR']], on='SK_ID_CURR', how='left')
+    due.columns = ['SK_ID_CURR'] + [f'prev_credit_instal_year_{col}' for col in due.columns[1:]]
+    
+    
+    # total paid amount by credit year
+    x = installments.groupby(['SK_ID_CURR', 'SK_ID_PREV'], as_index=False)['AMT_PAYMENT'].sum()
+    x = prev_app.loc[(prev_app.NAME_CONTRACT_STATUS == 0), 
+                    ['SK_ID_CURR', 'SK_ID_PREV', 'DAYS_DECISION']]\
+                .merge(x, on=['SK_ID_CURR', 'SK_ID_PREV'], how='left')
+
+    tmp  = data.loc[:, ['SK_ID_CURR', 'TARGET']]\
+                    .merge(x,
+                        on='SK_ID_CURR',
+                        how='left'
+                        )
+
+    tmp.loc[:, 'credit_years'] = -tmp.DAYS_DECISION / 365
+    tmp.loc[:, 'credit_years_cat'] = pd.factorize(pd.cut(tmp.credit_years, 
+                                                        bins=[0, 0.25, .5, .75, 1, 2, 3, 4, 5, 6, 7, 8, 9]))[0]
+    
+    paid = tmp.groupby(['SK_ID_CURR', 'credit_years_cat'])['AMT_PAYMENT'].sum().unstack().fillna(0).reset_index()\
+              .merge(app_train.loc[:, ['SK_ID_CURR']], on='SK_ID_CURR', how='left')
+    paid.columns = ['SK_ID_CURR'] + [f'prev_credit_paid_year_{col}' for col in paid.columns[1:]]
+    
+    # due to paid
+    res = due.iloc[:, 1:] / paid.iloc[:, 1:]
+    res.loc[:, 'SK_ID_CURR'] = paid.SK_ID_CURR
+    res.columns = ['SK_ID_CURR'] + [f'due_to_paid_{i}' for i in range(len(res.columns[1:]))]
+
+    res = data.loc[:, ['SK_ID_CURR']].merge(res, on='SK_ID_CURR', how='left')
+    res = res.loc[:, res.columns.drop('SK_ID_CURR')]
+
+    data = pd.concat((data, res), axis=1)
 
     return data, list(set(data.columns) - set(COLS))
 
