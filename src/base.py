@@ -500,11 +500,15 @@ class BaseModel:
 
         cv_data = cv(Pool(Xtr, ytr), model.get_params(), stratified=True, nfold=5)
         
+        print('CV DATA:\n {}'.format(cv_data))
+
         print('Best validation auc score: {:.2f}±{:.2f} on step {}'.format(
             np.max(cv_data['test-AUC-mean']),
             cv_data['test-AUC-std'][np.argmax(cv_data['test-AUC-mean'])],
             np.argmax(cv_data['test-AUC-mean'])
         ))
+
+        return np.max(cv_data['test-AUC-mean']), cv_data['test-AUC-std'][np.argmax(cv_data['test-AUC-mean'])], np.argmax(cv_data['test-AUC-mean'])
 
 
     def evaluate_lgb(self, Xte, yte, model):

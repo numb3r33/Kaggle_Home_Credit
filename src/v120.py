@@ -229,8 +229,8 @@ COLS_TO_REMOVE = ['TARGET',
                   ]  
 
 PARAMS = {
-    'iterations': 20000,
-    'learning_rate': .5,
+    'iterations': 100,
+    'learning_rate': .1,
     'depth': 4,
     'od_type': 'Iter',
     'od_wait': 40,
