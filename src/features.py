@@ -914,7 +914,7 @@ def bureau_and_balance(bureau, bureau_bal, data):
     # Relationship between count of different status ( most recent ) for credits
     # reported by Bureau and TARGET
 
-    data_bureau = data.loc[:, ['SK_ID_CURR', 'TARGET']]\
+    data_bureau = data.loc[:, ['SK_ID_CURR']]\
                            .merge(bureau.loc[:, ['SK_ID_CURR',
                                   'SK_ID_BUREAU'
                                  ]], on='SK_ID_CURR', how='left')
@@ -2344,7 +2344,7 @@ def prev_app_installments(prev_app, installments, data):
                     ['SK_ID_CURR', 'SK_ID_PREV', 'DAYS_DECISION']]\
                 .merge(x, on=['SK_ID_CURR', 'SK_ID_PREV'], how='left')
 
-    tmp  = data.loc[:, ['SK_ID_CURR', 'TARGET']]\
+    tmp  = data.loc[:, ['SK_ID_CURR']]\
                     .merge(x,
                         on='SK_ID_CURR',
                         how='left'
@@ -2365,7 +2365,7 @@ def prev_app_installments(prev_app, installments, data):
                     ['SK_ID_CURR', 'SK_ID_PREV', 'DAYS_DECISION']]\
                 .merge(x, on=['SK_ID_CURR', 'SK_ID_PREV'], how='left')
 
-    tmp  = data.loc[:, ['SK_ID_CURR', 'TARGET']]\
+    tmp  = data.loc[:, ['SK_ID_CURR']]\
                     .merge(x,
                         on='SK_ID_CURR',
                         how='left'
@@ -2388,6 +2388,32 @@ def prev_app_installments(prev_app, installments, data):
     res = res.loc[:, res.columns.drop('SK_ID_CURR')]
 
     data = pd.concat((data, res), axis=1)
+
+    # difference between days of payment vs actual paid date
+    x = (installments.DAYS_INSTALMENT - installments.DAYS_ENTRY_PAYMENT)
+    x = x.groupby([installments.SK_ID_CURR, installments.SK_ID_PREV]).sum()\
+        .reset_index()\
+        .rename(columns={0: 'diff_days'})
+
+    x = prev_app.loc[(prev_app.NAME_CONTRACT_STATUS == 0), 
+                    ['SK_ID_CURR', 'SK_ID_PREV', 'DAYS_DECISION']]\
+                .merge(x, on=['SK_ID_CURR', 'SK_ID_PREV'], how='left')
+
+    tmp  = data.loc[:, ['SK_ID_CURR']]\
+                    .merge(x,
+                        on='SK_ID_CURR',
+                        how='left'
+                        )
+
+    tmp.loc[:, 'credit_years']     = -tmp.DAYS_DECISION / 365
+    tmp.loc[:, 'credit_years_cat'] = pd.factorize(pd.cut(tmp.credit_years, 
+                                                        bins=[0, 0.25, .5, .75, 1, 2, 3, 4, 5, 6, 7, 8, 9]))[0]
+
+    res = tmp.groupby(['SK_ID_CURR', 'credit_years_cat'])['diff_days'].sum()\
+            .replace([np.inf, -np.inf], -999).astype(np.int).unstack().reset_index()\
+            .merge(data.loc[:, ['SK_ID_CURR']], on='SK_ID_CURR', how='left')
+    res.columns = ['SK_ID_CURR'] + [f'prev_credit_paid_days_{col}' for col in res.columns[1:]]
+
 
     return data, list(set(data.columns) - set(COLS))
 
@@ -2674,7 +2700,7 @@ def prev_app_pos(prev_app, pos_cash, data):
     tmp = 0 - l['MONTHS_BALANCE']
     f.loc[:, 'diff'] = tmp
 
-    tmp = data.loc[:, ['SK_ID_CURR', 'TARGET']].merge(f.loc[:, ['SK_ID_CURR', 'diff']], on='SK_ID_CURR', how='left')
+    tmp = data.loc[:, ['SK_ID_CURR']].merge(f.loc[:, ['SK_ID_CURR', 'diff']], on='SK_ID_CURR', how='left')
     data.loc[:, 'pos_current_last_months_balance'] = tmp['diff']
 
     del tmp, m, l, f
