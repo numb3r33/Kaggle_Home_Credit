@@ -232,6 +232,7 @@ PARAMS = {
     'n_estimators': 500,
     'max_depth': 12,
     'max_features': 'sqrt',
+    'n_jobs': -1,
     'random_state': SEED
 }
 
