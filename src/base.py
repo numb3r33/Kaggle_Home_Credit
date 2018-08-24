@@ -470,6 +470,68 @@ class BaseModel:
 
         return auc, pred_valid, pred_test, pred_test_final
 
+    def predict_test_rf(self, train, test, feature_list, params, n_folds=5, categorical_feature='auto'):
+        kfold_seeds = [2017, 2016, 2015, 2014, 2013]
+
+        pred_valid = np.zeros((train.shape[0], len(kfold_seeds)))
+        pred_test  = np.zeros((test.shape[0], len(kfold_seeds)))
+
+        X = train.loc[:, feature_list]
+        y = train.loc[:, 'TARGET']
+
+        X_test   = test.loc[:, feature_list]
+
+        data = pd.concat((X, X_test))
+
+        # preprocess for RF
+        for col in data.columns:
+            # replace inf with np.nan
+            data[col] = data[col].replace([np.inf, -np.inf], np.nan)
+            
+            # fill missing values with median
+            if data[col].isnull().sum():
+                if pd.isnull(data[col].median()):
+                    data[col] = data[col].fillna(-1)
+                else:
+                    data[col] = data[col].fillna(data[col].median())
+        
+        X = data.iloc[:len(X)]
+        X_test = data.iloc[len(X):]
+
+        del train, test, data
+        gc.collect()
+
+        t0 = time.time()
+
+        # train
+        for bag_idx, kfold_seed in enumerate(kfold_seeds):
+            kf = KFold(n_folds, shuffle=True, random_state=kfold_seed)
+
+            for fold_idx, (train_idx, valid_idx) in enumerate(kf.split(X)):
+                X_train, X_valid = X.iloc[train_idx], X.iloc[valid_idx]
+                y_train, y_valid = y.iloc[train_idx], y.iloc[valid_idx]
+
+                model = RandomForestClassifier(**params)
+                model.fit(X_train, y_train)
+
+                pred_valid[valid_idx, bag_idx] = model.predict_proba(X_valid)[:, 1]
+                auc = roc_auc_score(y_valid, pred_valid[valid_idx, bag_idx])
+
+                print('{}-fold auc: {}'.format(fold_idx, auc))
+                pred_test[:, bag_idx] += model.predict_proba(X_test)[:, 1] / len(kfold_seeds)
+
+            auc = roc_auc_score(y, pred_valid[:, bag_idx])
+            print('{}-bag auc: {}'.format(bag_idx, auc))
+        
+        print('Took: {} seconds to prepare oof and test predictions'.format(time.time() - t0))
+
+        auc = roc_auc_score(y, pred_valid.mean(axis=1))
+        print('total auc: {}'.format(auc))
+
+        pred_test_final = pred_test.mean(axis=1)
+
+        return auc, pred_valid, pred_test, pred_test_final
+
 
     def optimize_lgb(self, Xtr, ytr, Xte, yte, param_grid):
         

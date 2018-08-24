@@ -1803,8 +1803,8 @@ class Modelv131(BaseModel):
                                                     categorical_feature=categorical_feature
                                                     )
     
-    def predict_test(self, train, test, feature_list, params, save_path, n_folds=5):
-        return super(Modelv131, self).predict_test(train, test, feature_list, params, save_path, n_folds=n_folds)
+    def predict_test(self, train, test, feature_list, params, n_folds=5):
+        return super(Modelv131, self).predict_test_rf(train, test, feature_list, params, n_folds=n_folds)
 
 
     def cross_validate(self, train, feature_list, params, cv_adversarial_filepath=None, TARGET_NAME='TARGET'):
@@ -2141,8 +2141,7 @@ if __name__ == '__main__':
 
             auc             = joblib.load(os.path.join(basepath, output_path + f'{data_folder}{MODEL_FILENAME}_{CV_SEED}_oof_auc.pkl'))
         else:
-            save_path = os.path.join(basepath, output_path + f'{data_folder}{MODEL_FILENAME}')
-            auc, oof_train_preds, test_preds, test_preds_final = m.predict_test(train, test, feature_list, PARAMS.copy(), save_path)
+            auc, oof_train_preds, test_preds, test_preds_final = m.predict_test(train, test, feature_list, PARAMS.copy())
 
             np.save(os.path.join(basepath, output_path + f'{data_folder}{MODEL_FILENAME}_{CV_SEED}_oof_train_preds.npy'), oof_train_preds)
             np.save(os.path.join(basepath, output_path + f'{data_folder}{MODEL_FILENAME}_{CV_SEED}_test_preds.npy'), test_preds)
