@@ -573,7 +573,7 @@ class BaseModel:
 
         for fold in FOLD_NUM:
             test_idx  = list(cv_df[f'F{fold}'].values)
-            train_idx = list(set(X.index) - set(test_idx))
+            train_idx = list(set(Xtr.index) - set(test_idx))
 
             x_trn = Xtr.iloc[train_idx]
             y_trn = ytr.iloc[train_idx]
