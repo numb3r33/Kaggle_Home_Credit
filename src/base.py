@@ -279,13 +279,11 @@ class BaseModel:
 
         return np.array(hold_auc), test_preds, fold_trees
 
-    def predict_test(self, train, test, feature_list, params, save_path, n_folds=5, categorical_feature='auto'):
+    def predict_test(self, train, test, feature_list, params, save_path, kfold_seeds, n_folds=5, categorical_feature='auto'):
         num_boost_round       = params['num_boost_round']
         early_stopping_rounds = params['early_stopping_rounds']
 
         del params['num_boost_round'], params['early_stopping_rounds']
-
-        kfold_seeds = [2017, 2016, 2015, 2014, 2013]
 
         pred_valid = np.zeros((train.shape[0], len(kfold_seeds)))
         pred_test  = np.zeros((test.shape[0], len(kfold_seeds)))
