@@ -1821,7 +1821,14 @@ class Modelv137(BaseModel):
                                                     )
     
     def predict_test(self, train, test, feature_list, params, save_path, n_folds=5):
-        return super(Modelv137, self).predict_test(train, test, feature_list, params, save_path, n_folds=n_folds)
+        return super(Modelv137, self).predict_test(train, 
+                                                    test, 
+                                                    feature_list, 
+                                                    params, 
+                                                    save_path,
+                                                    kfold_seeds = [2017],
+                                                    n_folds=n_folds
+                                                    )
 
 
     def cross_validate(self, train, feature_list, params, cv_adversarial_filepath=None, TARGET_NAME='TARGET'):
@@ -1965,8 +1972,8 @@ if __name__ == '__main__':
         else:
             print('Preparing knn features ...')
 
-            t0 = time.time()
-            data_copy = data.iloc[:5000].copy()
+            t0        = time.time()
+            data_copy = data.copy()
             data_copy = fill_missing_values(data_copy)
 
             train = data_copy.iloc[:m.n_train]
