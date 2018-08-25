@@ -50,8 +50,6 @@ class Modelv135(BaseModel):
         dfs = []
         
         for filename in filenames:
-            print('Filename: {}'.format(filename))
-            
             dfs.append(np.load(os.path.join(basepath, self.params['output_path'] +  self.params['data_folder'] + f'{filename}')))
         
         dfs  = np.hstack(dfs) # concat across column axis
