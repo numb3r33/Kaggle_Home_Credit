@@ -1995,7 +1995,11 @@ if __name__ == '__main__':
             nn_features.fit(X, y)
             knn_test_features = nn_features.predict(X_test)
 
-            knn_features = np.vstack((knn_train_features, knn_test_features))
+            joblib.dump(knn_train_features, os.path.join(basepath, output_path + f'{data_folder}knn_train_features.pkl'))
+            joblib.dump(knn_test_features, os.path.join(basepath, output_path + f'{data_folder}knn_test_features.pkl'))
+
+            knn_features = np.vstack((knn_train_features, 
+                                      knn_test_features))
             joblib.dump(knn_features, os.path.join(basepath, output_path + f'{data_folder}knn_features.pkl'))
 
             print('Took: {} seconds to generate knn features'.format({time.time() - t0}))

@@ -69,7 +69,7 @@ class NearestNeighborsFeatures(BaseEstimator, ClassifierMixin):
 
 			neighs_y        = self.y_train[neighs]
 			
-			neighs_bincount = np.bincount(neighs_y, minlength=3) # for binary classification
+			neighs_bincount = np.bincount(neighs_y, minlength=2) # for binary classification
 			neighs_bincount = neighs_bincount / neighs_bincount.sum()
 				
 			return_list += [neighs_bincount]
@@ -153,8 +153,8 @@ class NearestNeighborsFeatures(BaseEstimator, ClassifierMixin):
 			neighs_dist = NN_output[0][0]
 			
 			neighs_y    = self.y_train[neighs] 
-			counts      = np.bincount(neighs_y, minlength=3)
-			feats       = np.bincount(neighs_y, neighs_dist, minlength=3)
+			counts      = np.bincount(neighs_y, minlength=2)
+			feats       = np.bincount(neighs_y, neighs_dist, minlength=2)
 			feats       = feats / counts
 			feats[~np.isfinite(feats)] = 999.0
 			
