@@ -85,3 +85,4 @@ submissions/
 models/
 references/
 papers/
+notebooks/*.tsv
