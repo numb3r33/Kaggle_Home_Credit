@@ -33,7 +33,7 @@ PARAMS = {
     'num_leaves': 10,
     'sub_feature': 0.3,
     'min_data_in_leaf': 20,
-    'nthread': 8,
+    'nthread': -1,
     'verbose': -1,
     'seed': SEED
 }
@@ -74,11 +74,11 @@ class Modelv135(BaseModel):
         t0 = time.time()
 
         # feature interaction
-        for i in range(n_features):
-            for j in range(i+1, n_features):
-                data.loc[:, f'f_{i}{j}'] = data.iloc[:, i] - data.iloc[:, j]
+        # for i in range(n_features):
+        #     for j in range(i+1, n_features):
+        #         data.loc[:, f'f_{i}{j}'] = data.iloc[:, i] - data.iloc[:, j]
         
-        print('Took: {} seconds to generate feature interactions'.format(time.time() - t0))
+        # print('Took: {} seconds to generate feature interactions'.format(time.time() - t0))
 
         return data
 
