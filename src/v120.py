@@ -229,12 +229,12 @@ COLS_TO_REMOVE = ['TARGET',
                   ]  
 
 PARAMS = {
-    'iterations': 100,
-    'learning_rate': .1,
+    'iterations': 1000,
+    'learning_rate': .05,
     'depth': 4,
     'od_type': 'Iter',
-    'od_wait': 40,
-    'reg_lambda': 15,
+    'od_wait': 45,
+    'l2_leaf_reg': 40,
     'custom_loss': 'AUC',
     'eval_metric': 'AUC',
     'logging_level': 'Verbose',
@@ -1815,11 +1815,11 @@ class Modelv120(BaseModel):
         return super(Modelv120, self).predict_test(train, test, feature_list, params)
 
 
-    def cross_validate(self, train, feature_list, params, TARGET_NAME='TARGET'):
+    def cross_validate(self, train, feature_list, params, cv_adversarial_filepath, TARGET_NAME='TARGET'):
         Xtr = train.loc[:, feature_list]
         ytr = train.loc[:, TARGET_NAME]
 
-        return super(Modelv120, self).cross_validate_cb(Xtr, ytr, params)
+        return super(Modelv120, self).cross_validate_cb(Xtr, ytr, params, cv_adversarial_filepath)
 
 
     def rf_fi(self, train, feature_list, SEED, target='TARGET'):
@@ -2071,18 +2071,17 @@ if __name__ == '__main__':
 
         # set random seed
         PARAMS['random_seed'] = SEED
-        
-        cv_history = m.cross_validate(train, feature_list, PARAMS.copy())
-        
-        # cv_score   = str(cv_history.iloc[-1]['auc-mean']) + '_' + str(cv_history.iloc[-1]['auc-stdv'])
-        
-        # PARAMS['num_boost_round']      = len(cv_history)
 
-        # print('*' * 100)
-        # print('Best AUC: {}'.format(cv_score))
+        cv_adversarial_filepath = os.path.join(basepath, 'data/raw/cv_idx_test_stratified.csv')
         
-        # joblib.dump(PARAMS, os.path.join(basepath, output_path + f'{data_folder}{MODEL_FILENAME}_{SEED}_params.pkl'))
-        # joblib.dump(cv_score, os.path.join(basepath, output_path + f'{data_folder}{MODEL_FILENAME}_{SEED}_cv.pkl'))
+        cv_mean, cv_std = m.cross_validate(train, feature_list, PARAMS.copy(), cv_adversarial_filepath)
+        cv_score   = str(cv_mean) + '_' + str(cv_std)
+        
+        print('*' * 100)
+        print('Best AUC: {}'.format(cv_score))
+        
+        joblib.dump(PARAMS, os.path.join(basepath, output_path + f'{data_folder}{MODEL_FILENAME}_{SEED}_params.pkl'))
+        joblib.dump(cv_score, os.path.join(basepath, output_path + f'{data_folder}{MODEL_FILENAME}_{SEED}_cv.pkl'))
     
     elif args.cv_predict:
         print('Cross validation with different seeds and produce submission for test set ..')

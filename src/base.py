@@ -765,20 +765,40 @@ class BaseModel:
 
 
     
-    def cross_validate_cb(self, Xtr, ytr, params):
+    def cross_validate_cb(self, Xtr, ytr, params, cv_adversarial_filepath):
+        # start time counter
+        t0     = time.time()
+        
+        FOLD_NUM = [0, 1, 2, 3, 4]
+        
+        # load cross validation indices file
+        cv_df = pd.read_csv(cv_adversarial_filepath)
+
         model = CatBoostClassifier(**params)
 
-        cv_data = cv(Pool(Xtr, ytr), model.get_params(), stratified=True, nfold=5)
+        auc = []
+
+        for fold in FOLD_NUM:
+            test_idx  = list(cv_df[f'F{fold}'].values)
+            train_idx = list(set(Xtr.index) - set(test_idx))
+
+            x_trn = Xtr.iloc[train_idx]
+            y_trn = ytr.iloc[train_idx]
+
+            x_val = Xtr.iloc[test_idx]
+            y_val = ytr.iloc[test_idx]
+
+            # train CatBoost Classifier
+            model.fit(x_trn, y_trn, verbose=False)
+            
+            fold_preds = model.predict_proba(x_val)[:, 1]
+            fold_auc   = roc_auc_score(y_val, fold_preds)
+
+            auc.append(fold_auc)
         
-        print('CV DATA:\n {}'.format(cv_data))
+        auc = np.array(auc)
 
-        print('Best validation auc score: {:.2f}±{:.2f} on step {}'.format(
-            np.max(cv_data['test-AUC-mean']),
-            cv_data['test-AUC-std'][np.argmax(cv_data['test-AUC-mean'])],
-            np.argmax(cv_data['test-AUC-mean'])
-        ))
-
-        return np.max(cv_data['test-AUC-mean']), cv_data['test-AUC-std'][np.argmax(cv_data['test-AUC-mean'])], np.argmax(cv_data['test-AUC-mean'])
+        return np.mean(auc), np.std(auc)
 
 
     def evaluate_lgb(self, Xte, yte, model):
