@@ -234,19 +234,17 @@ COLS_TO_REMOVE = ['TARGET',
 PARAMS = {
     'num_boost_round': 20000,
     'early_stopping_rounds': 200,
-    'objective': 'binary',
-    'boosting_type': 'gbdt',
-    'learning_rate': .01,
-    'metric': 'auc',
-    'num_leaves': 20,
-    'sub_feature': 0.05,
-    'bagging_fraction': 0.9,
-    'reg_lambda': 75,
-    'reg_alpha': 5,
-    'min_split_gain': .5,
-    'min_data_in_leaf': 15,
-    'min_sum_hessian_in_leaf': 1,
+    'objective': 'binary:logistic',
+    'eta': .1,
+    'eval_metric': 'auc',
+    'max_depth': 4,
+    'colsample_bytree': .05,
+    'colsample_bylevel': .2,
+    'min_child_weight': 5,
+    'gamma': 1,
+    'lambda': 30,
     'nthread': 8,
+    'silent': 1,
     'verbose': -1,
     'seed': SEED
 }
@@ -259,7 +257,7 @@ PCA_PARAMS = {
 }
 
 
-MODEL_FILENAME           = 'v137'
+MODEL_FILENAME           = 'v139'
 SAMPLE_SIZE              = .3
 
 # NOTE: column in frequency encoded columns
@@ -280,7 +278,7 @@ OHE_COLS           = [
 TARGET_ENCODING_COLS = []
 
 
-class Modelv137(BaseModel):
+class Modelv139(BaseModel):
     def __init__(self, **params):
         self.params  = params
         self.n_train = 307511 # TODO: find a way to remove this constant
@@ -293,12 +291,12 @@ class Modelv137(BaseModel):
         
         df       = pd.concat(dfs)
         df.index = np.arange(len(df))
-        df       = super(Modelv137, self).reduce_mem_usage(df)
+        df       = super(Modelv139, self).reduce_mem_usage(df)
 
         return df
     
     def reduce_mem_usage(self, df):
-        return super(Modelv137, self).reduce_mem_usage(df)
+        return super(Modelv139, self).reduce_mem_usage(df)
     
     def preprocess(self):
         
@@ -319,7 +317,7 @@ class Modelv137(BaseModel):
             data.index = np.arange(len(data))
 
             # fill infrequent values
-            data = super(Modelv137, self).fill_infrequent_values(data)
+            data = super(Modelv139, self).fill_infrequent_values(data)
 
             data.iloc[:ntrain].loc[:, FEATURE_NAMES].to_pickle(os.path.join(basepath, self.params['output_path'] + 'feature_groups/' + f'current_application_train.pkl'))
             data.iloc[ntrain:].loc[:, FEATURE_NAMES].to_pickle(os.path.join(basepath, self.params['output_path'] + 'feature_groups/' + f'current_application_test.pkl'))
@@ -341,7 +339,7 @@ class Modelv137(BaseModel):
             data.index          = np.arange(len(data))
 
             # fill infrequent values
-            data = super(Modelv137, self).fill_infrequent_values(data)
+            data = super(Modelv139, self).fill_infrequent_values(data)
 
             data.iloc[:ntrain].loc[:, FEATURE_NAMES].to_pickle(os.path.join(basepath, self.params['output_path'] + 'feature_groups/' + f'bureau_train.pkl'))
             data.iloc[ntrain:].loc[:, FEATURE_NAMES].to_pickle(os.path.join(basepath, self.params['output_path'] + 'feature_groups/' + f'bureau_test.pkl'))
@@ -370,7 +368,7 @@ class Modelv137(BaseModel):
             data.index          = np.arange(len(data))
 
             # fill infrequent values
-            data = super(Modelv137, self).fill_infrequent_values(data)
+            data = super(Modelv139, self).fill_infrequent_values(data)
 
             data.iloc[:ntrain].loc[:, FEATURE_NAMES].to_pickle(os.path.join(basepath, self.params['output_path'] + 'feature_groups/' + f'bureau_bal_train.pkl'))
             data.iloc[ntrain:].loc[:, FEATURE_NAMES].to_pickle(os.path.join(basepath, self.params['output_path'] + 'feature_groups/' + f'bureau_bal_test.pkl'))
@@ -393,7 +391,7 @@ class Modelv137(BaseModel):
             data.index          = np.arange(len(data))
 
             # fill infrequent values
-            data = super(Modelv137, self).fill_infrequent_values(data)
+            data = super(Modelv139, self).fill_infrequent_values(data)
 
             del prev_app
             gc.collect()
@@ -418,7 +416,7 @@ class Modelv137(BaseModel):
             data.index          = np.arange(len(data))
 
             # fill infrequent values
-            data = super(Modelv137, self).fill_infrequent_values(data)
+            data = super(Modelv139, self).fill_infrequent_values(data)
 
             del pos_cash
             gc.collect()
@@ -444,7 +442,7 @@ class Modelv137(BaseModel):
             data.index          = np.arange(len(data))
 
             # fill infrequent values
-            data = super(Modelv137, self).fill_infrequent_values(data)
+            data = super(Modelv139, self).fill_infrequent_values(data)
 
             del credit_bal
             gc.collect()
@@ -469,7 +467,7 @@ class Modelv137(BaseModel):
             data.index          = np.arange(len(data))
 
             # fill infrequent values
-            data = super(Modelv137, self).fill_infrequent_values(data)
+            data = super(Modelv139, self).fill_infrequent_values(data)
 
             del installments
             gc.collect()
@@ -499,7 +497,7 @@ class Modelv137(BaseModel):
             data.index          = np.arange(len(data))
 
             # fill infrequent values
-            data = super(Modelv137, self).fill_infrequent_values(data)
+            data = super(Modelv139, self).fill_infrequent_values(data)
 
             del bureau, prev_app
             gc.collect()
@@ -530,7 +528,7 @@ class Modelv137(BaseModel):
             data.index          = np.arange(len(data))
 
             # fill infrequent values
-            data = super(Modelv137, self).fill_infrequent_values(data)
+            data = super(Modelv139, self).fill_infrequent_values(data)
 
             del credit_bal, prev_app
             gc.collect()
@@ -561,7 +559,7 @@ class Modelv137(BaseModel):
             data.index          = np.arange(len(data))
 
             # fill infrequent values
-            data = super(Modelv137, self).fill_infrequent_values(data)
+            data = super(Modelv139, self).fill_infrequent_values(data)
 
             del installments, prev_app
             gc.collect()
@@ -595,7 +593,7 @@ class Modelv137(BaseModel):
             data.index          = np.arange(len(data))
 
             # fill infrequent values
-            data = super(Modelv137, self).fill_infrequent_values(data)
+            data = super(Modelv139, self).fill_infrequent_values(data)
 
             data.iloc[:ntrain].loc[:, FEATURE_NAMES].to_pickle(os.path.join(basepath, self.params['output_path'] + 'feature_groups/' + f'loan_stacking_train.pkl'))
             data.iloc[ntrain:].loc[:, FEATURE_NAMES].to_pickle(os.path.join(basepath, self.params['output_path'] + 'feature_groups/' + f'loan_stacking_test.pkl'))
@@ -614,7 +612,7 @@ class Modelv137(BaseModel):
             data.index          = np.arange(len(data))
 
             # fill infrequent values
-            data = super(Modelv137, self).fill_infrequent_values(data)
+            data = super(Modelv139, self).fill_infrequent_values(data)
 
             data.iloc[:ntrain].loc[:, FEATURE_NAMES].to_pickle(os.path.join(basepath, self.params['output_path'] + 'feature_groups/' + f'feature_groups_train.pkl'))
             data.iloc[ntrain:].loc[:, FEATURE_NAMES].to_pickle(os.path.join(basepath, self.params['output_path'] + 'feature_groups/' + f'feature_groups_test.pkl'))
@@ -640,7 +638,7 @@ class Modelv137(BaseModel):
             data.index          = np.arange(len(data))
 
             # fill infrequent values
-            data = super(Modelv137, self).fill_infrequent_values(data)
+            data = super(Modelv139, self).fill_infrequent_values(data)
 
             data.iloc[:ntrain].loc[:, FEATURE_NAMES].to_pickle(os.path.join(basepath, self.params['output_path'] + 'feature_groups/' + f'prev_app_pos_cash_train.pkl'))
             data.iloc[ntrain:].loc[:, FEATURE_NAMES].to_pickle(os.path.join(basepath, self.params['output_path'] + 'feature_groups/' + f'prev_app_pos_cash_test.pkl'))
@@ -672,7 +670,7 @@ class Modelv137(BaseModel):
             data.index          = np.arange(len(data))
 
             # fill infrequent values
-            data = super(Modelv137, self).fill_infrequent_values(data)
+            data = super(Modelv139, self).fill_infrequent_values(data)
 
             data.iloc[:ntrain].loc[:, FEATURE_NAMES].to_pickle(os.path.join(basepath, self.params['output_path'] + 'feature_groups/' + f'prev_app_pos_cash_credit_bal_train.pkl'))
             data.iloc[ntrain:].loc[:, FEATURE_NAMES].to_pickle(os.path.join(basepath, self.params['output_path'] + 'feature_groups/' + f'prev_app_pos_cash_credit_bal_test.pkl'))
@@ -695,7 +693,7 @@ class Modelv137(BaseModel):
             data.index          = np.arange(len(data))
 
             # fill infrequent values
-            data = super(Modelv137, self).fill_infrequent_values(data)
+            data = super(Modelv139, self).fill_infrequent_values(data)
 
             data.iloc[:ntrain].loc[:, FEATURE_NAMES].to_pickle(os.path.join(basepath, self.params['output_path'] + 'feature_groups/' + f'prev_app_ohe_train.pkl'))
             data.iloc[ntrain:].loc[:, FEATURE_NAMES].to_pickle(os.path.join(basepath, self.params['output_path'] + 'feature_groups/' + f'prev_app_ohe_test.pkl'))
@@ -723,7 +721,7 @@ class Modelv137(BaseModel):
             data.index = np.arange(len(data))
 
             # fill infrequent values
-            data = super(Modelv137, self).fill_infrequent_values(data)
+            data = super(Modelv139, self).fill_infrequent_values(data)
 
             data.iloc[:ntrain].loc[:, FEATURE_NAMES].to_pickle(os.path.join(basepath, self.params['output_path'] + 'feature_groups/' + f'current_application_train.pkl'))
             data.iloc[ntrain:].loc[:, FEATURE_NAMES].to_pickle(os.path.join(basepath, self.params['output_path'] + 'feature_groups/' + f'current_application_test.pkl'))
@@ -745,7 +743,7 @@ class Modelv137(BaseModel):
             data.index          = np.arange(len(data))
 
             # fill infrequent values
-            data = super(Modelv137, self).fill_infrequent_values(data)
+            data = super(Modelv139, self).fill_infrequent_values(data)
 
             data.iloc[:ntrain].loc[:, FEATURE_NAMES].to_pickle(os.path.join(basepath, self.params['output_path'] + 'feature_groups/' + f'bureau_train.pkl'))
             data.iloc[ntrain:].loc[:, FEATURE_NAMES].to_pickle(os.path.join(basepath, self.params['output_path'] + 'feature_groups/' + f'bureau_test.pkl'))
@@ -774,7 +772,7 @@ class Modelv137(BaseModel):
             data.index          = np.arange(len(data))
 
             # fill infrequent values
-            data = super(Modelv137, self).fill_infrequent_values(data)
+            data = super(Modelv139, self).fill_infrequent_values(data)
 
             data.iloc[:ntrain].loc[:, FEATURE_NAMES].to_pickle(os.path.join(basepath, self.params['output_path'] + 'feature_groups/' + f'bureau_bal_train.pkl'))
             data.iloc[ntrain:].loc[:, FEATURE_NAMES].to_pickle(os.path.join(basepath, self.params['output_path'] + 'feature_groups/' + f'bureau_bal_test.pkl'))
@@ -797,7 +795,7 @@ class Modelv137(BaseModel):
             data.index          = np.arange(len(data))
 
             # fill infrequent values
-            data = super(Modelv137, self).fill_infrequent_values(data)
+            data = super(Modelv139, self).fill_infrequent_values(data)
 
             del prev_app
             gc.collect()
@@ -822,7 +820,7 @@ class Modelv137(BaseModel):
             data.index          = np.arange(len(data))
 
             # fill infrequent values
-            data = super(Modelv137, self).fill_infrequent_values(data)
+            data = super(Modelv139, self).fill_infrequent_values(data)
 
             del pos_cash
             gc.collect()
@@ -848,7 +846,7 @@ class Modelv137(BaseModel):
             data.index          = np.arange(len(data))
 
             # fill infrequent values
-            data = super(Modelv137, self).fill_infrequent_values(data)
+            data = super(Modelv139, self).fill_infrequent_values(data)
 
             del credit_bal
             gc.collect()
@@ -873,7 +871,7 @@ class Modelv137(BaseModel):
             data.index          = np.arange(len(data))
 
             # fill infrequent values
-            data = super(Modelv137, self).fill_infrequent_values(data)
+            data = super(Modelv139, self).fill_infrequent_values(data)
 
             del installments
             gc.collect()
@@ -903,7 +901,7 @@ class Modelv137(BaseModel):
             data.index          = np.arange(len(data))
 
             # fill infrequent values
-            data = super(Modelv137, self).fill_infrequent_values(data)
+            data = super(Modelv139, self).fill_infrequent_values(data)
 
             del bureau, prev_app
             gc.collect()
@@ -934,7 +932,7 @@ class Modelv137(BaseModel):
             data.index          = np.arange(len(data))
 
             # fill infrequent values
-            data = super(Modelv137, self).fill_infrequent_values(data)
+            data = super(Modelv139, self).fill_infrequent_values(data)
 
             del credit_bal, prev_app
             gc.collect()
@@ -965,7 +963,7 @@ class Modelv137(BaseModel):
             data.index          = np.arange(len(data))
 
             # fill infrequent values
-            data = super(Modelv137, self).fill_infrequent_values(data)
+            data = super(Modelv139, self).fill_infrequent_values(data)
 
             del installments, prev_app
             gc.collect()
@@ -999,7 +997,7 @@ class Modelv137(BaseModel):
             data.index          = np.arange(len(data))
 
             # fill infrequent values
-            data = super(Modelv137, self).fill_infrequent_values(data)
+            data = super(Modelv139, self).fill_infrequent_values(data)
 
             data.iloc[:ntrain].loc[:, FEATURE_NAMES].to_pickle(os.path.join(basepath, self.params['output_path'] + 'feature_groups/' + f'loan_stacking_train.pkl'))
             data.iloc[ntrain:].loc[:, FEATURE_NAMES].to_pickle(os.path.join(basepath, self.params['output_path'] + 'feature_groups/' + f'loan_stacking_test.pkl'))
@@ -1018,7 +1016,7 @@ class Modelv137(BaseModel):
             data.index          = np.arange(len(data))
 
             # fill infrequent values
-            data = super(Modelv137, self).fill_infrequent_values(data)
+            data = super(Modelv139, self).fill_infrequent_values(data)
 
             data.iloc[:ntrain].loc[:, FEATURE_NAMES].to_pickle(os.path.join(basepath, self.params['output_path'] + 'feature_groups/' + f'feature_groups_train.pkl'))
             data.iloc[ntrain:].loc[:, FEATURE_NAMES].to_pickle(os.path.join(basepath, self.params['output_path'] + 'feature_groups/' + f'feature_groups_test.pkl'))
@@ -1044,7 +1042,7 @@ class Modelv137(BaseModel):
             data.index          = np.arange(len(data))
 
             # fill infrequent values
-            data = super(Modelv137, self).fill_infrequent_values(data)
+            data = super(Modelv139, self).fill_infrequent_values(data)
 
             data.iloc[:ntrain].loc[:, FEATURE_NAMES].to_pickle(os.path.join(basepath, self.params['output_path'] + 'feature_groups/' + f'prev_app_pos_cash_train.pkl'))
             data.iloc[ntrain:].loc[:, FEATURE_NAMES].to_pickle(os.path.join(basepath, self.params['output_path'] + 'feature_groups/' + f'prev_app_pos_cash_test.pkl'))
@@ -1076,7 +1074,7 @@ class Modelv137(BaseModel):
             data.index          = np.arange(len(data))
 
             # fill infrequent values
-            data = super(Modelv137, self).fill_infrequent_values(data)
+            data = super(Modelv139, self).fill_infrequent_values(data)
 
             data.iloc[:ntrain].loc[:, FEATURE_NAMES].to_pickle(os.path.join(basepath, self.params['output_path'] + 'feature_groups/' + f'prev_app_pos_cash_credit_bal_train.pkl'))
             data.iloc[ntrain:].loc[:, FEATURE_NAMES].to_pickle(os.path.join(basepath, self.params['output_path'] + 'feature_groups/' + f'prev_app_pos_cash_credit_bal_test.pkl'))
@@ -1099,7 +1097,7 @@ class Modelv137(BaseModel):
             data.index          = np.arange(len(data))
 
             # fill infrequent values
-            data = super(Modelv137, self).fill_infrequent_values(data)
+            data = super(Modelv139, self).fill_infrequent_values(data)
 
             data.iloc[:ntrain].loc[:, FEATURE_NAMES].to_pickle(os.path.join(basepath, self.params['output_path'] + 'feature_groups/' + f'prev_app_ohe_train.pkl'))
             data.iloc[ntrain:].loc[:, FEATURE_NAMES].to_pickle(os.path.join(basepath, self.params['output_path'] + 'feature_groups/' + f'prev_app_ohe_test.pkl'))
@@ -1738,14 +1736,14 @@ class Modelv137(BaseModel):
         if os.path.exists(os.path.join(basepath, self.params['output_path'] + f'{self.params["data_folder"]}pca.pkl')):
             pca_components = pd.read_pickle(os.path.join(basepath, self.params['output_path'] + f'{self.params["data_folder"]}pca.pkl'))
         else:
-            pca_components = super(Modelv137, self).add_pca_components(data.copy(), PCA_PARAMS)
+            pca_components = super(Modelv139, self).add_pca_components(data.copy(), PCA_PARAMS)
             pca_components.to_pickle(os.path.join(basepath, self.params['output_path'] + f'{self.params["data_folder"]}pca.pkl'))
         
         # add tsne components
         if os.path.exists(os.path.join(basepath, self.params['output_path'] + f'{self.params["data_folder"]}tsne.pkl')):
             tsne_components = pd.read_pickle(os.path.join(basepath, self.params['output_path'] + f'{self.params["data_folder"]}tsne.pkl'))
         else:
-            tsne_components = super(Modelv137, self).add_tsne_components(data.copy())
+            tsne_components = super(Modelv139, self).add_tsne_components(data.copy())
             tsne_components.to_pickle(os.path.join(basepath, self.params['output_path'] + f'{self.params["data_folder"]}tsne.pkl'))
         
 
@@ -1762,7 +1760,7 @@ class Modelv137(BaseModel):
             print('Computing One Hot Encoding of categorical features ...')
             print('*' * 100)
 
-            data = super(Modelv137, self).prepare_ohe(data, OHE_COLS, drop_col=True)
+            data = super(Modelv139, self).prepare_ohe(data, OHE_COLS, drop_col=True)
         elif compute_categorical == 'freq':
             print('Computing Frequency Encoding of Categorical features ....')
             print('*' * 100)
@@ -1798,7 +1796,7 @@ class Modelv137(BaseModel):
         if is_eval:
             yte = test.loc[:, TARGET_NAME]
         
-        return super(Modelv137, self).train_lgb(X, y, Xte, yte, **params)
+        return super(Modelv139, self).train_lgb(X, y, Xte, yte, **params)
 
     # This method just takes in a model and test dataset and returns predictions 
     # prints out AUC on the test dataset as well in the process.
@@ -1809,10 +1807,10 @@ class Modelv137(BaseModel):
         if is_eval:
             yte = test.loc[:, TARGET_NAME]
 
-        return super(Modelv137, self).evaluate_lgb(Xte, yte, model)
+        return super(Modelv139, self).evaluate_lgb(Xte, yte, model)
 
     def cv_predict(self, train, test, feature_list, params, cv_adversarial_filepath=None, categorical_feature='auto'):
-        return super(Modelv137, self).cv_predict(train, 
+        return super(Modelv139, self).cv_predict(train, 
                                                     test,
                                                     feature_list, 
                                                     params, 
@@ -1821,7 +1819,7 @@ class Modelv137(BaseModel):
                                                     )
     
     def predict_test(self, train, test, feature_list, params, save_path, n_folds=5):
-        return super(Modelv137, self).predict_test(train, 
+        return super(Modelv139, self).predict_test_xgb(train, 
                                                     test, 
                                                     feature_list, 
                                                     params, 
@@ -1835,13 +1833,13 @@ class Modelv137(BaseModel):
         Xtr = train.loc[:, feature_list]
         ytr = train.loc[:, TARGET_NAME]
 
-        return super(Modelv137, self).cross_validate(Xtr, ytr, params, cv_adversarial_filepath=cv_adversarial_filepath)
+        return super(Modelv139, self).cross_validate_xgb(Xtr, ytr, params, cv_adversarial_filepath=cv_adversarial_filepath)
 
     def rf_fi(self, train, feature_list, SEED, target='TARGET'):
         X = train.loc[:, feature_list]
         y = train.loc[:, target]
 
-        return super(Modelv137, self).rf_fi(X, y, SEED)
+        return super(Modelv139, self).rf_fi(X, y, SEED)
     
     def optimize_lgb(self, train, test, feature_list, TARGET_NAME='TARGET'):
         Xtr = train.loc[:, feature_list]
@@ -1861,7 +1859,7 @@ class Modelv137(BaseModel):
             'num_leaves': (5, 100)
         }
 
-        return super(Modelv137, self).optimize_lgb(Xtr, ytr, Xte, yte, param_grid)
+        return super(Modelv139, self).optimize_lgb(Xtr, ytr, Xte, yte, param_grid)
 
 
     def get_oof_preds(self, train, test, feature_list, model, TARGET_NAME='TARGET'):
@@ -1870,7 +1868,7 @@ class Modelv137(BaseModel):
         
         Xte = test.loc[:, feature_list]
 
-        return super(Modelv137, self).oof_preds(X, y, Xte, model)
+        return super(Modelv139, self).oof_preds(X, y, Xte, model)
 
 
 if __name__ == '__main__':
@@ -1906,7 +1904,7 @@ if __name__ == '__main__':
             'output_path': output_path
         }
 
-        m  = Modelv137(**params)
+        m  = Modelv139(**params)
         m.preprocess()
 
     elif args.features:
@@ -1921,7 +1919,7 @@ if __name__ == '__main__':
             'output_path': output_path,
         }
 
-        m = Modelv137(**params)
+        m = Modelv139(**params)
         m.prepare_features()
     
     elif args.cv:
@@ -1939,7 +1937,7 @@ if __name__ == '__main__':
             'data_folder': data_folder
         }
 
-        m   = Modelv137(**params)
+        m   = Modelv139(**params)
             
         if os.path.exists(os.path.join(basepath, output_path + f'{data_folder}data.h5')):
             print('Loading dataset from disk ...')
@@ -2004,6 +2002,7 @@ if __name__ == '__main__':
 
             print('Took: {} seconds to generate knn features'.format({time.time() - t0}))
 
+        # knn features
         knn_features = pd.DataFrame(knn_features, columns=[f'knn_{i}' for i in range(knn_features.shape[1])])
         knn_features.index = data.index
 
@@ -2020,15 +2019,12 @@ if __name__ == '__main__':
         
         
         PARAMS['seed']                  = SEED
-        PARAMS['feature_fraction_seed'] = SEED
-        PARAMS['bagging_seed']          = SEED
         
-        cv_adversarial_filepath = os.path.join(basepath, 'data/raw/cv_idx_test_stratified.csv')
-
         cv_history = m.cross_validate(train, feature_list, PARAMS.copy(), cv_adversarial_filepath)
-        cv_score   = str(cv_history.iloc[-1]['auc-mean']) + '_' + str(cv_history.iloc[-1]['auc-stdv'])
+        cv_score   = str(cv_history.iloc[-1]['test-auc-mean']) + '_' + str(cv_history.iloc[-1]['test-auc-std'])
         
-        PARAMS['num_boost_round']      = len(cv_history)
+        PARAMS['num_boost_round'] = np.argmax(cv_history['test-auc-mean'].values) + 1
+
 
         print('*' * 100)
         print('Best AUC: {}'.format(cv_score))
@@ -2052,7 +2048,7 @@ if __name__ == '__main__':
             'data_folder': data_folder
         }
 
-        m   = Modelv137(**params)
+        m   = Modelv139(**params)
         
 
         # Loading data
@@ -2094,9 +2090,7 @@ if __name__ == '__main__':
 
         
         PARAMS['seed']                  = SEED
-        PARAMS['feature_fraction_seed'] = SEED
-        PARAMS['bagging_seed']          = SEED
-
+        
         if os.path.exists(os.path.join(basepath, output_path + f'{data_folder}{MODEL_FILENAME}_{CV_SEED}_test_preds.npy')):
             oof_train_preds  = np.load(os.path.join(basepath, output_path + f'{data_folder}{MODEL_FILENAME}_{CV_SEED}_oof_train_preds.npy'))       
             test_preds       = np.load(os.path.join(basepath, output_path + f'{data_folder}{MODEL_FILENAME}_{CV_SEED}_test_preds.npy'))
@@ -2134,7 +2128,7 @@ if __name__ == '__main__':
             'data_folder': data_folder
         }
 
-        m   = Modelv137(**params)
+        m   = Modelv139(**params)
             
         if os.path.exists(os.path.join(basepath, output_path + f'{data_folder}data.h5')):
             print('Loading dataset from disk ...')
@@ -2207,7 +2201,7 @@ if __name__ == '__main__':
             'data_folder': data_folder
         }
 
-        m   = Modelv137(**params)
+        m   = Modelv139(**params)
         
         # Load or save data from/ on disk
         if os.path.exists(os.path.join(basepath, output_path + f'{data_folder}data.h5')):
@@ -2281,7 +2275,7 @@ if __name__ == '__main__':
             'data_folder': data_folder
         }
 
-        m   = Modelv137(**params)
+        m   = Modelv139(**params)
         
         # Loading data
         if os.path.exists(os.path.join(basepath, output_path + f'{data_folder}data.h5')):

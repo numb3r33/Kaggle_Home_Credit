@@ -17,6 +17,7 @@ from sklearn.externals import joblib
 from sklearn.decomposition import PCA
 from sklearn.preprocessing import StandardScaler
 from sklearn.ensemble import RandomForestClassifier, ExtraTreesClassifier
+from sklearn.linear_model import LogisticRegression
 from sklearn.base import BaseEstimator, ClassifierMixin
 from sklearn.model_selection import KFold
 
@@ -350,13 +351,20 @@ class BaseModel:
 
         return auc, pred_valid, pred_test, pred_test_final   
 
-    def predict_test_xgb(self, train, test, feature_list, params, save_path, n_folds=5, categorical_feature='auto'):
+    def predict_test_xgb(self, 
+                         train, 
+                         test, 
+                         feature_list, 
+                         params, 
+                         save_path, 
+                         kfold_seeds = [2017, 2016, 2015, 2014, 2013], 
+                         n_folds=5, 
+                         categorical_feature='auto'):
+        
         num_boost_round       = params['num_boost_round']
         early_stopping_rounds = params['early_stopping_rounds']
 
         del params['num_boost_round'], params['early_stopping_rounds']
-
-        kfold_seeds = [2017, 2016, 2015, 2014, 2013]
 
         pred_valid = np.zeros((train.shape[0], len(kfold_seeds)))
         pred_test  = np.zeros((test.shape[0], len(kfold_seeds)))
@@ -593,6 +601,74 @@ class BaseModel:
         pred_test_final = pred_test.mean(axis=1)
 
         return auc, pred_valid, pred_test, pred_test_final
+    
+    def predict_test_log(self, 
+                         train, 
+                         test, 
+                         feature_list, 
+                         params, 
+                         kfold_seeds=[2017, 2016, 2015, 2014, 2013], 
+                         n_folds=5, 
+                         categorical_feature='auto'):
+        
+        pred_valid = np.zeros((train.shape[0], len(kfold_seeds)))
+        pred_test  = np.zeros((test.shape[0], len(kfold_seeds)))
+
+        X = train.loc[:, feature_list]
+        y = train.loc[:, 'TARGET']
+
+        X_test   = test.loc[:, feature_list]
+
+        data = pd.concat((X, X_test))
+
+        # preprocess for RF
+        for col in data.columns:
+            # replace inf with np.nan
+            data[col] = data[col].replace([np.inf, -np.inf], np.nan)
+            
+            # fill missing values with median
+            if data[col].isnull().sum():
+                if pd.isnull(data[col].median()):
+                    data[col] = data[col].fillna(-1)
+                else:
+                    data[col] = data[col].fillna(data[col].median())
+        
+        X = data.iloc[:len(X)]
+        X_test = data.iloc[len(X):]
+
+        del train, test, data
+        gc.collect()
+
+        t0 = time.time()
+
+        # train
+        for bag_idx, kfold_seed in enumerate(kfold_seeds):
+            kf = KFold(n_folds, shuffle=True, random_state=kfold_seed)
+
+            for fold_idx, (train_idx, valid_idx) in enumerate(kf.split(X)):
+                X_train, X_valid = X.iloc[train_idx], X.iloc[valid_idx]
+                y_train, y_valid = y.iloc[train_idx], y.iloc[valid_idx]
+
+                model = ExtraTreesClassifier(**params)
+                model.fit(X_train, y_train)
+
+                pred_valid[valid_idx, bag_idx] = model.predict_proba(X_valid)[:, 1]
+                auc = roc_auc_score(y_valid, pred_valid[valid_idx, bag_idx])
+
+                print('{}-fold auc: {}'.format(fold_idx, auc))
+                pred_test[:, bag_idx] += model.predict_proba(X_test)[:, 1] / len(kfold_seeds)
+
+            auc = roc_auc_score(y, pred_valid[:, bag_idx])
+            print('{}-bag auc: {}'.format(bag_idx, auc))
+        
+        print('Took: {} seconds to prepare oof and test predictions'.format(time.time() - t0))
+
+        auc = roc_auc_score(y, pred_valid.mean(axis=1))
+        print('total auc: {}'.format(auc))
+
+        pred_test_final = pred_test.mean(axis=1)
+
+        return auc, pred_valid, pred_test, pred_test_final
 
 
     def optimize_lgb(self, Xtr, ytr, Xte, yte, param_grid):
@@ -715,6 +791,52 @@ class BaseModel:
         auc = np.array(auc)
 
         return np.mean(auc), np.std(auc)
+
+        def cross_validate_log(self, Xtr, ytr, params, cv_adversarial_filepath):
+            # start time counter
+            t0     = time.time()
+            
+            FOLD_NUM = [0, 1, 2, 3, 4]
+            
+            # load cross validation indices file
+            cv_df = pd.read_csv(cv_adversarial_filepath)
+
+            model = LogisticRegression(**params)
+
+            # preprocess for RF
+            for col in Xtr.columns:
+                # replace inf with np.nan
+                Xtr[col] = Xtr[col].replace([np.inf, -np.inf], np.nan)
+                
+                # fill missing values with median
+                if Xtr[col].isnull().sum():
+                    if pd.isnull(Xtr[col].median()):
+                        Xtr[col] = Xtr[col].fillna(-1)
+                    else:
+                        Xtr[col] = Xtr[col].fillna(Xtr[col].median())
+
+            auc = []
+
+            for fold in FOLD_NUM:
+                test_idx  = list(cv_df[f'F{fold}'].values)
+                train_idx = list(set(Xtr.index) - set(test_idx))
+
+                x_trn = Xtr.iloc[train_idx]
+                y_trn = ytr.iloc[train_idx]
+
+                x_val = Xtr.iloc[test_idx]
+                y_val = ytr.iloc[test_idx]
+
+                model.fit(x_trn, y_trn)
+                fold_preds = model.predict_proba(x_val)[:, 1]
+
+                fold_auc = roc_auc_score(y_val, fold_preds)
+
+                auc.append(fold_auc)
+            
+            auc = np.array(auc)
+
+            return np.mean(auc), np.std(auc)
 
 
     def cross_validate_etc(self, Xtr, ytr, params, cv_adversarial_filepath):
