@@ -243,7 +243,7 @@ PARAMS = {
     'min_child_weight': 5,
     'gamma': 1,
     'lambda': 30,
-    'nthread': -1,
+    'nthread': 14,
     'silent': 1,
     'verbose': -1,
     'seed': SEED
