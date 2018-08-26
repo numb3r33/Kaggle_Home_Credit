@@ -178,6 +178,31 @@ class BaseModel:
         print('Took: {} seconds to generate...'.format(time.time() - t0))
         
         return m, feat_df
+
+    
+    def train_log(self, X, y, Xte, yte, **params):
+        print()
+        print('Train Logistic Regression Classifier ...')
+        print('*' * 100)
+        print()
+
+        # start time counter
+        t0 = time.time()
+        m = LogisticRegression(**params)
+        hold_preds = None
+
+        if len(yte):
+            m.fit(X, y)
+            hold_preds = m.predict_proba(Xte)[:, 1]
+        else:
+            m.fit(X, y)
+            
+        print('Took: {} seconds to generate...'.format(time.time() - t0))
+        
+        return m, hold_preds
+
+
+
     
     def get_folds(self, X, cv_df):
         FOLD_NUM = [0, 1, 2, 3, 4]
@@ -1126,6 +1151,19 @@ class BaseModel:
             print('AUC: {}'.format(score))
         else:
             yhat = model.predict(Xte)
+        
+        return yhat, score
+
+    def evaluate_log(self, Xte, yte, model):
+        yhat  = None
+        score = None
+
+        if len(yte):
+            yhat  = model.predict_proba(Xte)[:, 1]
+            score = roc_auc_score(yte, yhat)
+            print('AUC: {}'.format(score))
+        else:
+            yhat = model.predict_proba(Xte)[:, 1]
         
         return yhat, score
 

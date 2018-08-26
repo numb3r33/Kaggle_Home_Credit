@@ -24,18 +24,10 @@ np.random.seed(SEED)
 #############################################################################################################
 
 PARAMS = {
-    'num_boost_round': 20000,
-    'early_stopping_rounds': 200,
-    'objective': 'binary',
-    'boosting_type': 'gbdt',
-    'learning_rate': .03,
-    'metric': 'auc',
-    'num_leaves': 10,
-    'sub_feature': 0.3,
-    'min_data_in_leaf': 20,
-    'nthread': -1,
-    'verbose': -1,
-    'seed': SEED
+    'C': 1.,
+    'solver': 'lbfgs',
+    'n_jobs': -1,
+    'random_state': SEED
 }
 
 MODEL_FILENAME           = 'v135'
@@ -69,7 +61,7 @@ class Modelv135(BaseModel):
         data.index = np.arange(len(data))
         n_features = data.shape[1]
 
-        t0 = time.time()
+        # t0 = time.time()
 
         # feature interaction
         # for i in range(n_features):
@@ -103,7 +95,7 @@ class Modelv135(BaseModel):
         if is_eval:
             yte = test.loc[:, TARGET_NAME]
         
-        return super(Modelv135, self).train_lgb(X, y, Xte, yte, **params)
+        return super(Modelv135, self).train_log(X, y, Xte, yte, **params)
 
     def evaluate(self, test, feature_list, is_eval, model, TARGET_NAME='TARGET'):
         Xte = test.loc[:, feature_list]
@@ -112,7 +104,7 @@ class Modelv135(BaseModel):
         if is_eval:
             yte = test.loc[:, TARGET_NAME]
 
-        return super(Modelv135, self).evaluate_lgb(Xte, yte, model)
+        return super(Modelv135, self).evaluate_log(Xte, yte, model)
 
 
     def predict_test(self, train, test, feature_list, params, save_path, n_folds=5):
@@ -123,7 +115,7 @@ class Modelv135(BaseModel):
         Xtr = train.loc[:, feature_list]
         ytr = train.loc[:, TARGET_NAME]
 
-        return super(Modelv135, self).cross_validate(Xtr, ytr, params, cv_adversarial_filepath=cv_adversarial_filepath)
+        return super(Modelv135, self).cross_validate_log(Xtr, ytr, params, cv_adversarial_filepath=cv_adversarial_filepath)
 
 if __name__ == '__main__':
     
@@ -146,21 +138,13 @@ if __name__ == '__main__':
         train_filenames = [
                             'v127_4457_oof_train_preds.npy',
                             'v128_4457_oof_train_preds.npy',
-                            'v129_4457_oof_train_preds.npy',
-                            'v131_4457_oof_train_preds.npy',
-                            'v132_4457_oof_train_preds.npy',
-                            'v133_4457_oof_train_preds.npy',
-                            'v134_4457_oof_train_preds.npy'
+                            'v136_4457_oof_train_preds.npy'
                           ]
 
         test_filenames  = [
                             'v127_4457_test_preds.npy',
                             'v128_4457_test_preds.npy',
-                            'v129_4457_test_preds.npy',
-                            'v131_4457_test_preds.npy',
-                            'v132_4457_test_preds.npy',
-                            'v133_4457_test_preds.npy',
-                            'v134_4457_test_preds.npy'
+                            'v136_4457_test_preds.npy'
                           ]
 
         input_path      = args.input_path
@@ -198,17 +182,13 @@ if __name__ == '__main__':
 
         feature_list = train.columns.drop('TARGET').tolist()
         
-        PARAMS['seed']                  = SEED
-        PARAMS['feature_fraction_seed'] = SEED
-        PARAMS['bagging_seed']          = SEED
+        PARAMS['random_state']  = SEED
         
         cv_adversarial_filepath = None
 
-        cv_history = m.cross_validate(train, feature_list, PARAMS.copy(), cv_adversarial_filepath)
-        cv_score   = str(cv_history.iloc[-1]['auc-mean']) + '_' + str(cv_history.iloc[-1]['auc-stdv'])
+        mean_auc, std_auc = m.cross_validate(train, feature_list, PARAMS.copy(), cv_adversarial_filepath)
+        cv_score          = str(mean_auc) + '_' + str(std_auc)
         
-        PARAMS['num_boost_round'] = len(cv_history)
-
         print('*' * 100)
         print('Best AUC: {}'.format(cv_score))
         
@@ -221,21 +201,13 @@ if __name__ == '__main__':
         train_filenames = [
                             'v127_4457_oof_train_preds.npy',
                             'v128_4457_oof_train_preds.npy',
-                            'v129_4457_oof_train_preds.npy',
-                            'v131_4457_oof_train_preds.npy',
-                            'v132_4457_oof_train_preds.npy',
-                            'v133_4457_oof_train_preds.npy',
-                            'v134_4457_oof_train_preds.npy'
+                            'v136_4457_oof_train_preds.npy'
                           ]
 
         test_filenames  = [
                             'v127_4457_test_preds.npy',
                             'v128_4457_test_preds.npy',
-                            'v129_4457_test_preds.npy',
-                            'v131_4457_test_preds.npy',
-                            'v132_4457_test_preds.npy',
-                            'v133_4457_test_preds.npy',
-                            'v134_4457_test_preds.npy'
+                            'v136_4457_test_preds.npy'
                           ]
 
 
