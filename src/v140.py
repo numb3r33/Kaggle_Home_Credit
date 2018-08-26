@@ -1959,9 +1959,6 @@ if __name__ == '__main__':
             print('Take a random sample of the training data ...')
             train = train.sample(frac=SAMPLE_SIZE)
         
-        
-        PARAMS['random_state']                  = SEED
-        
         cv_adversarial_filepath = os.path.join(basepath, 'data/raw/cv_idx_test_stratified.csv')
         mean_auc, std_auc = m.cross_validate(train, feature_list, PARAMS.copy(), cv_adversarial_filepath)
         cv_score   = str(mean_auc) + '_' + str(std_auc)
@@ -2029,11 +2026,6 @@ if __name__ == '__main__':
             feature_list = train.columns.tolist()
             feature_list = list(set(feature_list) - set(COLS_TO_REMOVE))
             np.save(os.path.join(basepath, output_path + f'{data_folder}{MODEL_FILENAME}_features.npy'), feature_list)
-
-        
-        PARAMS['seed']                  = SEED
-        PARAMS['feature_fraction_seed'] = SEED
-        PARAMS['bagging_seed']          = SEED
 
         if os.path.exists(os.path.join(basepath, output_path + f'{data_folder}{MODEL_FILENAME}_{CV_SEED}_test_preds.npy')):
             oof_train_preds  = np.load(os.path.join(basepath, output_path + f'{data_folder}{MODEL_FILENAME}_{CV_SEED}_oof_train_preds.npy'))       
