@@ -234,6 +234,7 @@ COLS_TO_REMOVE = ['TARGET',
 PARAMS = {
     'C': 10,
     'n_jobs': -1,
+    'solver': 'lbfgs',
     'random_state': SEED
 }
 
