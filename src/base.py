@@ -24,6 +24,13 @@ from sklearn.model_selection import KFold
 from bayes_opt import BayesianOptimization
 from MulticoreTSNE import MulticoreTSNE as TSNE
 
+import keras
+
+from keras.models import Sequential
+from keras.layers import Dense, Activation, Dropout
+from keras.wrappers.scikit_learn import KerasClassifier
+from sklearn.preprocessing import StandardScaler, MinMaxScaler
+
 import time
 
 #TODO: Think what all methods can be moved to base class which would be beneficial for
@@ -649,8 +656,14 @@ class BaseModel:
                 X_train, X_valid = X.iloc[train_idx], X.iloc[valid_idx]
                 y_train, y_valid = y.iloc[train_idx], y.iloc[valid_idx]
 
-                model = ExtraTreesClassifier(**params)
-                model.fit(X_train, y_train)
+                scaler = MinMaxScaler()
+
+                X_train = scaler.fit_transform(X_train)
+                X_valid = scaler.transform(X_valid)
+                X_test  = scaler.transform(X_test)
+
+                model = LogisticRegression(**params)
+                model.fit(X_train, y_train.values)
 
                 pred_valid[valid_idx, bag_idx] = model.predict_proba(X_valid)[:, 1]
                 auc = roc_auc_score(y_valid, pred_valid[valid_idx, bag_idx])
@@ -669,6 +682,103 @@ class BaseModel:
         pred_test_final = pred_test.mean(axis=1)
 
         return auc, pred_valid, pred_test, pred_test_final
+
+
+    def predict_test_nn(self, 
+                         train, 
+                         test, 
+                         feature_list, 
+                         params, 
+                         kfold_seeds=[2017, 2016, 2015, 2014, 2013], 
+                         n_folds=5, 
+                         categorical_feature='auto'):
+        
+        pred_valid = np.zeros((train.shape[0], len(kfold_seeds)))
+        pred_test  = np.zeros((test.shape[0], len(kfold_seeds)))
+
+        X = train.loc[:, feature_list]
+        y = train.loc[:, 'TARGET']
+
+        X_test   = test.loc[:, feature_list]
+
+        data = pd.concat((X, X_test))
+
+        # Model Configuration
+        def model_configuration():
+            # create model
+            model = Sequential(name='mlp')
+
+            model.add(Dense(units=600, activation='relu', input_dim=953))
+            model.add(Dropout(rate=.1))
+            model.add(Dense(units=500, activation='relu'))
+            model.add(Dropout(rate=.1))
+            model.add(Dense(units=400, activation='relu'))
+            model.add(Dropout(rate=.1))
+            model.add(Dense(units=300, activation='relu'))
+            model.add(Dropout(rate=.1))
+            model.add(Dense(units=100, activation='relu'))
+            model.add(Dropout(rate=.05))
+            model.add(Dense(units=2, activation='softmax'))
+
+            model.compile("adam", "categorical_crossentropy")
+
+            return model
+
+        # preprocess for RF
+        for col in data.columns:
+            # replace inf with np.nan
+            data[col] = data[col].replace([np.inf, -np.inf], np.nan)
+            
+            # fill missing values with median
+            if data[col].isnull().sum():
+                if pd.isnull(data[col].median()):
+                    data[col] = data[col].fillna(-1)
+                else:
+                    data[col] = data[col].fillna(data[col].median())
+        
+        X = data.iloc[:len(X)]
+        X_test = data.iloc[len(X):]
+
+        del train, test, data
+        gc.collect()
+
+        t0 = time.time()
+
+        # train
+        for bag_idx, kfold_seed in enumerate(kfold_seeds):
+            kf = KFold(n_folds, shuffle=True, random_state=kfold_seed)
+
+            for fold_idx, (train_idx, valid_idx) in enumerate(kf.split(X)):
+                X_train, X_valid = X.iloc[train_idx], X.iloc[valid_idx]
+                y_train, y_valid = y.iloc[train_idx], y.iloc[valid_idx]
+
+                scaler = MinMaxScaler()
+
+                X_train = scaler.fit_transform(X_train)
+                X_valid = scaler.transform(X_valid)
+                X_test  = scaler.transform(X_test)
+
+                model = KerasClassifier(build_fn=model_configuration, **params)
+                model.fit(X_train, y_train.values)
+
+                pred_valid[valid_idx, bag_idx] = model.predict_proba(X_valid)[:, 1]
+                auc = roc_auc_score(y_valid, pred_valid[valid_idx, bag_idx])
+
+                print('{}-fold auc: {}'.format(fold_idx, auc))
+                pred_test[:, bag_idx] += model.predict_proba(X_test)[:, 1] / len(kfold_seeds)
+
+            auc = roc_auc_score(y, pred_valid[:, bag_idx])
+            print('{}-bag auc: {}'.format(bag_idx, auc))
+        
+        print('Took: {} seconds to prepare oof and test predictions'.format(time.time() - t0))
+
+        auc = roc_auc_score(y, pred_valid.mean(axis=1))
+        print('total auc: {}'.format(auc))
+
+        pred_test_final = pred_test.mean(axis=1)
+
+        return auc, pred_valid, pred_test, pred_test_final
+
 
 
     def optimize_lgb(self, Xtr, ytr, Xte, yte, param_grid):
@@ -792,6 +902,80 @@ class BaseModel:
 
         return np.mean(auc), np.std(auc)
 
+        def cross_validate_nn(self, Xtr, ytr, params, cv_adversarial_filepath):
+            # start time counter
+            t0     = time.time()
+            
+            FOLD_NUM = [0, 1, 2, 3, 4]
+
+            # Model Configuration
+            def model_configuration():
+                # create model
+                model = Sequential(name='mlp')
+
+                model.add(Dense(units=600, activation='relu', input_dim=953))
+                model.add(Dropout(rate=.1))
+                model.add(Dense(units=500, activation='relu'))
+                model.add(Dropout(rate=.1))
+                model.add(Dense(units=400, activation='relu'))
+                model.add(Dropout(rate=.1))
+                model.add(Dense(units=300, activation='relu'))
+                model.add(Dropout(rate=.1))
+                model.add(Dense(units=100, activation='relu'))
+                model.add(Dropout(rate=.05))
+                model.add(Dense(units=2, activation='softmax'))
+
+                model.compile("adam", "categorical_crossentropy")
+
+                return model
+
+
+            # load cross validation indices file
+            cv_df = pd.read_csv(cv_adversarial_filepath)
+
+            model = KerasClassifier(build_fn=model_configuration, **params)
+
+            # preprocess for RF
+            for col in Xtr.columns:
+                # replace inf with np.nan
+                Xtr[col] = Xtr[col].replace([np.inf, -np.inf], np.nan)
+                
+                # fill missing values with median
+                if Xtr[col].isnull().sum():
+                    if pd.isnull(Xtr[col].median()):
+                        Xtr[col] = Xtr[col].fillna(-1)
+                    else:
+                        Xtr[col] = Xtr[col].fillna(Xtr[col].median())
+
+            auc = []
+
+            for fold in FOLD_NUM:
+                test_idx  = list(cv_df[f'F{fold}'].values)
+                train_idx = list(set(Xtr.index) - set(test_idx))
+
+                scaler = MinMaxScaler()
+
+                x_trn = Xtr.iloc[train_idx]
+                y_trn = ytr.iloc[train_idx].astype(np.uint8).values
+
+                x_trn = scaler.fit_transform(x_trn)
+
+                x_val = Xtr.iloc[test_idx]
+                y_val = ytr.iloc[test_idx].astype(np.uint8).values
+
+                x_val = scaler.transform(x_val)
+
+                model.fit(x_trn, y_trn)
+                fold_preds = model.predict_proba(x_val)[:, 1]
+
+                fold_auc = roc_auc_score(y_val, fold_preds)
+
+                auc.append(fold_auc)
+            
+            auc = np.array(auc)
+
+            return np.mean(auc), np.std(auc)
+
         def cross_validate_log(self, Xtr, ytr, params, cv_adversarial_filepath):
             # start time counter
             t0     = time.time()
@@ -820,12 +1004,18 @@ class BaseModel:
             for fold in FOLD_NUM:
                 test_idx  = list(cv_df[f'F{fold}'].values)
                 train_idx = list(set(Xtr.index) - set(test_idx))
-
+                
+                scaler = MinMaxScaler()
+                
                 x_trn = Xtr.iloc[train_idx]
-                y_trn = ytr.iloc[train_idx]
+                y_trn = ytr.iloc[train_idx].values
 
+                x_trn = scaler.fit_transform(x_trn)
+                
                 x_val = Xtr.iloc[test_idx]
-                y_val = ytr.iloc[test_idx]
+                y_val = ytr.iloc[test_idx].values
+
+                x_val = scaler.transform(x_val)
 
                 model.fit(x_trn, y_trn)
                 fold_preds = model.predict_proba(x_val)[:, 1]
@@ -901,6 +1091,10 @@ class BaseModel:
         auc = []
 
         for fold in FOLD_NUM:
+            print('Fold: {}'.format(fold))
+            print('*' * 100)
+            print()
+
             test_idx  = list(cv_df[f'F{fold}'].values)
             train_idx = list(set(Xtr.index) - set(test_idx))
 
@@ -919,6 +1113,8 @@ class BaseModel:
             auc.append(fold_auc)
         
         auc = np.array(auc)
+        
+        print('Took: {} seconds to cross-validate'.format(time.time() - t0))
 
         return np.mean(auc), np.std(auc)
 

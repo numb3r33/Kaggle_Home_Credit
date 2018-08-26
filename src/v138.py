@@ -1967,8 +1967,6 @@ if __name__ == '__main__':
         mean_auc, std_auc = m.cross_validate(train, feature_list, PARAMS.copy(), cv_adversarial_filepath)
         cv_score   = str(mean_auc) + '_' + str(std_auc)
         
-        PARAMS['num_boost_round'] = np.argmax(cv_history['test-auc-mean'].values) + 1
-
         print('*' * 100)
         print('Best AUC: {}'.format(cv_score))
         
