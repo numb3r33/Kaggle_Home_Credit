@@ -240,7 +240,8 @@ PARAMS = {
     'eval_metric': 'AUC',
     'logging_level': 'Verbose',
     'verbose': 100,
-    'thread_count': 8
+    'thread_count': 8,
+    'random_state': SEED
 }
 
 
@@ -2077,7 +2078,7 @@ if __name__ == '__main__':
             train = train.sample(frac=SAMPLE_SIZE)
         
         
-        PARAMS['seed']  = SEED
+        PARAMS['random_state']  = SEED
         
         cv_adversarial_filepath = os.path.join(basepath, 'data/raw/cv_idx_test_stratified.csv')
 
@@ -2149,7 +2150,7 @@ if __name__ == '__main__':
         
         PARAMS        = joblib.load(os.path.join(basepath, output_path + f'{data_folder}{MODEL_FILENAME}_{CV_SEED}_params.pkl'))
         
-        PARAMS['seed'] = SEED
+        PARAMS['random_state'] = SEED
         
         if os.path.exists(os.path.join(basepath, output_path + f'{data_folder}{MODEL_FILENAME}_{CV_SEED}_test_preds.npy')):
             test_preds = np.load(os.path.join(basepath, output_path + f'{data_folder}{MODEL_FILENAME}_{CV_SEED}_test_preds.npy'))
