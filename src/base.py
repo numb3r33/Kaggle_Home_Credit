@@ -24,11 +24,6 @@ from sklearn.model_selection import KFold
 from bayes_opt import BayesianOptimization
 from MulticoreTSNE import MulticoreTSNE as TSNE
 
-import keras
-
-from keras.models import Sequential
-from keras.layers import Dense, Activation, Dropout
-from keras.wrappers.scikit_learn import KerasClassifier
 from sklearn.preprocessing import StandardScaler, MinMaxScaler
 
 import time
