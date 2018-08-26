@@ -1161,7 +1161,7 @@ class BaseModel:
             print('Fold: {}'.format(fold))
             print('*' * 100)
             print()
-            
+
             test_idx  = list(cv_df[f'F{fold}'].values)
             train_idx = list(set(Xtr.index) - set(test_idx))
             
@@ -1258,11 +1258,11 @@ class BaseModel:
             test_idx  = list(cv_df[f'F{fold}'].values)
             train_idx = list(set(Xtr.index) - set(test_idx))
 
-            x_trn = Xtr.iloc[train_idx]
-            y_trn = ytr.iloc[train_idx]
+            x_trn = Xtr[Xtr.index.isin(train_idx)]
+            y_trn = ytr[ytr.index.isin(train_idx)]
 
-            x_val = Xtr.iloc[test_idx]
-            y_val = ytr.iloc[test_idx]
+            x_val = Xtr[Xtr.index.isin(test_idx)]
+            y_val = ytr[ytr.index.isin(test_idx)]
 
             # train CatBoost Classifier
             model.fit(x_trn, y_trn, verbose=False)
