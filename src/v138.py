@@ -1962,7 +1962,8 @@ if __name__ == '__main__':
         
         
         PARAMS['random_state']  = SEED
-        
+
+        cv_adversarial_filepath = os.path.join(basepath, 'data/raw/cv_idx_test_stratified.csv')        
         mean_auc, std_auc = m.cross_validate(train, feature_list, PARAMS.copy(), cv_adversarial_filepath)
         cv_score   = str(mean_auc) + '_' + str(std_auc)
         
