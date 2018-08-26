@@ -1976,6 +1976,8 @@ if __name__ == '__main__':
         
         PARAMS['seed']                  = SEED
         
+        cv_adversarial_filepath = os.path.join(basepath, 'data/raw/cv_idx_test_stratified.csv')        
+        
         cv_history = m.cross_validate(train, feature_list, PARAMS.copy(), cv_adversarial_filepath)
         cv_score   = str(cv_history.iloc[-1]['test-auc-mean']) + '_' + str(cv_history.iloc[-1]['test-auc-std'])
         
