@@ -897,131 +897,131 @@ class BaseModel:
 
         return np.mean(auc), np.std(auc)
 
-        def cross_validate_nn(self, Xtr, ytr, params, cv_adversarial_filepath):
-            # start time counter
-            t0     = time.time()
+    def cross_validate_nn(self, Xtr, ytr, params, cv_adversarial_filepath):
+        # start time counter
+        t0     = time.time()
+        
+        FOLD_NUM = [0, 1, 2, 3, 4]
+
+        # Model Configuration
+        def model_configuration():
+            # create model
+            model = Sequential(name='mlp')
+
+            model.add(Dense(units=600, activation='relu', input_dim=953))
+            model.add(Dropout(rate=.1))
+            model.add(Dense(units=500, activation='relu'))
+            model.add(Dropout(rate=.1))
+            model.add(Dense(units=400, activation='relu'))
+            model.add(Dropout(rate=.1))
+            model.add(Dense(units=300, activation='relu'))
+            model.add(Dropout(rate=.1))
+            model.add(Dense(units=100, activation='relu'))
+            model.add(Dropout(rate=.05))
+            model.add(Dense(units=2, activation='softmax'))
+
+            model.compile("adam", "categorical_crossentropy")
+
+            return model
+
+
+        # load cross validation indices file
+        cv_df = pd.read_csv(cv_adversarial_filepath)
+
+        model = KerasClassifier(build_fn=model_configuration, **params)
+
+        # preprocess for RF
+        for col in Xtr.columns:
+            # replace inf with np.nan
+            Xtr[col] = Xtr[col].replace([np.inf, -np.inf], np.nan)
             
-            FOLD_NUM = [0, 1, 2, 3, 4]
+            # fill missing values with median
+            if Xtr[col].isnull().sum():
+                if pd.isnull(Xtr[col].median()):
+                    Xtr[col] = Xtr[col].fillna(-1)
+                else:
+                    Xtr[col] = Xtr[col].fillna(Xtr[col].median())
 
-            # Model Configuration
-            def model_configuration():
-                # create model
-                model = Sequential(name='mlp')
+        auc = []
 
-                model.add(Dense(units=600, activation='relu', input_dim=953))
-                model.add(Dropout(rate=.1))
-                model.add(Dense(units=500, activation='relu'))
-                model.add(Dropout(rate=.1))
-                model.add(Dense(units=400, activation='relu'))
-                model.add(Dropout(rate=.1))
-                model.add(Dense(units=300, activation='relu'))
-                model.add(Dropout(rate=.1))
-                model.add(Dense(units=100, activation='relu'))
-                model.add(Dropout(rate=.05))
-                model.add(Dense(units=2, activation='softmax'))
+        for fold in FOLD_NUM:
+            test_idx  = list(cv_df[f'F{fold}'].values)
+            train_idx = list(set(Xtr.index) - set(test_idx))
 
-                model.compile("adam", "categorical_crossentropy")
+            scaler = MinMaxScaler()
 
-                return model
+            x_trn = Xtr.iloc[train_idx]
+            y_trn = ytr.iloc[train_idx].astype(np.uint8).values
 
+            x_trn = scaler.fit_transform(x_trn)
 
-            # load cross validation indices file
-            cv_df = pd.read_csv(cv_adversarial_filepath)
+            x_val = Xtr.iloc[test_idx]
+            y_val = ytr.iloc[test_idx].astype(np.uint8).values
 
-            model = KerasClassifier(build_fn=model_configuration, **params)
+            x_val = scaler.transform(x_val)
 
-            # preprocess for RF
-            for col in Xtr.columns:
-                # replace inf with np.nan
-                Xtr[col] = Xtr[col].replace([np.inf, -np.inf], np.nan)
-                
-                # fill missing values with median
-                if Xtr[col].isnull().sum():
-                    if pd.isnull(Xtr[col].median()):
-                        Xtr[col] = Xtr[col].fillna(-1)
-                    else:
-                        Xtr[col] = Xtr[col].fillna(Xtr[col].median())
+            model.fit(x_trn, y_trn)
+            fold_preds = model.predict_proba(x_val)[:, 1]
 
-            auc = []
+            fold_auc = roc_auc_score(y_val, fold_preds)
 
-            for fold in FOLD_NUM:
-                test_idx  = list(cv_df[f'F{fold}'].values)
-                train_idx = list(set(Xtr.index) - set(test_idx))
+            auc.append(fold_auc)
+        
+        auc = np.array(auc)
 
-                scaler = MinMaxScaler()
+        return np.mean(auc), np.std(auc)
 
-                x_trn = Xtr.iloc[train_idx]
-                y_trn = ytr.iloc[train_idx].astype(np.uint8).values
+    def cross_validate_log(self, Xtr, ytr, params, cv_adversarial_filepath):
+        # start time counter
+        t0     = time.time()
+        
+        FOLD_NUM = [0, 1, 2, 3, 4]
+        
+        # load cross validation indices file
+        cv_df = pd.read_csv(cv_adversarial_filepath)
 
-                x_trn = scaler.fit_transform(x_trn)
+        model = LogisticRegression(**params)
 
-                x_val = Xtr.iloc[test_idx]
-                y_val = ytr.iloc[test_idx].astype(np.uint8).values
-
-                x_val = scaler.transform(x_val)
-
-                model.fit(x_trn, y_trn)
-                fold_preds = model.predict_proba(x_val)[:, 1]
-
-                fold_auc = roc_auc_score(y_val, fold_preds)
-
-                auc.append(fold_auc)
+        # preprocess for RF
+        for col in Xtr.columns:
+            # replace inf with np.nan
+            Xtr[col] = Xtr[col].replace([np.inf, -np.inf], np.nan)
             
-            auc = np.array(auc)
+            # fill missing values with median
+            if Xtr[col].isnull().sum():
+                if pd.isnull(Xtr[col].median()):
+                    Xtr[col] = Xtr[col].fillna(-1)
+                else:
+                    Xtr[col] = Xtr[col].fillna(Xtr[col].median())
 
-            return np.mean(auc), np.std(auc)
+        auc = []
 
-        def cross_validate_log(self, Xtr, ytr, params, cv_adversarial_filepath):
-            # start time counter
-            t0     = time.time()
+        for fold in FOLD_NUM:
+            test_idx  = list(cv_df[f'F{fold}'].values)
+            train_idx = list(set(Xtr.index) - set(test_idx))
             
-            FOLD_NUM = [0, 1, 2, 3, 4]
+            scaler = MinMaxScaler()
             
-            # load cross validation indices file
-            cv_df = pd.read_csv(cv_adversarial_filepath)
+            x_trn = Xtr.iloc[train_idx]
+            y_trn = ytr.iloc[train_idx].values
 
-            model = LogisticRegression(**params)
-
-            # preprocess for RF
-            for col in Xtr.columns:
-                # replace inf with np.nan
-                Xtr[col] = Xtr[col].replace([np.inf, -np.inf], np.nan)
-                
-                # fill missing values with median
-                if Xtr[col].isnull().sum():
-                    if pd.isnull(Xtr[col].median()):
-                        Xtr[col] = Xtr[col].fillna(-1)
-                    else:
-                        Xtr[col] = Xtr[col].fillna(Xtr[col].median())
-
-            auc = []
-
-            for fold in FOLD_NUM:
-                test_idx  = list(cv_df[f'F{fold}'].values)
-                train_idx = list(set(Xtr.index) - set(test_idx))
-                
-                scaler = MinMaxScaler()
-                
-                x_trn = Xtr.iloc[train_idx]
-                y_trn = ytr.iloc[train_idx].values
-
-                x_trn = scaler.fit_transform(x_trn)
-                
-                x_val = Xtr.iloc[test_idx]
-                y_val = ytr.iloc[test_idx].values
-
-                x_val = scaler.transform(x_val)
-
-                model.fit(x_trn, y_trn)
-                fold_preds = model.predict_proba(x_val)[:, 1]
-
-                fold_auc = roc_auc_score(y_val, fold_preds)
-
-                auc.append(fold_auc)
+            x_trn = scaler.fit_transform(x_trn)
             
-            auc = np.array(auc)
+            x_val = Xtr.iloc[test_idx]
+            y_val = ytr.iloc[test_idx].values
 
-            return np.mean(auc), np.std(auc)
+            x_val = scaler.transform(x_val)
+
+            model.fit(x_trn, y_trn)
+            fold_preds = model.predict_proba(x_val)[:, 1]
+
+            fold_auc = roc_auc_score(y_val, fold_preds)
+
+            auc.append(fold_auc)
+        
+        auc = np.array(auc)
+
+        return np.mean(auc), np.std(auc)
 
 
     def cross_validate_etc(self, Xtr, ytr, params, cv_adversarial_filepath):
