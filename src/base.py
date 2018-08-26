@@ -1013,7 +1013,7 @@ class BaseModel:
             # create model
             model = Sequential(name='mlp')
 
-            model.add(Dense(units=600, activation='relu', input_dim=953))
+            model.add(Dense(units=600, activation='relu', input_dim=1350))
             model.add(Dropout(rate=.1))
             model.add(Dense(units=500, activation='relu'))
             model.add(Dropout(rate=.1))
