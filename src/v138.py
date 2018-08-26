@@ -1807,7 +1807,7 @@ class Modelv138(BaseModel):
                                                     )
     
     def predict_test(self, train, test, feature_list, params, save_path, n_folds=5):
-        return super(Modelv138, self).predict_test(train, 
+        return super(Modelv138, self).predict_test_log(train, 
                                                     test, 
                                                     feature_list, 
                                                     params, 
@@ -1821,7 +1821,7 @@ class Modelv138(BaseModel):
         Xtr = train.loc[:, feature_list]
         ytr = train.loc[:, TARGET_NAME]
 
-        return super(Modelv138, self).cross_validate(Xtr, ytr, params, cv_adversarial_filepath=cv_adversarial_filepath)
+        return super(Modelv138, self).cross_validate_log(Xtr, ytr, params, cv_adversarial_filepath=cv_adversarial_filepath)
 
     def rf_fi(self, train, feature_list, SEED, target='TARGET'):
         X = train.loc[:, feature_list]
