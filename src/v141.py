@@ -30,10 +30,10 @@ PARAMS = {
     'random_state': SEED
 }
 
-MODEL_FILENAME           = 'v140'
+MODEL_FILENAME           = 'v141'
 SAMPLE_SIZE              = .3
 
-class Modelv140(BaseModel):
+class Modelv141(BaseModel):
     def __init__(self, **params):
         self.params  = params
         self.n_train = 307511 # TODO: find a way to remove this constant
@@ -54,7 +54,7 @@ class Modelv140(BaseModel):
         return df
     
     def reduce_mem_usage(self, df):
-        return super(Modelv140, self).reduce_mem_usage(df)
+        return super(Modelv141, self).reduce_mem_usage(df)
     
     def get_features(self, train, test):
         data       = pd.concat((train, test))
@@ -95,7 +95,7 @@ class Modelv140(BaseModel):
         if is_eval:
             yte = test.loc[:, TARGET_NAME]
         
-        return super(Modelv140, self).train_log(X, y, Xte, yte, **params)
+        return super(Modelv141, self).train_log(X, y, Xte, yte, **params)
 
     def evaluate(self, test, feature_list, is_eval, model, TARGET_NAME='TARGET'):
         Xte = test.loc[:, feature_list]
@@ -104,18 +104,18 @@ class Modelv140(BaseModel):
         if is_eval:
             yte = test.loc[:, TARGET_NAME]
 
-        return super(Modelv140, self).evaluate_log(Xte, yte, model)
+        return super(Modelv141, self).evaluate_log(Xte, yte, model)
 
 
     def predict_test(self, train, test, feature_list, params, save_path, n_folds=5):
-        return super(Modelv140, self).predict_test_xgb(train, test, feature_list, params, save_path, n_folds=n_folds)
+        return super(Modelv141, self).predict_test_xgb(train, test, feature_list, params, save_path, n_folds=n_folds)
 
 
     def cross_validate(self, train, feature_list, params, cv_adversarial_filepath=None, TARGET_NAME='TARGET'):
         Xtr = train.loc[:, feature_list]
         ytr = train.loc[:, TARGET_NAME]
 
-        return super(Modelv140, self).cross_validate_log(Xtr, ytr, params, cv_adversarial_filepath=cv_adversarial_filepath)
+        return super(Modelv141, self).cross_validate_log(Xtr, ytr, params, cv_adversarial_filepath=cv_adversarial_filepath)
 
 if __name__ == '__main__':
     
@@ -161,7 +161,7 @@ if __name__ == '__main__':
             'data_folder': data_folder
         }
 
-        m   = Modelv140(**params)
+        m   = Modelv141(**params)
             
         train  = m.load_data(train_filenames)
         test   = m.load_data(test_filenames)
@@ -228,7 +228,7 @@ if __name__ == '__main__':
             'data_folder': data_folder
         }
 
-        m   = Modelv140(**params)
+        m   = Modelv141(**params)
             
         train  = m.load_data(train_filenames)
         test   = m.load_data(test_filenames)

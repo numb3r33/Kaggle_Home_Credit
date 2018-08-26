@@ -240,7 +240,7 @@ PARAMS = {
     'eval_metric': 'AUC',
     'logging_level': 'Verbose',
     'verbose': 100,
-    'thread_count': 8,
+    'thread_count': 16,
     'random_state': SEED
 }
 
