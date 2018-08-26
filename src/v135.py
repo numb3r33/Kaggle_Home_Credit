@@ -252,7 +252,7 @@ if __name__ == '__main__':
         PARAMS        = joblib.load(os.path.join(basepath, output_path + f'{data_folder}{MODEL_FILENAME}_{CV_SEED}_params.pkl'))
         HOLDOUT_SCORE = joblib.load(os.path.join(basepath, output_path + f'{data_folder}{MODEL_FILENAME}_{CV_SEED}_cv.pkl'))
 
-        PARAMS['seed'] = SEED
+        PARAMS['random_state'] = SEED
 
         print('*' * 100)
         print('PARAMS are: {}'.format(PARAMS))
