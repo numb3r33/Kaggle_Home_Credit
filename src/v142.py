@@ -245,7 +245,7 @@ PCA_PARAMS = {
 
 
 MODEL_FILENAME           = 'v142'
-SAMPLE_SIZE              = .3
+SAMPLE_SIZE              = .1
 
 # NOTE: column in frequency encoded columns
 # cannot be in ohe cols.

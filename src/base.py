@@ -808,7 +808,7 @@ class BaseModel:
             # create model
             model = Sequential(name='mlp')
 
-            model.add(Dense(units=600, activation='relu', input_dim=953))
+            model.add(Dense(units=600, activation='relu', input_dim=1350))
             model.add(Dropout(rate=.1))
             model.add(Dense(units=500, activation='relu'))
             model.add(Dropout(rate=.1))
@@ -1158,18 +1158,22 @@ class BaseModel:
         auc = []
 
         for fold in FOLD_NUM:
+            print('Fold: {}'.format(fold))
+            print('*' * 100)
+            print()
+            
             test_idx  = list(cv_df[f'F{fold}'].values)
             train_idx = list(set(Xtr.index) - set(test_idx))
             
             scaler = MinMaxScaler()
             
-            x_trn = Xtr.iloc[train_idx]
-            y_trn = ytr.iloc[train_idx].values
+            x_trn = Xtr[Xtr.index.isin(train_idx)]
+            y_trn = ytr[ytr.index.isin(train_idx)].values
 
             x_trn = scaler.fit_transform(x_trn)
             
-            x_val = Xtr.iloc[test_idx]
-            y_val = ytr.iloc[test_idx].values
+            x_val = Xtr[Xtr.index.isin(test_idx)]
+            y_val = ytr[ytr.index.isin(test_idx)].values
 
             x_val = scaler.transform(x_val)
 
