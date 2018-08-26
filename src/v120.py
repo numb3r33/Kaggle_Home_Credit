@@ -2065,50 +2065,7 @@ if __name__ == '__main__':
             feature_list = data.columns.tolist()
             feature_list = list(set(feature_list) - set(COLS_TO_REMOVE))
             np.save(os.path.join(basepath, output_path + f'{data_folder}{MODEL_FILENAME}_features.npy'), feature_list)
-
-        # KNN Features
-        if os.path.exists(os.path.join(basepath, output_path + f'{data_folder}knn_features.pkl')):
-            print('Loading KNN features ...')
-            knn_features = joblib.load(os.path.join(basepath, output_path + f'{data_folder}knn_features.pkl'))
-        else:
-            print('Preparing knn features ...')
-
-            t0        = time.time()
-            data_copy = data.copy()
-            data_copy = fill_missing_values(data_copy)
-
-            train = data_copy.iloc[:m.n_train]
-            test  = data_copy.iloc[m.n_train:]
-
-            X = train.loc[:, feature_list].values
-            y = train.loc[:, 'TARGET'].astype(np.uint8).values
-
-            X_test = test.loc[:, feature_list].values
-
-            # standardization
-            scaler = MinMaxScaler()
-            X      = scaler.fit_transform(X)
-            X_test = scaler.transform(X_test)
-
-            nn_features        = NearestNeighborsFeatures(n_neighbors=5, metric='cosine', k_list=[3, 5, 7], n_jobs=16)
-            knn_train_features = cross_val_predict(nn_features, X, y, cv=5)
-
-            nn_features.fit(X, y)
-            knn_test_features = nn_features.predict(X_test)
-
-            joblib.dump(knn_train_features, os.path.join(basepath, output_path + f'{data_folder}knn_train_features.pkl'))
-            joblib.dump(knn_test_features, os.path.join(basepath, output_path + f'{data_folder}knn_test_features.pkl'))
-
-            knn_features = np.vstack((knn_train_features, 
-                                      knn_test_features))
-            joblib.dump(knn_features, os.path.join(basepath, output_path + f'{data_folder}knn_features.pkl'))
-
-            print('Took: {} seconds to generate knn features'.format({time.time() - t0}))
-
-        knn_features = pd.DataFrame(knn_features, columns=[f'knn_{i}' for i in range(knn_features.shape[1])])
-        knn_features.index = data.index
-
-        data  = pd.concat((data, knn_features), axis=1)     
+    
         train = data.iloc[:m.n_train]
 
         del data
@@ -2120,7 +2077,7 @@ if __name__ == '__main__':
             train = train.sample(frac=SAMPLE_SIZE)
         
         
-        PARAMS['seed']                  = SEED
+        PARAMS['seed']  = SEED
         
         cv_adversarial_filepath = os.path.join(basepath, 'data/raw/cv_idx_test_stratified.csv')
 
@@ -2192,10 +2149,8 @@ if __name__ == '__main__':
         
         PARAMS        = joblib.load(os.path.join(basepath, output_path + f'{data_folder}{MODEL_FILENAME}_{CV_SEED}_params.pkl'))
         
-        PARAMS['seed']                  = SEED
-        PARAMS['feature_fraction_seed'] = SEED
-        PARAMS['bagging_seed']          = SEED
-
+        PARAMS['seed'] = SEED
+        
         if os.path.exists(os.path.join(basepath, output_path + f'{data_folder}{MODEL_FILENAME}_{CV_SEED}_test_preds.npy')):
             test_preds = np.load(os.path.join(basepath, output_path + f'{data_folder}{MODEL_FILENAME}_{CV_SEED}_test_preds.npy'))
         else:
