@@ -462,9 +462,7 @@ class BaseModel:
         return auc, pred_valid, pred_test, pred_test_final           
                 
     
-    def predict_test_cb(self, train, test, feature_list, params, n_folds=5, categorical_feature='auto'):
-        kfold_seeds = [2017, 2016, 2015, 2014, 2013]
-
+    def predict_test_cb(self, train, test, feature_list, params, kfold_seeds=[2017, 2016, 2015, 2014, 2013], n_folds=5, categorical_feature='auto'):
         pred_valid = np.zeros((train.shape[0], len(kfold_seeds)))
         pred_test  = np.zeros((test.shape[0], len(kfold_seeds)))
 
@@ -487,8 +485,8 @@ class BaseModel:
             kf = KFold(n_folds, shuffle=True, random_state=kfold_seed)
 
             for fold_idx, (train_idx, valid_idx) in enumerate(kf.split(X)):
-                X_train, X_valid = X.iloc[train_idx], X.iloc[valid_idx]
-                y_train, y_valid = y.iloc[train_idx], y.iloc[valid_idx]
+                X_train, X_valid = X[X.index.isin(train_idx)], X[X.index.isin(valid_idx)]
+                y_train, y_valid = y[y.index.isin(train_idx)], y[y.index.isin(valid_idx)]
 
                 model = CatBoostClassifier(**params)
                 model.fit(X_train, y_train)
