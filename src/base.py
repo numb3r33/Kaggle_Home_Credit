@@ -1537,7 +1537,7 @@ class BaseModel:
 
         return fi_df
     
-    def get_feature_importance(self, X, y, shuffle=False, seed=None):
+    def get_feature_importance(self, X, y, seed=None, shuffle=False):
         y_target = y.copy()
 
         if shuffle:
