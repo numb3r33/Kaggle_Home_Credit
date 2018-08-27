@@ -2138,3 +2138,16 @@ if __name__ == '__main__':
 
         scores_df = pd.DataFrame(feature_scores, columns=['feature', 'split_score', 'gain_score'])
         scores_df.to_csv(os.path.join(basepath, output_path + f'{data_folder}{MODEL_FILENAME}_scores.csv'), index=False)
+
+        correlation_scores = []
+        for _f in imp_df['feature'].unique():
+            f_null_imps = null_imp_df.loc[null_imp_df['feature'] == _f, 'importance_gain'].values
+            f_act_imps = imp_df.loc[imp_df['feature'] == _f, 'importance_gain'].values
+            gain_score = 100 * (f_null_imps < np.percentile(f_act_imps, 25)).sum() / f_null_imps.size
+            f_null_imps = null_imp_df.loc[null_imp_df['feature'] == _f, 'importance_split'].values
+            f_act_imps = imp_df.loc[imp_df['feature'] == _f, 'importance_split'].values
+            split_score = 100 * (f_null_imps < np.percentile(f_act_imps, 25)).sum() / f_null_imps.size
+            correlation_scores.append((_f, split_score, gain_score))
+
+        corr_scores_df = pd.DataFrame(correlation_scores, columns=['feature', 'split_score', 'gain_score'])
+        corr_scores_df.to_csv(os.path.join(basepath, output_path + f'{data_folder}{MODEL_FILENAME}_corr_scores.csv'), index=False)
