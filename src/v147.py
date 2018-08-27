@@ -1114,21 +1114,17 @@ PARAMS = {
     'early_stopping_rounds': 200,
     'objective': 'binary',
     'boosting_type': 'dart',
-    'learning_rate': .01,
+    'learning_rate': .05,
     'metric': 'auc',
     'num_leaves': 20,
     'sub_feature': 0.05,
     'bagging_fraction': 0.9,
-    'reg_lambda': 75,
-    'reg_alpha': 5,
-    'min_split_gain': .5,
     'min_data_in_leaf': 15,
     'min_sum_hessian_in_leaf': 1,
     'nthread': 16,
     'verbose': -1,
     'seed': SEED
 }
-
 
 
 PCA_PARAMS = {
