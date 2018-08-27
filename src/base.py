@@ -1552,6 +1552,7 @@ class BaseModel:
             'colsample_bytree': .7,
             'num_leaves': 100,
             'max_depth': 8,
+            'bagging_freq': 1,
             'seed': seed,
             'n_jobs': -1
         }
