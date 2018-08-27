@@ -2127,7 +2127,7 @@ if __name__ == '__main__':
 
         feature_scores = []
 
-        for _f in imp_df['feature'].unique():
+        for _f in imp_df.loc[:, 'feature'].unique():
             f_null_imps_gain = null_imp_df.loc[null_imp_df['feature'] == _f, 'importance_gain'].values
             f_act_imps_gain = imp_df.loc[imp_df['feature'] == _f, 'importance_gain'].mean()
             gain_score = np.log(1e-10 + f_act_imps_gain / (1 + np.percentile(f_null_imps_gain, 75)))  # Avoid didvide by zero
