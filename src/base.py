@@ -1554,7 +1554,7 @@ class BaseModel:
             'max_depth': 8,
             'bagging_freq': 1,
             'seed': seed,
-            'n_jobs': -1
+            'nthread': -1
         }
 
         # fit model
@@ -1562,7 +1562,7 @@ class BaseModel:
 
         # Get feature importance
         imp_df = pd.DataFrame()
-        imp_df['feature'] = list(train_features)
+        imp_df['feature'] = list(X.columns)
         imp_df['importance_gain'] = clf.feature_importance(importance_type='gain')
         imp_df['importance_split'] = clf.feature_importance(importance_type='split')
         imp_df['trn_score'] = roc_auc_score(y, clf.predict(data[train_features]))
