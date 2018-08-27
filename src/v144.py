@@ -2093,14 +2093,14 @@ if __name__ == '__main__':
             np.save(os.path.join(basepath, output_path + f'{data_folder}{MODEL_FILENAME}_features.npy'), feature_list)
 
         if os.path.exists(os.path.join(basepath, output_path + f'{data_folder}{MODEL_FILENAME}_imp_df.csv')):
-            print('Already generated actual importance ...')
+            imp_df = os.path.join(basepath, output_path + f'{data_folder}{MODEL_FILENAME}_imp_df.csv')
         else:
             imp_df = m.get_feature_importance(train, feature_list, SEED, shuffle=False)
             imp_df.to_csv(os.path.join(basepath, output_path + f'{data_folder}{MODEL_FILENAME}_imp_df.csv'), index=False)
             
 
         if os.path.exists(os.path.join(basepath, output_path + f'{data_folder}{MODEL_FILENAME}_null_imp_df.csv')):
-            print('Already generated null importance ....')
+            null_imp_df = pd.read_csv(os.path.join(basepath, output_path + f'{data_folder}{MODEL_FILENAME}_null_imp_df.csv'))
         else:
             null_imp_df = pd.DataFrame()
             nb_runs = 80
@@ -2123,3 +2123,18 @@ if __name__ == '__main__':
                 print(dsp, end='', flush=True)
             
             null_imp_df.to_csv(os.path.join(basepath, output_path + f'{data_folder}{MODEL_FILENAME}_null_imp_df.csv'), index=False)
+        
+
+        feature_scores = []
+
+        for _f in imp_df['feature'].unique():
+            f_null_imps_gain = null_imp_df.loc[null_imp_df['feature'] == _f, 'importance_gain'].values
+            f_act_imps_gain = imp_df.loc[imp_df['feature'] == _f, 'importance_gain'].mean()
+            gain_score = np.log(1e-10 + f_act_imps_gain / (1 + np.percentile(f_null_imps_gain, 75)))  # Avoid didvide by zero
+            f_null_imps_split = null_imp_df.loc[null_imp_df['feature'] == _f, 'importance_split'].values
+            f_act_imps_split = imp_df.loc[imp_df['feature'] == _f, 'importance_split'].mean()
+            split_score = np.log(1e-10 + f_act_imps_split / (1 + np.percentile(f_null_imps_split, 75)))  # Avoid didvide by zero
+            feature_scores.append((_f, split_score, gain_score))
+
+        scores_df = pd.DataFrame(feature_scores, columns=['feature', 'split_score', 'gain_score'])
+        scores_df.to_csv(os.path.join(basepath, output_path + f'{data_folder}{MODEL_FILENAME}_scores.csv'), index=False)
