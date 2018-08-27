@@ -1536,6 +1536,37 @@ class BaseModel:
         })
 
         return fi_df
+    
+    def get_feature_importance(self, X, y, shuffle=False, seed=None):
+        y_target = y.copy()
+
+        if shuffle:
+            y = y.sample(frac=1.)
+
+        dtrain = lgb.Dataset(X, y, free_raw_data=False, silent=True)
+        
+        lgb_params = {
+            'objective': 'binary',
+            'boosting_type': 'rf',
+            'subsample': .7,
+            'colsample_bytree': .7,
+            'num_leaves': 100,
+            'max_depth': 8,
+            'seed': seed,
+            'n_jobs': -1
+        }
+
+        # fit model
+        clf = lgb.train(params=lgb_params, train_set=dtrain, num_boost_round=200)
+
+        # Get feature importance
+        imp_df = pd.DataFrame()
+        imp_df['feature'] = list(train_features)
+        imp_df['importance_gain'] = clf.feature_importance(importance_type='gain')
+        imp_df['importance_split'] = clf.feature_importance(importance_type='split')
+        imp_df['trn_score'] = roc_auc_score(y, clf.predict(data[train_features]))
+        
+        return imp_df
 
     
 class CategoricalMeanEncoded(BaseEstimator, ClassifierMixin):
@@ -1585,34 +1616,3 @@ class CategoricalMeanEncoded(BaseEstimator, ClassifierMixin):
         test_res_den = test_series.map(self.target_cnts[col]).fillna(0.0) + self.C
 
         return test_res_num / test_res_den
-
-    def get_feature_importance(self, X, y, shuffle=False, seed=None):
-        y_target = y.copy()
-
-        if shuffle:
-            y = y.sample(frac=1.)
-
-        dtrain = lgb.Dataset(X, y, free_raw_data=False, silent=True)
-        
-        lgb_params = {
-            'objective': 'binary',
-            'boosting_type': 'rf',
-            'subsample': .7,
-            'colsample_bytree': .7,
-            'num_leaves': 100,
-            'max_depth': 8,
-            'seed': seed,
-            'n_jobs': -1
-        }
-
-        # fit model
-        clf = lgb.train(params=lgb_params, train_set=dtrain, num_boost_round=200)
-
-        # Get feature importance
-        imp_df = pd.DataFrame()
-        imp_df['feature'] = list(train_features)
-        imp_df['importance_gain'] = clf.feature_importance(importance_type='gain')
-        imp_df['importance_split'] = clf.feature_importance(importance_type='split')
-        imp_df['trn_score'] = roc_auc_score(y, clf.predict(data[train_features]))
-        
-        return imp_df
