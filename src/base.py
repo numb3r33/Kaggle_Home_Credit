@@ -462,7 +462,15 @@ class BaseModel:
         return auc, pred_valid, pred_test, pred_test_final           
                 
     
-    def predict_test_cb(self, train, test, feature_list, params, kfold_seeds=[2017, 2016, 2015, 2014, 2013], n_folds=5, categorical_feature='auto'):
+    def predict_test_cb(self, 
+                        train, 
+                        test, 
+                        feature_list, 
+                        params, 
+                        kfold_seeds=[2017, 2016, 2015, 2014, 2013], 
+                        n_folds=5, 
+                        categorical_feature='auto'):
+        
         pred_valid = np.zeros((train.shape[0], len(kfold_seeds)))
         pred_test  = np.zeros((test.shape[0], len(kfold_seeds)))
 
@@ -471,7 +479,24 @@ class BaseModel:
 
         X_test   = test.loc[:, feature_list] 
         
-        del train, test
+        data = pd.concat((X, X_test))
+
+        # preprocess for CB
+        for col in data.columns:
+            # replace inf with np.nan
+            data[col] = data[col].replace([np.inf, -np.inf], np.nan)
+            
+            # fill missing values with median
+            if data[col].isnull().sum():
+                if pd.isnull(data[col].median()):
+                    data[col] = data[col].fillna(-1)
+                else:
+                    data[col] = data[col].fillna(data[col].median())
+        
+        X = data.iloc[:len(X)]
+        X_test = data.iloc[len(X):]
+
+        del train, test, data
         gc.collect()
 
         t0 = time.time()
@@ -489,7 +514,7 @@ class BaseModel:
                 y_train, y_valid = y[y.index.isin(train_idx)], y[y.index.isin(valid_idx)]
 
                 model = CatBoostClassifier(**params)
-                model.fit(X_train, y_train, eval_set=(X_valid, y_valid))
+                model.fit(X_train, y_train, eval_set=(X_valid, y_valid), verbose=False)
 
                 pred_valid[valid_idx, bag_idx] = model.predict_proba(X_valid)[:, 1]
                 auc = roc_auc_score(y_valid, pred_valid[valid_idx, bag_idx])
