@@ -2696,7 +2696,13 @@ class Modelv147(BaseModel):
                                                     )
     
     def predict_test(self, train, test, feature_list, params, save_path, n_folds=5):
-        return super(Modelv147, self).predict_test(train, test, feature_list, params, save_path, n_folds=n_folds)
+        return super(Modelv147, self).predict_test(train, 
+                                                   test, 
+                                                   feature_list, 
+                                                   params, 
+                                                   save_path, 
+                                                   kfold_seeds=[2017], 
+                                                   n_folds=n_folds)
 
 
     def cross_validate(self, train, feature_list, params, cv_adversarial_filepath=None, TARGET_NAME='TARGET'):
