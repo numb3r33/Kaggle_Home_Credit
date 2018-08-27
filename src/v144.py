@@ -2093,4 +2093,4 @@ if __name__ == '__main__':
             np.save(os.path.join(basepath, output_path + f'{data_folder}{MODEL_FILENAME}_features.npy'), feature_list)
 
         imp_df = m.get_feature_importance(train, feature_list, SEED, shuffle=False)
-        print(imp_df.head())
+        imp_df.to_csv(os.path.join(basepath, output_path + f'{data_folder}{MODEL_FILENAME}_imp_df.csv'), index=False)

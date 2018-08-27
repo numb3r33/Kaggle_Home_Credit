@@ -1565,7 +1565,7 @@ class BaseModel:
         imp_df['feature'] = list(X.columns)
         imp_df['importance_gain'] = clf.feature_importance(importance_type='gain')
         imp_df['importance_split'] = clf.feature_importance(importance_type='split')
-        imp_df['trn_score'] = roc_auc_score(y, clf.predict(X[train_features]))
+        imp_df['trn_score'] = roc_auc_score(y, clf.predict(X))
         
         return imp_df
 
