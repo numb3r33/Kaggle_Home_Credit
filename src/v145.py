@@ -2962,8 +2962,8 @@ if __name__ == '__main__':
         PARAMS['feature_fraction_seed'] = SEED
         PARAMS['bagging_seed']          = SEED
         
-        # cv_adversarial_filepath = os.path.join(basepath, 'data/raw/cv_idx_test_stratified.csv')
-        cv_adversarial_filepath = None
+        cv_adversarial_filepath = os.path.join(basepath, 'data/raw/cv_idx_test_stratified.csv')
+        # cv_adversarial_filepath = None
 
         cv_history = m.cross_validate(train, feature_list, PARAMS.copy(), cv_adversarial_filepath)
         cv_score   = str(cv_history.iloc[-1]['auc-mean']) + '_' + str(cv_history.iloc[-1]['auc-stdv'])
