@@ -1124,7 +1124,7 @@ PARAMS = {
     'min_split_gain': .5,
     'min_data_in_leaf': 15,
     'min_sum_hessian_in_leaf': 1,
-    'nthread': 8,
+    'nthread': 16,
     'verbose': -1,
     'seed': SEED
 }
