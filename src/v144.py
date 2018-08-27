@@ -2092,5 +2092,34 @@ if __name__ == '__main__':
             feature_list = list(set(feature_list) - set(COLS_TO_REMOVE))
             np.save(os.path.join(basepath, output_path + f'{data_folder}{MODEL_FILENAME}_features.npy'), feature_list)
 
-        imp_df = m.get_feature_importance(train, feature_list, SEED, shuffle=False)
-        imp_df.to_csv(os.path.join(basepath, output_path + f'{data_folder}{MODEL_FILENAME}_imp_df.csv'), index=False)
+        if os.path.exists(os.path.join(basepath, output_path + f'{data_folder}{MODEL_FILENAME}_imp_df.csv')):
+            print('Already generated actual importance ...')
+        else:
+            imp_df = m.get_feature_importance(train, feature_list, SEED, shuffle=False)
+            imp_df.to_csv(os.path.join(basepath, output_path + f'{data_folder}{MODEL_FILENAME}_imp_df.csv'), index=False)
+            
+
+        if os.path.exists(os.path.join(basepath, output_path + f'{data_folder}{MODEL_FILENAME}_null_imp_df.csv')):
+            print('Already generated null importance ....')
+        else:
+            null_imp_df = pd.DataFrame()
+            nb_runs = 80
+
+            start = time.time()
+            dsp = ''
+
+            for i in range(nb_runs):
+                # Get current run importances
+                imp_df = m.get_feature_importance(train, feature_list, SEED, shuffle=True)
+                imp_df['run'] = i + 1 
+                # Concat the latest importances with the old ones
+                null_imp_df = pd.concat([null_imp_df, imp_df], axis=0)
+                # Erase previous message
+                for l in range(len(dsp)):
+                    print('\b', end='', flush=True)
+                # Display current run and time used
+                spent = (time.time() - start) / 60
+                dsp = 'Done with %4d of %4d (Spent %5.1f min)' % (i + 1, nb_runs, spent)
+                print(dsp, end='', flush=True)
+            
+            null_imp_df.to_csv(os.path.join(basepath, output_path + f'{data_folder}{MODEL_FILENAME}_null_imp_df.csv'), index=False)
