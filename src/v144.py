@@ -2091,3 +2091,6 @@ if __name__ == '__main__':
             feature_list = train.columns.tolist()
             feature_list = list(set(feature_list) - set(COLS_TO_REMOVE))
             np.save(os.path.join(basepath, output_path + f'{data_folder}{MODEL_FILENAME}_features.npy'), feature_list)
+
+        imp_df = m.get_feature_importance(train, feature_list, SEED, shuffle=False)
+        print(imp_df.head())

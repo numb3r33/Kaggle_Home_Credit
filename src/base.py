@@ -1601,7 +1601,7 @@ class CategoricalMeanEncoded(BaseEstimator, ClassifierMixin):
             'colsample_bytree': .7,
             'num_leaves': 100,
             'max_depth': 8,
-            'seed': SEED,
+            'seed': seed,
             'n_jobs': -1
         }
 
