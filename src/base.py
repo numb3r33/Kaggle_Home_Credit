@@ -489,7 +489,7 @@ class BaseModel:
                 y_train, y_valid = y[y.index.isin(train_idx)], y[y.index.isin(valid_idx)]
 
                 model = CatBoostClassifier(**params)
-                model.fit(X_train, y_train)
+                model.fit(X_train, y_train, eval_set=[(X_valid, y_valid)])
 
                 pred_valid[valid_idx, bag_idx] = model.predict_proba(X_valid)[:, 1]
                 auc = roc_auc_score(y_valid, pred_valid[valid_idx, bag_idx])
