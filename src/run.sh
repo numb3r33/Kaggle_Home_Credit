@@ -20,7 +20,7 @@
 # python v145.py -input_path data/raw/ -output_path data/interim/ -data_folder dataset6/ -cv True -seed 4457
 # python v145.py -input_path data/raw/ -output_path data/interim/ -data_folder dataset6/ -cv_predict True -cv_seed 4457 -seed 1231
 
-# Ensemble
+# Stacker ( 1st-stage )
 # python v146.py -input_path data/raw/ -output_path data/interim/ -data_folder dataset6/ -cv True -seed 4457
 # python v146.py -input_path data/raw/ -output_path data/interim/ -data_folder dataset6/ -t True -cv_seed 4457 -seed 1235
 
@@ -28,7 +28,7 @@
 # python v147.py -input_path data/raw/ -output_path data/interim/ -data_folder dataset6/ -cv True -seed 4457
 # python v147.py -input_path data/raw/ -output_path data/interim/ -data_folder dataset6/ -cv_predict True -cv_seed 4457 -seed 1231
 
-# 2nd-stage Stacking
+# Stacker ( 2nd-stage )
 # python v148.py -input_path data/raw/ -output_path data/interim/ -data_folder dataset6/ -cv_predict True -cv_seed 4457 -seed 1231
 # python v149.py -input_path data/raw/ -output_path data/interim/ -data_folder dataset6/ -cv_predict True -cv_seed 4457 -seed 1231
 
@@ -39,4 +39,9 @@
 
 
 # LGB ( cv_adversarial_idx_v1.csv, gain_score > .3 )
-python v151.py -input_path data/raw/ -output_path data/interim/ -data_folder dataset6/ -cv_predict True -cv_seed 4457 -seed 1231
+# python v151.py -input_path data/raw/ -output_path data/interim/ -data_folder dataset6/ -cv_predict True -cv_seed 4457 -seed 1231
+
+
+# Stacker ( 1st-stage )
+python v152.py -input_path data/raw/ -output_path data/interim/ -data_folder dataset6/ -cv True -seed 4457
+# python v152.py -input_path data/raw/ -output_path data/interim/ -data_folder dataset6/ -t True -cv_seed 4457 -seed 1235
