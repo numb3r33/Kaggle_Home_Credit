@@ -2159,8 +2159,7 @@ if __name__ == '__main__':
 
             auc             = joblib.load(os.path.join(basepath, output_path + f'{data_folder}{MODEL_FILENAME}_{CV_SEED}_oof_auc.pkl'))
         else:
-            save_path = os.path.join(basepath, output_path + f'{data_folder}{MODEL_FILENAME}')
-            auc, oof_train_preds, test_preds, test_preds_final = m.predict_test(train, test, feature_list, PARAMS.copy(), save_path)
+            auc, oof_train_preds, test_preds, test_preds_final = m.predict_test(train, test, feature_list, PARAMS.copy())
 
             np.save(os.path.join(basepath, output_path + f'{data_folder}{MODEL_FILENAME}_{CV_SEED}_oof_train_preds.npy'), oof_train_preds)
             np.save(os.path.join(basepath, output_path + f'{data_folder}{MODEL_FILENAME}_{CV_SEED}_test_preds.npy'), test_preds)
