@@ -131,6 +131,7 @@ if __name__ == '__main__':
     parser.add_argument('-output_path', help='Path to output directory')   # path to working data folder 
     parser.add_argument('-data_folder', help='Folder name of the dataset') # dataset folder name
     parser.add_argument('-cv', type=bool, help='Cross Validation')
+    parser.add_argument('-cv_predict',type=bool, help='Cross Validation and Predictions for test set.')
     parser.add_argument('-t',type=bool, help='Full Training on a given seed.')
     parser.add_argument('-s', type=bool, help='Whether to work on a sample or not.')
     parser.add_argument('-seed', type=int, help='Random SEED')
