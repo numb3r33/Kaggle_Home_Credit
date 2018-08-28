@@ -33,8 +33,8 @@ PARAMS = {
     'seed': SEED
 }
 
-MODEL_FILENAME           = 'v149'
-SAMPLE_SIZE              = .3
+MODEL_FILENAME    = 'v149'
+SAMPLE_SIZE       = .3
 
 class Modelv149(BaseModel):
     def __init__(self, **params):
@@ -124,7 +124,11 @@ class Modelv149(BaseModel):
         Xtr = train.loc[:, feature_list]
         ytr = train.loc[:, TARGET_NAME]
 
-        return super(Modelv149, self).cross_validate_log(Xtr, ytr, params, cv_adversarial_filepath=cv_adversarial_filepath)
+        return super(Modelv149, self).cross_validate_log(Xtr, 
+                                                         ytr, 
+                                                         params, 
+                                                         cv_adversarial_filepath=cv_adversarial_filepath
+                                                        )
 
 if __name__ == '__main__':
     
