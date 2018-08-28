@@ -653,19 +653,20 @@ PARAMS = {
     'early_stopping_rounds': 200,
     'objective': 'binary',
     'boosting_type': 'gbdt',
-    'learning_rate': .1,
+    'learning_rate': .01,
     'metric': 'auc',
-    'num_leaves': 20,
+    'num_leaves': 40,
     'sub_feature': 0.5,
     'bagging_fraction': 0.9,
     'reg_lambda': 75,
     'reg_alpha': 5,
     'min_data_in_leaf': 15,
-    'min_sum_hessian_in_leaf': 1,
+    'min_sum_hessian_in_leaf': 10,
     'nthread': 16,
     'verbose': -1,
     'seed': SEED
 }
+
 
 
 
