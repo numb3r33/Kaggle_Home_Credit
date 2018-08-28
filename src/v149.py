@@ -235,8 +235,6 @@ if __name__ == '__main__':
         SEED            = args.seed
         CV_SEED         = args.cv_seed
 
-        print('CV SEED: {}'.format(CV_SEED))
-
         params = {
             'input_path': input_path,
             'output_path': output_path,
@@ -260,6 +258,7 @@ if __name__ == '__main__':
         print('Shape of data: {}'.format(data.shape))
     
         train  = data.iloc[:m.n_train]
+        test   = data.iloc[m.n_train:]
 
         del data, test
         gc.collect()
