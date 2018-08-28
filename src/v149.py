@@ -25,7 +25,11 @@ np.random.seed(SEED)
 
 PARAMS = {
     'num_boost_round': 500,
+    'objective': 'binary',
+    'boosting_type': 'gbdt',
     'early_stopping_rounds': 200,
+    'learning_rate': .03,
+    'metric': 'auc',
     'num_leaves': 10,
     'min_data_in_leaf': 20,
     'colsample_bytree': .3,
