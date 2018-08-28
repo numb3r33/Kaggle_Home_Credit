@@ -260,7 +260,7 @@ if __name__ == '__main__':
         train  = data.iloc[:m.n_train]
         test   = data.iloc[m.n_train:]
 
-        del data, test
+        del data
         gc.collect()
 
         feature_list = train.columns.drop('TARGET').tolist()
