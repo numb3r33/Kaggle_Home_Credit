@@ -226,6 +226,9 @@ if __name__ == '__main__':
         data_folder     = args.data_folder
         is_sample       = args.s
         SEED            = args.seed
+        CV_SEED         = args.cv_seed
+
+        print('CV SEED: {}'.format(CV_SEED))
 
         params = {
             'input_path': input_path,

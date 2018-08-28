@@ -235,6 +235,8 @@ if __name__ == '__main__':
         SEED            = args.seed
         CV_SEED         = args.cv_seed
 
+        print('CV SEED: {}'.format(CV_SEED))
+
         params = {
             'input_path': input_path,
             'output_path': output_path,
@@ -264,7 +266,7 @@ if __name__ == '__main__':
 
         feature_list = train.columns.drop('TARGET').tolist()
 
-        PARAMS['seed'] = seed
+        PARAMS['seed'] = SEED
 
         if os.path.exists(os.path.join(basepath, output_path + f'{data_folder}{MODEL_FILENAME}_{CV_SEED}_test_preds.npy')):
             oof_train_preds  = np.load(os.path.join(basepath, output_path + f'{data_folder}{MODEL_FILENAME}_{CV_SEED}_oof_train_preds.npy'))       
