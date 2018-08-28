@@ -677,7 +677,7 @@ class BaseModel:
 
         data = pd.concat((X, X_test))
 
-        # preprocess for RF
+        # preprocess for Linear Model
         for col in data.columns:
             # replace inf with np.nan
             data[col] = data[col].replace([np.inf, -np.inf], np.nan)
