@@ -2535,8 +2535,9 @@ if __name__ == '__main__':
         print('Before adding xgboost features feature length: {}'.format(len(feature_list)))
 
         xgb_cols      = list(xgboost_leaves.columns)
+
         for col in xgb_cols:
-            feature_list.append(col)
+            feature_list = np.append(feature_list, col)
 
         print('After adding xgboost features feature length: {}'.format(len(feature_list)))
 
@@ -2655,7 +2656,7 @@ if __name__ == '__main__':
 
         xgb_cols      = list(xgboost_leaves.columns)
         for col in xgb_cols:
-            feature_list.append(col)
+            feature_list = np.append(feature_list, col)
 
         print('After adding xgboost features feature length: {}'.format(len(feature_list)))
 
