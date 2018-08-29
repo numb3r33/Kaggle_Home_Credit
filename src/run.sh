@@ -47,4 +47,4 @@
 # python v152.py -input_path data/raw/ -output_path data/interim/ -data_folder dataset6/ -t True -cv_seed 4457 -seed 1235
 
 # LGB ( XGBOOST Leaves )
-python v153.py -input_path data/raw/ -output_path data/interim/ -data_folder dataset6/ -t True -cv_seed 4457 -seed 1235
+python v153.py -input_path data/raw/ -output_path data/interim/ -data_folder dataset6/ -cv_predict True -cv_seed 4457 -seed 1231
