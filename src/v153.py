@@ -2532,8 +2532,14 @@ if __name__ == '__main__':
 
         train = pd.concat((train, xgboost_leaves_train), axis=1)
 
-        xgb_cols  = list(xgboost_leaves.columns)
-        feature_list += xgb_cols
+        print('Before adding xgboost features feature length: {}'.format(len(feature_list)))
+
+        xgb_cols      = list(xgboost_leaves.columns)
+        for col in xgb_cols:
+            feature_list.append(col)
+
+        print('After adding xgboost features feature length: {}'.format(len(feature_list)))
+
 
         del test
         gc.collect()
@@ -2645,9 +2651,15 @@ if __name__ == '__main__':
         # concat xgboost leaves test with test
         test    = pd.concat((test, xgboost_leaves_test), axis=1)
 
+        print('Before adding xgboost features feature length: {}'.format(len(feature_list)))
+
         xgb_cols      = list(xgboost_leaves.columns)
-        feature_list += xgb_cols
-        
+        for col in xgb_cols:
+            feature_list.append(col)
+
+        print('After adding xgboost features feature length: {}'.format(len(feature_list)))
+
+
         PARAMS['seed']                  = SEED
         PARAMS['feature_fraction_seed'] = SEED
         PARAMS['bagging_seed']          = SEED
