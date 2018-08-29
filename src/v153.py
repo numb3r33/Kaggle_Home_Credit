@@ -9,6 +9,7 @@ import time
 
 from base import *
 from features import *
+from xgboost_fi import *
 
 from datetime import datetime
 from sklearn.externals import joblib
@@ -675,6 +676,8 @@ PCA_PARAMS = {
     'whiten': True,
     'random_state': SEED
 }
+
+NUM_LEAVES = 10
 
 
 MODEL_FILENAME           = 'v151'
