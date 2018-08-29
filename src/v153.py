@@ -2532,6 +2532,8 @@ if __name__ == '__main__':
 
         train = pd.concat((train, xgboost_leaves_train), axis=1)
 
+        feature_list += xgboost_leaves.columns.tolist()
+
         del test
         gc.collect()
 
@@ -2641,6 +2643,8 @@ if __name__ == '__main__':
 
         # concat xgboost leaves test with test
         test    = pd.concat((test, xgboost_leaves_test), axis=1)
+
+        feature_list += xgboost_leaves.columns.tolist()
         
         PARAMS['seed']                  = SEED
         PARAMS['feature_fraction_seed'] = SEED
