@@ -1,7 +1,6 @@
 import pandas as pd
 import numpy as np
 import gc
-import feather
 
 from sklearn.base import BaseEstimator, ClassifierMixin
 
