@@ -39,7 +39,7 @@
 
 
 # LGB ( cv_adversarial_idx_v1.csv, gain_score > .3 )
-python v151.py -input_path data/raw/ -output_path data/interim/ -data_folder dataset6/ -cv_predict True -cv_seed 4457 -seed 1231
+# python v151.py -input_path data/raw/ -output_path data/interim/ -data_folder dataset6/ -cv_predict True -cv_seed 4457 -seed 1231
 
 
 # Stacker ( 1st-stage )
