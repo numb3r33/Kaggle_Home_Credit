@@ -2525,19 +2525,13 @@ if __name__ == '__main__':
             np.save(os.path.join(basepath, output_path + f'{data_folder}{MODEL_FILENAME}_xgb_leaves.npy'), xgboost_leaves)
         
         xgboost_leaves = pd.DataFrame(xgboost_leaves)
-        xgboost_leaves.columns = [f'leaf_{i}' for i in xgboost_leaves.shape[1]]
+        xgboost_leaves.columns = [f'leaf_{i}' for i in range(xgboost_leaves.shape[1])]
         
         xgboost_leaves_train = xgboost_leaves.iloc[:m.n_train]
         xgboost_leaves_train.index = train.index
 
         train = pd.concat((train, xgboost_leaves_train), axis=1)
 
-        # test
-        # xgboost_leaves_test = xgboost_leaves.iloc[m.n_train:]
-        # xgboost_leaves_test.index = test.index
-
-        # test    = pd.concat((test, xgboost_leaves_test), axi)
-        
         del test
         gc.collect()
 
@@ -2634,7 +2628,7 @@ if __name__ == '__main__':
             np.save(os.path.join(basepath, output_path + f'{data_folder}{MODEL_FILENAME}_xgb_leaves.npy'), xgboost_leaves)
         
         xgboost_leaves = pd.DataFrame(xgboost_leaves)
-        xgboost_leaves.columns = [f'leaf_{i}' for i in xgboost_leaves.shape[1]]
+        xgboost_leaves.columns = [f'leaf_{i}' for i in range(xgboost_leaves.shape[1])]
         
         xgboost_leaves_train = xgboost_leaves.iloc[:m.n_train]
         xgboost_leaves_train.index = train.index
