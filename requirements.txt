@@ -188,7 +188,7 @@ requests-file==1.4.3
 requests-ftp==0.3.1
 rgf-python==2.3.0
 rope-py3k==0.9.4.post1
-rsa==3.4.2
+rsa==4.7
 s3transfer==0.1.13
 scikit-image==0.13.0
 scikit-learn==0.19.1
