@@ -146,7 +146,7 @@ PDPbox==0.1
 pep8==1.7.0
 pexpect==4.6.0
 pickleshare==0.7.4
-Pillow==5.1.0
+Pillow==9.0.0
 plotnine==0.3.0
 ply==3.10
 poyo==0.4.1
