@@ -216,7 +216,7 @@ TA-Lib==0.4.10
 tables==3.3.0
 tabulate==0.8.2
 tblib==1.3.2
-tensorflow-gpu==1.4.1
+tensorflow-gpu==2.6.4
 tensorflow-tensorboard==0.4.0rc3
 terminado==0.8.1
 testpath==0.3.1
